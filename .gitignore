@@ -1,0 +1,28 @@
+# Environments
+venv/
+env/
+squashfs-root/
+packaging/
+.env
+*.key
+linuxdeploy*
+
+
+# Python temporary files
+__pycache__/
+*.pyc
+
+# Local data & temp
+temp/
+.DS_Store
+
+# SECRETS (Do not share!)
+serviceAccountKey.json
+
+# Old backup files (keep your repo clean)
+main-5.py
+main-stable.py
+
+# Remove specific dummy/temp files
+et -x KIVY_BCKND_CLIPBOARD*
+dummy

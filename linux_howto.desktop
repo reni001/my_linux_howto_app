@@ -1,0 +1,19 @@
+[Desktop Entry]
+Categories=Utility;Development;
+Comment[en_GB]=My Personal Linux Documentation App
+Comment=My Personal Linux Documentation App
+Exec=/home/reni/Documents/code/apps/my_linux_howto_app/run_app.sh
+GenericName[en_GB]=
+GenericName=
+Icon=/home/reni/Documents/code/apps/my_linux_howto_app/assets/icons/howtolinux.png
+MimeType=
+Name[en_GB]=Linux HowTo
+Name=Linux HowTo
+Path=/home/reni/Documents/code/apps/my_linux_howto_app/
+StartupNotify=true
+Terminal=false
+TerminalOptions=
+Type=Application
+Version=1.0
+X-KDE-SubstituteUID=false
+X-KDE-Username=
