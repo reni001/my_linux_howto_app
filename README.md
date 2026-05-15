@@ -112,6 +112,7 @@ cd my_linux_howto_app
 
 ### 📂 Project Structure
 
+```bash
 my_linux_howto_app/
 ├── src/
 │   ├── main.py
@@ -130,7 +131,7 @@ my_linux_howto_app/
 ├── assets/
 │   ├── icons/
 │   └── screenshots/
-
+```
 
 ---
 ## 3️⃣ Create Virtual Environment
@@ -160,7 +161,9 @@ python -m src.main
 
 The app stores runtime data in:
 
+```bash
 ~/.local/share/linux-howto/
+```
 
 ### Structure
 
@@ -188,6 +191,7 @@ The app stores runtime data in:
 | cache.json | Sync track |
 | ingserviceAccountKey.json | Authentication|
 
+
 📁 assets/
 
 | Folder | Purpose |
@@ -213,18 +217,26 @@ At startup:
 
 File:
 
+```bash
 config/firebase.json
+```
+
 
 👉 Should be copied automatically to:
+
+```bash
 ~/.local/share/linux-howto/data/firebase.json
+```
 
 ❗ If it fails
 
 Run manually:
-Shellmkdir -p ~/.local/share/linux-howto/datacp config/firebase.json ~/.local/share/linux-howto/data/firebase.json
 
+```bash
+Shellmkdir -p ~/.local/share/linux-howto/datacp config/firebase.json ~/.local/share/linux-howto/data/firebase.json
 mkdir -p ~/.local/share/linux-howto/data
 cp config/firebase.json ~/.local/share/linux-howto/data/firebase.json
+```
 
 ---
 ##⚠🔥 Firebase Usage
@@ -252,7 +264,6 @@ Upload assets
 https://console.firebase.google.com
 
 2. Generate key
-
 Project Settings → Service Accounts
 Click Generate new private key
 
@@ -262,14 +273,17 @@ Click Generate new private key
 
 4. Update config
 Edit:
+```bash
 config/firebase.json
+```
 
 Example of how the firebasr.json needs to look like:
 
+```bash
 {
   "databaseURL": "https://your-project.firebaseio.com"
 }
-
+```
 
 ---
 ##📡 Git-Based Asset Sync
@@ -284,6 +298,7 @@ Assets (icons + screenshots) are synchronised from your repository.
 | Icons/screenshots | Git | 
 | Cache | Local |
 
+
 ### 🔄 Updating the App
 
 git pull
@@ -295,27 +310,30 @@ pip install -r requirements.txt
 
 ###❌ App does not start
 
+```bash
 python -m src.main
+```
 
 ### ❌ Firebase issues
 
 Check:
-
+```bash
 firebase.json exists
 serviceAccountKey.json (if needed)
-
+```
 
 ### ❌ Missing assets
-
+```bash
 git pull
+```
 
 ### ❌ Kivy install fails
-
+```bash
 pip install cython
 pip install kivy
+```
 
 ### Issue: App won't open on Wayland,
-
 Cause: Graphics backend mismatch,
 Fix: Run: KIVY_WINDOW=sdl2 python main.py
 
