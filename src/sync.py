@@ -90,10 +90,31 @@ def sync_excel_to_firebase():
     print("📊 Reading Excel:", EXCEL_FILE)
     xl = pd.ExcelFile(EXCEL_FILE)
 
+
     payload = {}
     for sheet in xl.sheet_names:
         df = xl.parse(sheet)
-        payload[sheet] = df.to_dict(orient="records")
+
+        # --- SPECIAL CASE: AppInfo -> metadata dict ---
+        if sheet.strip().lower() == "appinfo":
+            # Expected columns from your Excel: 'app_name' and a value column (e.g. 'Linux HowTo') [1](https://solvaysa-my.sharepoint.com/personal/renate_schwiedernoch_solvay_com/Documents/Microsoft%20Copilot%20Chat%20Files/main.py)
+            cols = list(df.columns)
+            if "app_name" in cols and len(cols) >= 2:
+                value_col = [c for c in cols if c != "app_name"][0]
+                meta = {}
+                for _, row in df.iterrows():
+                    k = row.get("app_name")
+                    if pd.isna(k) or k is None:
+                        continue
+                    v = row.get(value_col)
+                    meta[str(k).strip()] = v
+                payload["metadata"] = meta
+            else:
+               # fallback: keep raw
+                payload["metadata"] = df.to_dict(orient="records")
+        else:
+            payload[sheet] = df.to_dict(orient="records")
+
 
     print("☁ Uploading data to Firebase…")
 

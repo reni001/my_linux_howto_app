@@ -1,0 +1,151 @@
+#!/usr/bin/env bash
+
+set -e
+
+echo ""
+echo "=========================================="
+echo " Linux HowTo App – Installer"
+echo "=========================================="
+echo ""
+
+# ----------------------------------------
+# PATHS (FIXED)
+# ----------------------------------------
+
+APP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+VENV_DIR="$APP_DIR/venv"
+BASE_DIR="$HOME/.local/share/linux-howto"
+DATA_DIR="$BASE_DIR/data"
+ASSETS_DIR="$BASE_DIR/assets"
+
+# ----------------------------------------
+# DETECT DISPLAY SERVER (Wayland vs X11)
+# ----------------------------------------
+
+echo "[INFO] Detecting display server..."
+
+SESSION_TYPE="${XDG_SESSION_TYPE:-x11}"
+echo "[INFO] Session type: $SESSION_TYPE"
+
+if [ "$SESSION_TYPE" = "wayland" ]; then
+    echo "[INFO] Wayland detected → forcing X11 compatibility for Kivy"
+    export KIVY_GL_BACKEND=gl
+    export SDL_VIDEODRIVER=x11
+else
+    echo "[INFO] X11 detected"
+fi
+
+# ----------------------------------------
+# PYTHON AUTO DETECTION
+# ----------------------------------------
+
+echo "[INFO] Detecting Python..."
+
+if command -v python3.12 &> /dev/null; then
+    PYTHON_BIN="python3.12"
+elif command -v python3.11 &> /dev/null; then
+    echo "[WARNING] Python 3.12 not found, using Python 3.11"
+    PYTHON_BIN="python3.11"
+elif command -v python3 &> /dev/null; then
+    echo "[WARNING] Using system python3"
+    PYTHON_BIN="python3"
+else
+    echo "[ERROR] Python not found. Please install Python 3.11+"
+    exit 1
+fi
+
+echo "[INFO] Using $PYTHON_BIN"
+
+# ----------------------------------------
+# CREATE VIRTUAL ENVIRONMENT
+# ----------------------------------------
+
+echo "[INFO] Creating virtual environment..."
+
+$PYTHON_BIN -m venv "$VENV_DIR"
+source "$VENV_DIR/bin/activate"
+
+# ----------------------------------------
+# INSTALL DEPENDENCIES
+# ----------------------------------------
+
+echo "[INFO] Installing dependencies..."
+
+pip install --upgrade pip setuptools wheel
+pip install kivy pandas requests firebase-admin openpyxl cython
+
+# ----------------------------------------
+# CREATE RUNTIME DIRECTORIES
+# ----------------------------------------
+
+echo "[INFO] Creating runtime directories..."
+
+mkdir -p "$DATA_DIR"
+mkdir -p "$ASSETS_DIR"
+
+# ----------------------------------------
+# COPY firebase.json (CRITICAL PART)
+# ----------------------------------------
+
+echo "[INFO] Installing firebase.json..."
+
+if [ -f "$APP_DIR/config/firebase.json" ]; then
+    cp "$APP_DIR/config/firebase.json" "$DATA_DIR/firebase.json"
+    echo "[INFO] ✅ firebase.json copied to:"
+    echo "       $DATA_DIR/firebase.json"
+else
+    echo "[ERROR] ❌ firebase.json NOT found!"
+    echo ""
+    echo "Expected at:"
+    echo "   $APP_DIR/config/firebase.json"
+    echo ""
+    echo "Fix:"
+    echo "   Make sure the file exists after cloning the repo."
+    echo ""
+    exit 1
+fi
+
+# ----------------------------------------
+# VERIFY INSTALLATION (VERY IMPORTANT)
+# ----------------------------------------
+
+echo "[INFO] Verifying installation..."
+
+if [ -f "$DATA_DIR/firebase.json" ]; then
+    echo "[INFO] ✅ firebase.json is correctly installed"
+else
+    echo "[ERROR] ❌ firebase.json missing after copy!"
+    exit 1
+fi
+
+# ----------------------------------------
+# OPTIONAL FIRST RUN TEST
+# ----------------------------------------
+
+echo "[INFO] Running first test..."
+
+if python -m src.main; then
+    echo "[INFO] ✅ App started successfully"
+else
+    echo "[WARNING] App exited with warnings (can be normal on first run)"
+fi
+
+# ----------------------------------------
+# DONE
+# ----------------------------------------
+
+echo ""
+echo "=========================================="
+echo " ✅ INSTALLATION COMPLETE"
+echo "=========================================="
+echo ""
+echo "To run the app:"
+echo ""
+echo "cd $APP_DIR"
+echo "source venv/bin/activate"
+echo "python -m src.main"
+echo ""
+echo "Or use:"
+echo "   ./run.sh"
+echo ""

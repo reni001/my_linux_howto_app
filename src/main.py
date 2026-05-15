@@ -34,13 +34,21 @@ from kivy.core.clipboard import Clipboard
 from kivy.clock import Clock
 from kivy.properties import StringProperty, ListProperty
 
+# ----- Check if python 3.12 is installed ---------
+
+if sys.version_info >= (3, 14):
+    print("\n⚠️ WARNING: Python 3.14 may be incompatible with Kivy")
+    print("✅ The app will continue, but issues *might* occur")
+    print("💡 Recommended: Use Python 3.12 if you encounter problems\n")
+
 
 
 # --- CONFIGURATION ---
 Window.size = (500, 850)
 
 # ✅ ensure runtime dirs & config exist
-initialize_first_run()
+#initialize_first_run()
+Clock.schedule_once(lambda dt: initialize_first_run(), 1)
 
 # ✅ now it is safe to load firebase.json
 firebase_cfg = load_firebase_config()
@@ -422,6 +430,12 @@ class LinuxHowToApp(App):
 
     def show_about(self):
         from kivy.uix.popup import Popup
+
+        metadata = APP_DATA.get("metadata") or  APP_DATA.get("AppInfo", {})
+        # ✅ debug AFTER assignment
+        print("TYPE:", type(metadata))
+        print("DATA:", metadata)
+
         try:
             # 1. Pull data from the APP_DATA we fetched earlier
             metadata = APP_DATA.get('metadata', {})
@@ -432,7 +446,7 @@ class LinuxHowToApp(App):
             desc = metadata.get('description', 'A personal documentation hub.')
 
             # This handles the '\n' characters coming from Excel cells
-            change = metadata.get('changelog', '').replace('\\n', '\n')
+            change = metadata.get('changelog', '').replace("\\n", "\n")
 
             # 2. Build the Layout inside the Popup
             content = BoxLayout(orientation='vertical', padding=dp(20), spacing=dp(15))
