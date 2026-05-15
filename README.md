@@ -48,7 +48,7 @@ It combines:
 ### ⚠️ Python Version (CRITICAL)
 
 - ✅ Python **3.12 works**
-- ❌ Python **3.14 does NOT work (Kivy incompatibility)**
+- ❌ Python **3.14 does NOT work properly with the current Kivy (Kivy incompatibility)**
 
 👉 On Arch Linux you may need to install Python 3.12 manually
 
@@ -60,11 +60,27 @@ Example:
 ~/Documents/apps//my_linux_howto_app/
 
 ---
+---
 
 # 👤 PART A — USER INSTALLATION
 
 ---
 
+## Installation and running the App using the script:
+
+### Installation
+run
+``` bash
+./install.sh
+```
+
+later to run the app run
+```bash
+./run.sh
+```
+
+---
+## Manual installation
 ## 1️⃣ Install System Dependencies
 
 ### Arch Linux
