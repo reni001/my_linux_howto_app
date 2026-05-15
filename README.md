@@ -72,14 +72,17 @@ Example:
 ```bash
 sudo pacman -Syu
 sudo pacman -S python python-pip git
+```
 
 Check version:
 python --version
 👉 If version is 3.14 → install Python 3.12 (e.g. via pyenv)
 
+```bash
     sudo pacman -S pyenv
     pyenv install 3.12
     pyenv local 3.12
+   ```
     
     Verify the version before creating your venv:
     python --version  # Should show 3.12.x
@@ -95,8 +98,9 @@ sudo apt install python3.12 python3.12-venv python3-pip git
 ## 2️⃣  Install System Dependencies
 Kivy requires specific X11 and OpenGL headers to render the UI on Arch:
     
-    ```bash
+```bash
     sudo pacman -S --needed base-devel libx11 libxkbcommon-x11 mesa-utils mtdev  
+```
     
 ---
 ## 2️⃣ Download the App
@@ -104,6 +108,7 @@ Kivy requires specific X11 and OpenGL headers to render the UI on Arch:
 ```bash
 git clone https://github.com/reni001/my_linux_howto_app.git
 cd my_linux_howto_app
+```
 
 ### 📂 Project Structure
 
@@ -133,6 +138,7 @@ my_linux_howto_app/
 ```bash
 python3.12 -m venv venv
 source venv/bin/activate
+```
 
 ---
 ## 4️⃣ Install Python Dependencies
@@ -140,12 +146,14 @@ source venv/bin/activate
 ```bash
 pip install --upgrade pip setuptools wheel
 pip install kivy pandas requests firebase-admin openpyxl
+```
 
 ---
 ## 5️⃣ Run the App
 
 ```bash
 python -m src.main
+```
 
 ---
 ## 📁 Local Data Structure (IMPORTANT)
@@ -155,6 +163,8 @@ The app stores runtime data in:
 ~/.local/share/linux-howto/
 
 ### Structure
+
+```bash
 ~/.local/share/linux-howto/
 │
 ├── data/
@@ -166,6 +176,7 @@ The app stores runtime data in:
 └── assets/
     ├── icons/
     └── screenshots/
+```
 
 #### 🧠 File Explanation
 📁 data/
