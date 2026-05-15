@@ -1,72 +1,81 @@
-# Linux HowTo App
-> A data-driven documentation hub for Linux enthusiasts.This Kivy-based application serves as a personal documentation hub. This project features dynamic synchronization between a local Excel database and Google Firebase.
+# 🧠 Linux HowTo App
 
-Developed by: **Renate Schwiedernoch** Version: **0.1.0-dev**
+## 📍 Installation & Developer Guide
+
+---
+
+## 📖 Overview
+
+This application is a **Python + Kivy desktop app** for browsing and managing Linux how-to instructions. This Kivy-based application serves as a personal documentation hub. This project features dynamic synchronization between a local Excel database and Google Firebase.
+
+It combines:
+
+| Component | Role |
+|----------|------|
+| 📊 Excel (`main.xlsx`) | Local database |
+| ☁️ Firebase | Central content updates |
+| 📁 Git | Sync of icons & screenshots |
+
+---
 
 ## 📸 Screenshots
 | Main Menu | Category View | Article View | Menu Section |
 | :---: | :---: | :---: |:---: |
 | ![Menu](assets/screenshots/start.png) | ![Category](assets/screenshots/detailscreen.png) |![Article](assets/screenshots/articlescreen.png) | ![Menu](assets/screenshots/menu.png) |
 
-## 🚀 Key Features
-* **Cloud Sync:** Fetches real-time documentation from Firebase via a custom Excel-to-Cloud pipeline.
-* **Intelligent Navigation:** Multi-tier categorization (OS > Category > Subcategory) with expandable sections.
-* **Search Engine:** Includes global search across all articles and local filtering within categories.
-* **Dynamic Article Builder:** Renders instructions, code snippets with "Copy to Clipboard" functionality, and stylized warnings/notes.
-* **Cross-Platform UI:** Responsive design built with Kivy, featuring orientation toggles and adaptive layouts.
+---
 
-## 🛠 Tech Stack
-* **Language:** Python
-* **Framework:** Kivy (UI/UX)
-* **Backend:** Firebase Realtime Database
-* **Data Management:** Pandas & Openpyxl (Excel processing)
+## 🔁 Synchronisation Concept
+
+- Firebase → **content updates (pull-only)**
+- Git → **assets (icons, screenshots)**
+- Local files → **offline usage**
+
+✅ Works offline after first sync  
+✅ Works across multiple computers  
+✅ No backend setup required for users  
 
 ---
 
-## 📁 Project Structure
-* `main.py`: Core application logic and Kivy UI.
-* `sync.py`: Automation script for Firebase updates and GitHub synchronization.
-* `assets/icons/`: UI elements (`howto.png`, `menu.png`, `arrow_back.png`).
-* `assets/screenshots/`: Visual guides for app usage.
-* `data/main.xlsx`: The local Excel database for documentation.
-* `requirements.txt`: Python dependency manifest.
+## ⚠️ Requirements & Compatibility
+
+### ✅ Supported Systems
+- Arch Linux
+- Ubuntu
 
 ---
 
-## 🚀 General Setup & Installation
+### ⚠️ Python Version (CRITICAL)
 
-## 🔧 Installation & Setup
-1. Clone the repository:
-   ```bash
-   git clone [https://github.com/yourusername/linux-howto-app.git](https://github.com/yourusername/linux-howto-app.git)
+- ✅ Python **3.12 works**
+- ❌ Python **3.14 does NOT work (Kivy incompatibility)**
 
-2. Environment Configuration
-We utilize a virtual environment to prevent system-wide package conflicts.
+👉 On Arch Linux you may need to install Python 3.12 manually
 
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
+---
 
-3. Install Requirements
-pip install -r requirements.txt
+## 📂 Project Location
 
+Example:
+~/Documents/apps//my_linux_howto_app/
 
-#########################
-🔥 Firebase Configuration
-The sync.py script requires administrative access to your Firebase instance:
+---
 
-Generate a serviceAccountKey.json from the Firebase Console (Project Settings > Service Accounts).
+# 👤 PART A — USER INSTALLATION
 
-Place the file in the project root.
+---
 
-Security Note: This file is ignored by Git to prevent exposing your private database keys.
+## 1️⃣ Install System Dependencies
 
-#########################
-🔧 Arch-Based Linux: Special Instructions
-Arch Linux (Manjaro, EndeavourOS) requires specific steps due to its "Rolling Release" nature and strict Python management.
+### Arch Linux
 
-1. Python 3.12 Requirement
-Arch often moves to new Python versions (e.g., 3.13+) before Kivy/Buildozer wheels are ready.
-Solution: Use pyenv to maintain stability.
+```bash
+sudo pacman -Syu
+sudo pacman -S python python-pip git
+
+Check version:
+python --version
+👉 If version is 3.14 → install Python 3.12 (e.g. via pyenv)
 
     sudo pacman -S pyenv
     pyenv install 3.12
@@ -78,73 +87,247 @@ Solution: Use pyenv to maintain stability.
     ### Why we had to do this:
     * **Kivy Wheels:** Sometimes Kivy doesn't have "pre-built" wheels for the brand-new Python version that Arch just released. By moving back to 3.12, we ensure all the library "parts" fit together without having to compile them from scratch (which takes forever).
 
-2. System Dependencies
+### Debian based (Ubuntu)
+sudo apt update
+sudo apt install python3.12 python3.12-venv python3-pip git
+
+---
+## 2️⃣  Install System Dependencies
 Kivy requires specific X11 and OpenGL headers to render the UI on Arch:
     
-    sudo pacman -S --needed base-devel libx11 libxkbcommon-x11 mesa-utils mtdev
+    ```bash
+    sudo pacman -S --needed base-devel libx11 libxkbcommon-x11 mesa-utils mtdev  
+    
+---
+## 2️⃣ Download the App
 
-3. PEP 668 (Externally Managed Environment)
-Arch enforces virtual environments. If you see a "break-system-packages" error, you must use the venv steps listed in the General Setup section.
+```bash
+git clone https://github.com/reni001/my_linux_howto_app.git
+cd my_linux_howto_app
 
-4. Solving the "Externally Managed Environment" Error
-Arch Linux prevents pip install outside of a virtual environment to protect the system. You must use a Virtual Environment (venv):
+### 📂 Project Structure
 
-    # Create the venv
-    python -m venv venv
+my_linux_howto_app/
+├── src/
+│   ├── main.py
+│   ├── sync.py
+│   ├── update_content.py
+│   ├── runtime_paths.py
+│   ├── config.py
+│   └── first_run.py
+│
+├── config/
+│   └── firebase.json
+│
+├── data/
+│   └── main.xlsx
+│
+├── assets/
+│   ├── icons/
+│   └── screenshots/
 
-    # Activate it
-    source venv/bin/activate
 
-    # Now install the requirements inside the venv
-    pip install -r requirements.txt
+---
+## 3️⃣ Create Virtual Environment
 
-5. Kivy & Wayland (Optional)
-If you are using Wayland instead of X11 and the app won't open, try forcing the window provider by running:
+```bash
+python3.12 -m venv venv
+source venv/bin/activate
 
-    KIVY_WINDOW=sdl2 python main.py
+---
+## 4️⃣ Install Python Dependencies
 
-#########################
-## 🖥️ Linux Desktop Integration
-To add this app to your system launcher:
-1. Create `run_app.sh` and make it executable: `chmod +x run_app.sh`.
-2. Create a `.desktop` file in `~/.local/share/applications/`.
-3. Ensure the `Exec` and `Icon` paths point to your absolute project directory.
+```bash
+pip install --upgrade pip setuptools wheel
+pip install kivy pandas requests firebase-admin openpyxl
 
-##########################
+---
+## 5️⃣ Run the App
 
-⚠️ Known Issues & Solutions
+```bash
+python -m src.main
 
-Issue: App won't open on Wayland,
+---
+## 📁 Local Data Structure (IMPORTANT)
+
+The app stores runtime data in:
+
+~/.local/share/linux-howto/
+
+### Structure
+~/.local/share/linux-howto/
+│
+├── data/
+│   ├── main.xlsx
+│   ├── firebase.json
+│   ├── cache.json
+│   └── serviceAccountKey.json
+│
+└── assets/
+    ├── icons/
+    └── screenshots/
+
+#### 🧠 File Explanation
+📁 data/
+
+| File | Purpose |
+| :---: | :---: |
+| main.xlsx | Local database |
+| firebase.json |Firebase connection | 
+| cache.json | Sync track |
+| ingserviceAccountKey.json | Authentication|
+
+📁 assets/
+
+| Folder | Purpose |
+| :---: | :---: |
+| icons/ | UI icons |
+| screenshots |Tutorial images | 
+
+
+---
+## 🔄 Synchronisation Behaviour
+
+At startup:
+
+1. Load local Excel
+2. Connect to Firebase
+3. Pull latest content
+4. Update Excel
+5. Sync icons/screenshots from Git
+
+
+---
+##⚠️ Known Issue — firebase.json
+
+File:
+
+config/firebase.json
+
+👉 Should be copied automatically to:
+~/.local/share/linux-howto/data/firebase.json
+
+❗ If it fails
+
+Run manually:
+Shellmkdir -p ~/.local/share/linux-howto/datacp config/firebase.json ~/.local/share/linux-howto/data/firebase.json
+
+mkdir -p ~/.local/share/linux-howto/data
+cp config/firebase.json ~/.local/share/linux-howto/data/firebase.json
+
+---
+##⚠🔥 Firebase Usage
+✅ Default Mode
+
+Uses developer Firebase backend
+No setup required
+
+✅ Users can
+
+Pull updates
+Use offline
+Browse content
+
+❌ Users cannot
+
+Push data
+Modify database
+Upload assets
+
+---
+### ⚙️ Optional: Own Firebase Setup
+
+1. Create project
+https://console.firebase.google.com
+
+2. Generate key
+
+Project Settings → Service Accounts
+Click Generate new private key
+
+
+3. Place file
+~/.local/share/linux-howto/data/serviceAccountKey.json
+
+4. Update config
+Edit:
+config/firebase.json
+
+Example of how the firebasr.json needs to look like:
+
+{
+  "databaseURL": "https://your-project.firebaseio.com"
+}
+
+
+---
+##📡 Git-Based Asset Sync
+
+Assets (icons + screenshots) are synchronised from your repository.
+
+### 🧠 Multi-device Design
+
+| Component | Sync Method |
+| :---: | :---: |
+| Excel data | Firebase |
+| Icons/screenshots | Git | 
+| Cache | Local |
+
+### 🔄 Updating the App
+
+git pull
+source venv/bin/activate
+pip install -r requirements.txt
+
+---
+##📡 🧪 Troubleshooting
+
+###❌ App does not start
+
+python -m src.main
+
+### ❌ Firebase issues
+
+Check:
+
+firebase.json exists
+serviceAccountKey.json (if needed)
+
+
+### ❌ Missing assets
+
+git pull
+
+### ❌ Kivy install fails
+
+pip install cython
+pip install kivy
+
+### Issue: App won't open on Wayland,
+
 Cause: Graphics backend mismatch,
 Fix: Run: KIVY_WINDOW=sdl2 python main.py
 
-Issue: Icons aligned to the left,
+### Issue: Icons aligned to the left,
 Cause: Missing layout spacer,
 Fix: A Widget spacer was added in ArticleScreen KV to force icons to the right.
 
-Issue: """Write access denied"" (403)",
+### Issue: """Write access denied"" (403)",
 Cause: Cached Git credentials,
 Fix: Clear Git cache or use a Personal Access Token (PAT) for authentication.
 
-Issue: Massive Repo Size (93MB),
+### Issue: Massive Repo Size (93MB),
 Cause: venv folder tracked,
 Fix: Use git rm -r --cached . and update .gitignore to purge large environment files.
 
-Issue: Clipboard Fail,
+### Issue: Clipboard Fail,
 Cause: Missing xclip,
 Fix: Install xclip or xsel via pacman for terminal copy-paste support.
 
+---
 
-#########################
-📱 Features
-Dynamic UI: Pulls documentation categories directly from Firebase/Excel.
-Searchable Content: Browse through Linux tips and commands.
-Responsive Layout: Handles screen orientation changes.
+# 🔧 PART B — DEVELOPER GUIDE
 
-Copy to Clipboard: One-tap copying for terminal commands.
+---
 
-#########################
-🛠 Built With
-Kivy - The Python Framework for NUI.
-Firebase - Realtime Database.
-Pandas - For Excel data handling.
+
