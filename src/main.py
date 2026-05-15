@@ -12,6 +12,7 @@ from pathlib import Path
 from src.config import load_firebase_config
 from src.runtime_paths import is_dev_mode
 from src.update_content import update_assets, update_excel
+from src.runtime_paths import get_runtime_paths
 
 # Kivy imports
 from kivy.lang import Builder
@@ -33,6 +34,7 @@ from kivy.metrics import dp
 from kivy.core.clipboard import Clipboard
 from kivy.clock import Clock
 from kivy.properties import StringProperty, ListProperty
+from kivy.uix.popup import Popup
 
 # ----- Check if python 3.12 is installed ---------
 
@@ -79,6 +81,47 @@ PANEL_COLOR = [179/255, 209/255, 255/255, 1]
 NOTE_BG = [255/255, 250/255, 230/255, 1]
 
 # --- HELPER FUNCTIONS ---
+def load_app_metadata():
+    import pandas as pd
+    from pathlib import Path
+
+    metadata = {}
+
+    # ✅ 1. Try Excel first
+    try:
+        paths = get_runtime_paths()
+        excel_path = paths["data"] / "main.xlsx"
+
+        if excel_path.exists():
+            df = pd.read_excel(excel_path, sheet_name="AppInfo")
+
+            for _, row in df.iterrows():
+                key = str(row.iloc[0]).strip().lower()
+                value = str(row.iloc[1]).strip()
+
+                metadata[key] = value
+
+            print("✅ Metadata loaded from Excel:", metadata)
+
+    except Exception as e:
+        print("[ERROR] Excel metadata failed:", e)
+
+    # ✅ 2. FALLBACK to Firebase if Excel failed
+    if not metadata:
+        global APP_DATA
+        firebase_meta = APP_DATA.get("metadata", {})
+
+        print("✅ Using Firebase metadata:", firebase_meta)
+
+        metadata = {
+            "version": firebase_meta.get("version", "0.0.0"),
+            "last_update": firebase_meta.get("last update", "unknown"),
+            "description": firebase_meta.get("description", ""),
+            "developer": firebase_meta.get("developer", ""),
+            "changelog": firebase_meta.get("changelog", "")
+        }
+
+    return metadata
 
 def open_url(url):
     if not url: return
@@ -138,6 +181,41 @@ class LinuxHowToApp(App):
     sync_bg = ListProperty([1, 0.5, 0, 1])          # orange
     sync_fg = ListProperty([0.1, 0.25, 0.45, 1])            # dark text
     sync_border = ListProperty([0, 0, 0, 0])        # invisible
+
+    def update_version_labels(self):
+        """
+        Update all version labels using self.metadata (Excel)
+        """
+        if not hasattr(self, 'sm'):
+            return
+
+        version = self.metadata.get("version", "0.0.0")
+        last_update = self.metadata.get("last_update", "")
+
+        version_str = f"v{version}"
+
+        screen_map = {
+            'menu': 'version_label_menu',
+            'search': 'version_label_search',
+            'details': 'version_label_details',
+            'article': 'version_label_article'
+        }
+
+        for screen_name, label_id in screen_map.items():
+            try:
+                screen = self.sm.get_screen(screen_name)
+                if label_id in screen.ids:
+                    screen.ids[label_id].text = version_str
+            except Exception as e:
+                print(f"DEBUG: Could not update {screen_name}: {e}")
+
+
+    def on_start(self):
+        pass
+        #self.metadata = load_app_metadata()
+
+        #self.update_version_labels()
+
 
 
     def toggle_orientation(self):
@@ -208,13 +286,18 @@ class LinuxHowToApp(App):
         Thread(target=_task, daemon=True).start()
 
     def refresh_ui_data(self):
+        self.metadata = load_app_metadata()
+        self.update_version_labels()
         """Updates the version label across all application screens."""
         if not hasattr(self, 'sm'):
             Clock.schedule_once(lambda dt: self.refresh_ui_data(), 0.1)
             return
 
-        metadata = APP_DATA.get('metadata', {})
-        version_str = f"v{metadata.get('version', '0.0.0')}"
+        version = self.metadata.get("version", "0.0.0")
+        last_update = self.metadata.get("last_update", "")
+
+        version_str = f"v{version}"
+        version_str = f"v{version}\n{last_update}"
 
         # Map of Screen Name -> Label ID we created in KV
         screen_map = {
@@ -372,6 +455,8 @@ class LinuxHowToApp(App):
         self.update_bg = [0.9, 0.95, 0.9, 1]        # light background
         self.update_fg = [0.1, 0.5, 0.1, 1]         # dark green text
         self.update_border = [0.3, 0.8, 0.3, 1]     # green border
+        self.metadata = load_app_metadata()
+        self.refresh_ui_data()
 
         Clock.schedule_once(self.restore_update_button, 2)
 
@@ -381,6 +466,9 @@ class LinuxHowToApp(App):
         self.update_bg = [0.98, 0.9, 0.9, 1]        # light red
         self.update_fg = [0.7, 0.1, 0.1, 1]         # dark red text
         self.update_border = [1, 0.2, 0.2, 1]       # ✅ red border
+        self.metadata = load_app_metadata()
+        self.refresh_ui_data()
+
         Clock.schedule_once(self.restore_update_button, 3)
 
 
@@ -398,6 +486,9 @@ class LinuxHowToApp(App):
         self.sync_bg = [0.9, 0.95, 0.9, 1]        # light background
         self.sync_fg = [0.1, 0.5, 0.1, 1]         # dark green text
         self.sync_border = [0.3, 0.8, 0.3, 1]     # green border
+        self.metadata = load_app_metadata()
+        self.refresh_ui_data()
+
 
         Clock.schedule_once(self.restore_sync_button, 3)
 
@@ -418,18 +509,8 @@ class LinuxHowToApp(App):
         self.sync_border = [0, 0, 0, 0]            # no border
 
 
-    #def _restore_sync_btn(self, dt):
-    #    try:
-    #        screen = self.root.get_screen("menu")
-    #        btn = screen.ids.get("sync_btn")
-    #        if btn:
-    #            btn.text = "Sync with Firebase & Git"
-    #            btn.disabled = False
-    #    except Exception:
-    #        pass
-
     def show_about(self):
-        from kivy.uix.popup import Popup
+
 
         metadata = APP_DATA.get("metadata") or  APP_DATA.get("AppInfo", {})
         # ✅ debug AFTER assignment
@@ -438,12 +519,19 @@ class LinuxHowToApp(App):
 
         try:
             # 1. Pull data from the APP_DATA we fetched earlier
-            metadata = APP_DATA.get('metadata', {})
+            #metadata = APP_DATA.get('metadata', {})
+            metadata = self.metadata
             name = metadata.get('app_name', 'Linux HowTo')
             version = metadata.get('version', '0.0.0')
+            last_update = metadata.get('last update', metadata.get('last_update', 'unknown'))
             # --- PULL THE NEW DEVELOPER FIELD ---
             dev_name = metadata.get('developer', 'Unknown Developer')
             desc = metadata.get('description', 'A personal documentation hub.')
+
+            change = metadata.get('changelog', '')
+            desc = metadata.get('description', '')
+            dev_name = metadata.get('developer', '')
+
 
             # This handles the '\n' characters coming from Excel cells
             change = metadata.get('changelog', '').replace("\\n", "\n")
@@ -455,6 +543,7 @@ class LinuxHowToApp(App):
             content.add_widget(Label(
                 text=f"[b][size=28sp]{name}[/size][/b]\n"
                      f"[size=16sp]Version {version}[/size]\n"
+                     f"[size=14sp]Last update: {last_update}[/size]\n"
                      f"[size=14sp][color=888888]Developed by: {dev_name}[/color][/size]",
                 markup=True,
                 size_hint_y=None,
