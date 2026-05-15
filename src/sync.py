@@ -148,15 +148,25 @@ def sync_to_github(commit_message):
     print("🚀 Pushing changes to Git")
 
     try:
+        # ✅ Always pull first (safe)
+        subprocess.run(["git", "pull", "--rebase"], check=True)
+
         subprocess.run(["git", "add", "."], check=True)
-        subprocess.run(
+
+        commit = subprocess.run(
             ["git", "commit", "-m", commit_message],
-            check=False
+            capture_output=True,
+            text=True
         )
+
+        print(commit.stdout)
+
         subprocess.run(["git", "push"], check=True)
+
         print("✅ GitHub sync done")
+
     except subprocess.CalledProcessError as e:
-        print("⚠ Git push failed:", e)
+        print("⚠ Git sync failed:", e)
 
 
 # --------------------------------------------------
