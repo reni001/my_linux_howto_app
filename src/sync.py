@@ -85,7 +85,7 @@ def sync_excel_to_firebase():
     xl = pd.ExcelFile(EXCEL_FILE)
     sheets = {}
 
-    # ✅ --- STEP 1: UPDATE VERSION ONLY ONCE ---
+    # ✅ STEP 1 — update version ONCE
     version_updated = False
 
     for sheet in xl.sheet_names:
@@ -107,19 +107,18 @@ def sync_excel_to_firebase():
 
         sheets[sheet] = df
 
-    # ✅ --- STEP 2: SAVE EXCEL CLEANLY ---
+    # ✅ STEP 2 — save Excel ONCE
     with pd.ExcelWriter(EXCEL_FILE, engine="openpyxl") as writer:
         for sheet_name, df in sheets.items():
             df.to_excel(writer, sheet_name=sheet_name, index=False)
 
-    # ✅ --- STEP 3: BUILD PAYLOAD FROM UPDATED DATA ---
+    # ✅ STEP 3 — build payload ONCE
     payload = {}
 
     for sheet, df in sheets.items():
 
         if sheet.strip().lower() == "appinfo":
             meta = {}
-
             for _, row in df.iterrows():
                 key = str(row.iloc[0]).strip()
                 value = row.iloc[1]
@@ -130,13 +129,12 @@ def sync_excel_to_firebase():
         else:
             payload[sheet] = df.to_dict(orient="records")
 
-    # ✅ --- STEP 4: UPLOAD ---
+    # ✅ STEP 4 — upload ONCE
     print("☁ Uploading data to Firebase…")
 
     payload = json_safe(payload)
     db.reference("/").set(payload)
 
-    # ✅ Cache
     with open(CACHE_FILE, "w", encoding="utf-8") as f:
         json.dump(payload, f, indent=2)
 
