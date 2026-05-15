@@ -353,10 +353,115 @@ Fix: Use git rm -r --cached . and update .gitignore to purge large environment f
 Cause: Missing xclip,
 Fix: Install xclip or xsel via pacman for terminal copy-paste support.
 
+
+ 
 ---
 
 # 🔧 PART B — DEVELOPER GUIDE
 
 ---
+
+```Bash
+📂 Project Structure
+my_linux_howto_app-v3/
+├── src/
+│   ├── main.py
+│   ├── sync.py
+│   ├── update_content.py
+│   ├── runtime_paths.py
+│   ├── config.py
+│   └── first_run.py
+│
+├── config/
+│   └── firebase.json
+│
+├── data/
+│   └── main.xlsx
+│
+├── assets/
+```
+
+---
+## 🧠 Developer Responsibilities
+You maintain:
+
+Firebase content
+Excel base dataset
+Assets (icons/screenshots)
+
+
+---
+## 🔄 Sync Architecture
+
+### Firebase
+Firebase → sync.py → main.xlsx
+
+
+### Git Assets
+Git → update_content.py → ~/.local/share/linux-howto/assets/
+
+
+---
+## ➕ Adding Content
+
+### Option 1 — Firebase
+Update backend → users auto receive updates
+
+### Option 2 — Excel
+Modify:
+```
+data/main.xlsx
+```
+
+### Add Images
+``` bash
+Shellcp image.png assets/screenshots/git add .git commit -m "add asset"git pushShow more lines
+```
+
+---
+## 🔥 Use Your Own Firebase (Forking)
+
+Create Firebase project
+Generate service key
+Replace:
+
+``` bash
+~/.local/share/linux-howto/data/serviceAccountKey.json
+```
+
+Edit:
+
+firebase.json
+
+
+🛠 Customisation Options
+
+- Change Excel structure
+- Replace Firebase backend
+- Modify Kivy UI
+- Extend sync logic
+
+
+---
+## ✅ Summary
+
+| Layer | Technology |
+| UI | Kivy |
+| Data | Excel |
+| Backend | Firebase |
+| Assets | Git |
+
+
+### 🚀 Result
+✅ Automatic updates
+✅ Offline capable
+✅ Multi-device sync
+✅ Lightweight architecture
+
+### 🚀 Next Improvements
+
+Add requirements.txt
+Add install.sh
+Create AppImage
 
 
