@@ -35,6 +35,7 @@ from kivy.core.clipboard import Clipboard
 from kivy.clock import Clock
 from kivy.properties import StringProperty, ListProperty
 from kivy.uix.popup import Popup
+from kivy.uix.scrollview import ScrollView
 
 # ----- Check if python 3.12 is installed ---------
 
@@ -511,91 +512,116 @@ class LinuxHowToApp(App):
 
     def show_about(self):
 
+        metadata = self.metadata
 
-        metadata = APP_DATA.get("metadata") or  APP_DATA.get("AppInfo", {})
-        # ✅ debug AFTER assignment
-        print("TYPE:", type(metadata))
-        print("DATA:", metadata)
+        name = metadata.get('app_name', 'Linux HowTo')
+        version = metadata.get('version', '0.0.0')
+        last_update = metadata.get('last update', 'unknown')
+        dev_name = metadata.get('developer', '')
+        desc = metadata.get('description', '')
+        change = metadata.get('changelog', '').replace("\\n", "\n")
 
-        try:
-            # 1. Pull data from the APP_DATA we fetched earlier
-            #metadata = APP_DATA.get('metadata', {})
-            metadata = self.metadata
-            name = metadata.get('app_name', 'Linux HowTo')
-            version = metadata.get('version', '0.0.0')
-            last_update = metadata.get('last update', metadata.get('last_update', 'unknown'))
-            # --- PULL THE NEW DEVELOPER FIELD ---
-            dev_name = metadata.get('developer', 'Unknown Developer')
-            desc = metadata.get('description', 'A personal documentation hub.')
+        # ✅ OUTER layout (fixed size)
+        outer = BoxLayout(orientation='vertical', padding=20, spacing=15)
 
-            change = metadata.get('changelog', '')
-            desc = metadata.get('description', '')
-            dev_name = metadata.get('developer', '')
+        # ✅ HEADER (no scroll)
+        outer.add_widget(Label(
+           text=f"[b][size=28sp]{name}[/size][/b]\n"
+                f"[size=16sp]Version {version}[/size]\n"
+                f"[size=14sp]Last update: {last_update}[/size]\n"
+                f"[size=14sp][color=888888]Developed by: {dev_name}[/color][/size]",
+            markup=True,
+            size_hint_y=None,
+            height=120,
+            halign='center'
+        ))
+
+        # ✅ SCROLLABLE AREA
+        scroll = ScrollView(size_hint=(1, 1))
+
+        scroll_content = BoxLayout(
+            orientation='vertical',
+            size_hint_y=None,
+            spacing=10,
+            padding=[15, 10]
+        )
+
+        scroll_content.bind(minimum_height=scroll_content.setter('height'))
+
+        # ✅ DESCRIPTION
+        desc_label = Label(
+            text=f"[i]{desc}[/i]",
+            markup=True,
+            size_hint_y=None,
+            halign='center',
+            valign='top'
+        )
+
+        desc_label.bind(
+            width=lambda inst, val: setattr(inst, 'text_size', (val, None)),
+            texture_size=lambda inst, val: setattr(inst, 'height', val[1])
+        )
+
+        scroll_content.add_widget(desc_label)
+
+        # ✅ CHANGELOG TITLE
+        title_label = Label(
+            text="[b]WHAT'S NEW[/b]",
+            markup=True,
+            size_hint_y=None,
+            height=30,
+            halign='left',
+            valign='middle',
+            color=[0.7, 0.7, 1, 1]
+        )
+
+        title_label.bind(
+            width=lambda inst, val: setattr(inst, 'text_size', (val, None))
+        )
+
+        scroll_content.add_widget(title_label)
 
 
-            # This handles the '\n' characters coming from Excel cells
-            change = metadata.get('changelog', '').replace("\\n", "\n")
+        # ✅ CHANGELOG TEXT (NOW SCROLLABLE ✅)
+        changelog_label = Label(
+            text=change,
+            size_hint_y=None,
+            halign='left',
+            valign='top'
+        )
 
-            # 2. Build the Layout inside the Popup
-            content = BoxLayout(orientation='vertical', padding=dp(20), spacing=dp(15))
+        changelog_label.bind(
+            width=lambda inst, val: setattr(inst, 'text_size', (val, None)),
+            texture_size=lambda inst, val: setattr(inst, 'height', val[1])
+        )
 
-            # Header: App Name, Version, and Developer
-            content.add_widget(Label(
-                text=f"[b][size=28sp]{name}[/size][/b]\n"
-                     f"[size=16sp]Version {version}[/size]\n"
-                     f"[size=14sp]Last update: {last_update}[/size]\n"
-                     f"[size=14sp][color=888888]Developed by: {dev_name}[/color][/size]",
-                markup=True,
-                size_hint_y=None,
-                height=dp(100), # Increased height to fit 3 lines
-                halign='center'
-            ))
 
-            # Description
-            content.add_widget(Label(
-                text=f"[i][size=18sp]{desc}[/size][/i]",
-                markup=True,
-                size_hint_y=None,
-                height=dp(60),
-                halign='center',
-                text_size=(dp(400), None)
-            ))
+        changelog_label.bind(
+            texture_size=lambda inst, val: setattr(inst, 'height', val[1])
+        )
 
-            # Changelog Headline
-            content.add_widget(Label(
-                text="[b][size=20sp]WHAT'S NEW[/size][/b]",
-                markup=True,
-                size_hint_y=None,
-                height=dp(40),
-                halign='left',
-                text_size=(dp(400), None),
-                color=PANEL_COLOR # Uses your theme blue
-            ))
+        scroll_content.add_widget(changelog_label)
 
-            # Changelog Body
-            content.add_widget(Label(
-                text=f"[size=16sp]{change}[/size]",
-                markup=True,
-                halign='left',
-                valign='top',
-                text_size=(dp(400), None)
-            ))
+        scroll.add_widget(scroll_content)
+        outer.add_widget(scroll)
 
-            btn = Button(
-                text='[b]CLOSE[/b]',
-                markup=True,
-                size_hint_y=None,
-                height=dp(50),
-                background_color=COLOR_BLUE
-            )
-            content.add_widget(btn)
+        # ✅ CLOSE BUTTON (fixed bottom)
+        btn = Button(
+            text='CLOSE',
+            size_hint_y=None,
+            height=50
+        )
 
-            popup = Popup(title='About Application', content=content, size_hint=(0.9, 0.85))
-            btn.bind(on_release=popup.dismiss)
-            popup.open()
+        outer.add_widget(btn)
 
-        except Exception as e:
-            print(f"Error opening About popup: {e}")
+        popup = Popup(
+            title="About Application",
+            content=outer,
+            size_hint=(0.9, 0.9)
+        )
+
+        btn.bind(on_release=popup.dismiss)
+        popup.open()
 
 
 # (Rest of the Screen and Widget classes remain same as your main.py)

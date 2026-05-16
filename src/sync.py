@@ -148,25 +148,45 @@ def sync_to_github(commit_message):
     print("🚀 Pushing changes to Git")
 
     try:
-        # ✅ Always pull first (safe)
-        subprocess.run(["git", "pull", "--rebase"], check=True)
+        # ✅ STEP 1: Stage everything (IMPORTANT)
+        subprocess.run(["git", "add", "-A"], check=True)
 
-        subprocess.run(["git", "add", "."], check=True)
-
+        # ✅ STEP 2: Commit (safe even if nothing changed)
         commit = subprocess.run(
             ["git", "commit", "-m", commit_message],
             capture_output=True,
             text=True
         )
 
-        print(commit.stdout)
+        if "nothing to commit" not in commit.stdout.lower():
+            print(commit.stdout.strip())
 
+        # ✅ STEP 3: STASH any remaining changes (VERY IMPORTANT)
+        subprocess.run(["git", "stash", "--include-untracked"], check=False)
+
+        # ✅ STEP 4: Pull latest changes safely
+        subprocess.run(["git", "pull", "--rebase"], check=True)
+
+        # ✅ STEP 5: Restore stashed changes
+        subprocess.run(["git", "stash", "pop"], check=False)
+
+        # ✅ STEP 6: Stage again (important after stash pop)
+        subprocess.run(["git", "add", "-A"], check=True)
+
+        # ✅ STEP 7: Commit again if needed
+        subprocess.run(
+            ["git", "commit", "-m", commit_message],
+            check=False
+        )
+
+        # ✅ STEP 8: Push
         subprocess.run(["git", "push"], check=True)
 
         print("✅ GitHub sync done")
 
     except subprocess.CalledProcessError as e:
         print("⚠ Git sync failed:", e)
+
 
 
 # --------------------------------------------------

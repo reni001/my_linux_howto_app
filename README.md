@@ -483,8 +483,7 @@ firebase.json
 
 ### 🚀 Next Improvements
 
-Add requirements.txt
-Add install.sh
 Create AppImage
+Create apk for android phones
 
 
