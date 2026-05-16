@@ -43,14 +43,30 @@ fi
 echo "[INFO] Detecting Python..."
 
 
+echo "[INFO] Detecting Python..."
+
 if command -v python3.12 &> /dev/null; then
     PYTHON_BIN="python3.12"
+    echo "[INFO] ✅ Using Python 3.12 (recommended)"
+
 elif command -v python3.11 &> /dev/null; then
     PYTHON_BIN="python3.11"
+    echo "[INFO] ✅ Using Python 3.11"
+
 elif command -v python3.10 &> /dev/null; then
     PYTHON_BIN="python3.10"
+    echo "[INFO] ✅ Using Python 3.10"
+
+elif command -v python3 &> /dev/null; then
+    PY_VERSION=$(python3 -c 'import sys; print(".".join(map(str, sys.version_info[:2])))')
+
+    echo "[WARNING] ⚠️ Using system Python $PY_VERSION"
+    echo "[WARNING] Some features (sync, Kivy, pandas) may behave differently"
+
+    PYTHON_BIN="python3"
+
 else
-    echo "[ERROR] Python 3.10–3.12 required"
+    echo "[ERROR] ❌ Python not found. Please install Python 3.8+"
     exit 1
 fi
 
