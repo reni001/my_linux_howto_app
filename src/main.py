@@ -14,7 +14,10 @@ from src.runtime_paths import is_dev_mode
 from src.update_content import update_assets, update_excel
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 from src.runtime_paths import get_runtime_paths
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 =======
@@ -45,6 +48,7 @@ from kivy.uix.scrollview import ScrollView
 
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 # ----- Check if python 3.12 is installed ---------
 
 if sys.version_info >= (3, 14):
@@ -53,6 +57,9 @@ if sys.version_info >= (3, 14):
     print("💡 Recommended: Use Python 3.12 if you encounter problems\n")
 
 
+=======
+
+>>>>>>> Stashed changes
 =======
 
 >>>>>>> Stashed changes
@@ -341,7 +348,11 @@ class LinuxHowToApp(App):
     def build(self):
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
         #initialize_first_run()
+=======
+        initialize_first_run()
+>>>>>>> Stashed changes
 =======
         initialize_first_run()
 >>>>>>> Stashed changes
