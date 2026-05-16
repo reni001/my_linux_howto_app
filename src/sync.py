@@ -165,7 +165,7 @@ def sync_to_github(commit_message):
         subprocess.run(["git", "stash", "--include-untracked"], check=False)
 
         # ✅ STEP 4: Pull latest changes safely
-        subprocess.run(["git", "pull", "--rebase"], check=True)
+        subprocess.run(["git", "pull", "--rebase", "--autostash"], check=True)
 
         # ✅ STEP 5: Restore stashed changes
         subprocess.run(["git", "stash", "pop"], check=False)
