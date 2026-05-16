@@ -172,6 +172,20 @@ def load_cached_payload() -> dict | None:
     except Exception:
         return None
 
+# ----------------------------
+# DETECT ASSET CHANGES
+# ----------------------------
+
+def assets_changed(runtime_assets, repo_assets):
+    if not repo_assets.exists():
+        return True
+
+    runtime_files = set(str(p.relative_to(runtime_assets)) for p in runtime_assets.rglob("*") if p.is_file())
+    repo_files = set(str(p.relative_to(repo_assets)) for p in repo_assets.rglob("*") if p.is_file())
+
+    return runtime_files != repo_files
+
+
 
 # ---------------------------
 # Git helpers (CONTENT-ONLY + CONFLICT-PROOF)
@@ -197,17 +211,32 @@ def git_status_porcelain(repo_root: Path) -> list[str]:
 
 
 def repo_has_conflict_markers(repo_root: Path) -> bool:
-    # checks tracked files only; fast and safe
-    r = git(repo_root, "grep", "-n", "<<<<<<<", check=False, capture=True)
+    r = git(
+        repo_root,
+        "grep",
+        "-n",
+        "<<<<<<<",
+        "--",
+        # ✅ EXCLUDE sync.py (important fix)
+        ":(exclude)src/sync.py",
+        check=False,
+        capture=True,
+    )
     return bool(r.stdout.strip())
 
 
 def git_has_non_content_changes(repo_root: Path, allowed: set[str]) -> bool:
     lines = git_status_porcelain(repo_root)
+
     for ln in lines:
         path = ln[3:].strip().replace("\\", "/")
-        if path not in allowed:
-            return True
+
+        # ✅ allow anything inside allowed folders
+        if any(path.startswith(a.rstrip("/") + "/") or path == a for a in allowed):
+            continue
+
+        return True
+
     return False
 
 
@@ -252,9 +281,13 @@ def git_sync_content_only(repo_root: Path, version: str):
         print("👉 Resolve conflicts and commit before syncing.")
         return
 
-    allowed = {"data/main.xlsx"}  # allowlist: only publish Excel content
+    allowed = {
+        "data/main.xlsx",
+        "assets/icons",
+        "assets/screenshots"
+    }
 
-    # If repo has code/UI changes, don't pull/rebase (this is how main.py got corrupted)
+        # If repo has code/UI changes, don't pull/rebase (this is how main.py got corrupted)
     if git_has_non_content_changes(repo_root, allowed):
         print("⚠️ Repo has non-content changes (code/UI/etc).")
         print("ℹ️ To prevent conflicts or accidental deletions, Git sync is skipped.")
@@ -274,7 +307,8 @@ def git_sync_content_only(repo_root: Path, version: str):
 
     # Commit only if needed; message includes version
     msg = f"content: v{version}"
-    created = git_commit_if_needed(repo_root, msg, ["data/main.xlsx"])
+    created = git_commit_if_needed(repo_root, msg, ["data", "assets"])
+
     if not created:
         print("ℹ️ Skipping push (no new commit).")
         return
@@ -308,12 +342,27 @@ def main():
     pre_norm = normalise_for_change_detection(payload_pre)
     cached_norm = normalise_for_change_detection(cached) if cached else None
 
+    same = False
     if cached_norm is not None:
         same = sha256_text(stable_dumps(pre_norm)) == sha256_text(stable_dumps(cached_norm))
-        if same:
-            print("✅ No content changes detected (compared to cache).")
-            print("ℹ️ Skipping version bump, Firebase upload, and GitHub sync.")
-            return
+
+    repo_root = Path(__file__).resolve().parent.parent
+    repo_assets = repo_root / "assets"
+    runtime_assets = paths["assets"]
+
+    excel_changed = not same
+    assets_have_changed = assets_changed(runtime_assets, repo_assets)
+
+    if not excel_changed and not assets_have_changed:
+        print("✅ No content or asset changes detected")
+        print("ℹ Skipping version bump, Firebase upload, and GitHub sync")
+        return
+
+    if assets_have_changed:
+        print("📦 Asset changes detected")
+    if excel_changed:
+        print("📊 Excel changes detected")
+
 
     # 3) Bump version + date
     meta = payload_pre.get("metadata", {}) if isinstance(payload_pre.get("metadata", {}), dict) else {}
@@ -349,12 +398,21 @@ def main():
     # 8) GitHub sync section (safe, content-only)
     repo_root = Path(__file__).resolve().parent.parent  # src/.. (repo root)
 
-    # Copy runtime Excel into repo Excel (explicit, controlled)
+    # Copy runtime Excel into repo Excel
     repo_excel = repo_root / "data" / "main.xlsx"
     repo_excel.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(EXCEL_FILE, repo_excel)
     print(f"📦 Copied runtime Excel to repo: {repo_excel}")
 
+    # ✅ NEW: Copy assets
+    runtime_assets = paths["assets"]
+    repo_assets = repo_root / "assets"
+
+    if runtime_assets.exists():
+        shutil.copytree(runtime_assets, repo_assets, dirs_exist_ok=True)
+        print("📦 Copied assets to repo")
+
+    # ✅ Now sync Git
     git_sync_content_only(repo_root, new_version)
 
 
