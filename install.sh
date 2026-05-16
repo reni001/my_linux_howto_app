@@ -42,18 +42,18 @@ fi
 
 echo "[INFO] Detecting Python..."
 
+
 if command -v python3.12 &> /dev/null; then
     PYTHON_BIN="python3.12"
 elif command -v python3.11 &> /dev/null; then
-    echo "[WARNING] Python 3.12 not found, using Python 3.11"
     PYTHON_BIN="python3.11"
-elif command -v python3 &> /dev/null; then
-    echo "[WARNING] Using system python3"
-    PYTHON_BIN="python3"
+elif command -v python3.10 &> /dev/null; then
+    PYTHON_BIN="python3.10"
 else
-    echo "[ERROR] Python not found. Please install Python 3.11+"
+    echo "[ERROR] Python 3.10–3.12 required"
     exit 1
 fi
+
 
 echo "[INFO] Using $PYTHON_BIN"
 

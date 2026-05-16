@@ -400,7 +400,11 @@ class LinuxHowToApp(App):
                 if process.returncode == 0:
                     Clock.schedule_once(self.sync_success, 0)
                 else:
-                    Clock.schedule_once(lambda dt: self._on_sync_failed(stderr), 0)
+
+
+                    print("❌ Sync failed:\n", stderr)
+                    Clock.schedule_once(lambda dt: self.sync_failed(), 0)
+
 
             except Exception as e:
                 Clock.schedule_once(self.sync_failed, 0)
