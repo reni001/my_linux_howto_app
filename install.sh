@@ -106,6 +106,27 @@ else
     exit 1
 fi
 
+#-----------------------------------------
+# COPY assets
+#-----------------------------------------
+
+echo "[INFO] Copying assets to runtime directory..."
+
+ASSETS_SRC="$APP_DIR/assets"
+ASSETS_DST="$HOME/.local/share/linux-howto/assets"
+
+mkdir -p "$ASSETS_DST"
+
+if [ -d "$ASSETS_SRC" ]; then
+    rsync -av --delete "$ASSETS_SRC/" "$ASSETS_DST/"
+    echo "[INFO] ✅ Assets (icons + screenshots) copied successfully"
+else
+    echo "[ERROR] ❌ Assets folder not found at: $ASSETS_SRC"
+    exit 1
+fi
+
+
+
 # ----------------------------------------
 # VERIFY INSTALLATION (VERY IMPORTANT)
 # ----------------------------------------
@@ -149,3 +170,12 @@ echo ""
 echo "Or use:"
 echo "   ./run.sh"
 echo ""
+
+echo "[INFO] Verifying assets..."
+
+if [ -d "$ASSETS_DST/icons" ] && [ "$(ls -A "$ASSETS_DST/icons")" ]; then
+    echo "[INFO] ✅ Icons installed"
+else
+    echo "[WARNING] ⚠️ Icons missing"
+fi
+
