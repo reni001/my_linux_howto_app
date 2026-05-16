@@ -12,7 +12,10 @@ from pathlib import Path
 from src.config import load_firebase_config
 from src.runtime_paths import is_dev_mode
 from src.update_content import update_assets, update_excel
+<<<<<<< Updated upstream
 from src.runtime_paths import get_runtime_paths
+=======
+>>>>>>> Stashed changes
 
 # Kivy imports
 from kivy.lang import Builder
@@ -37,6 +40,7 @@ from kivy.properties import StringProperty, ListProperty
 from kivy.uix.popup import Popup
 from kivy.uix.scrollview import ScrollView
 
+<<<<<<< Updated upstream
 # ----- Check if python 3.12 is installed ---------
 
 if sys.version_info >= (3, 14):
@@ -44,6 +48,9 @@ if sys.version_info >= (3, 14):
     print("✅ The app will continue, but issues *might* occur")
     print("💡 Recommended: Use Python 3.12 if you encounter problems\n")
 
+=======
+
+>>>>>>> Stashed changes
 
 # --- CONFIGURATION ---
 Window.size = (500, 850)
@@ -324,6 +331,7 @@ class LinuxHowToApp(App):
             pass
 
     def build(self):
+<<<<<<< Updated upstream
 
         #initialize_first_run()
         initialize_first_run()
@@ -331,6 +339,12 @@ class LinuxHowToApp(App):
 
         self.icon = get_icon_path("howto.png")
 
+=======
+        initialize_first_run()
+
+        self.icon = get_icon_path("howto.png")
+
+>>>>>>> Stashed changes
         self.sm = ScreenManager(transition=FadeTransition())
         self.sm.add_widget(MenuScreen(name='menu'))
         self.sm.add_widget(SearchScreen(name='search'))
@@ -341,6 +355,7 @@ class LinuxHowToApp(App):
         return self.sm      
 
     def run_sync_script(self, *args):
+<<<<<<< Updated upstream
 
         # --- UI: syncing state (IMMEDIATE) ---
 
@@ -353,6 +368,17 @@ class LinuxHowToApp(App):
             self.sync_border = [1, 0, 0, 1]
             return
 
+=======
+        """Runs the sync.py script in the background."""
+        try:
+            import pandas  # noqa
+        except ImportError:
+            self.sync_text = "Developer Sync unavailable (pandas missing)"
+            self.sync_fg = [1, 0, 0, 1]
+            self.sync_border = [1, 0, 0, 1]
+            return
+
+>>>>>>> Stashed changes
         from pathlib import Path
         sync_script = str(Path(__file__).parent / "sync.py")
 
