@@ -96,7 +96,7 @@ def load_app_metadata():
 
                 metadata[key] = value
 
-            print("✅ Metadata loaded from Excel:", metadata)
+            #print("✅ Metadata loaded from Excel:", metadata)
 
     except Exception as e:
         print("[ERROR] Excel metadata failed:", e)
@@ -206,10 +206,6 @@ class LinuxHowToApp(App):
 
     def on_start(self):
         pass
-        #self.metadata = load_app_metadata()
-
-        #self.update_version_labels()
-
 
 
     def toggle_orientation(self):
