@@ -6,6 +6,7 @@ import webbrowser
 import subprocess
 import sys
 import traceback
+import shutil
 from threading import Thread
 from src.first_run import initialize_first_run
 from pathlib import Path
@@ -56,13 +57,6 @@ Clock.schedule_once(lambda dt: initialize_first_run(), 1)
 # ✅ now it is safe to load firebase.json
 firebase_cfg = load_firebase_config()
 DB_URL = firebase_cfg["database_url"] + "/.json"
-
-APP_DATA = {}
-for t in APP_DATA.get("topics", []):
-    for k in ("Cat_Icon", "Sub_Icon", "Topic_Icon"):
-        if t.get(k) == "":
-            print(f"⚠️ Empty {k} in topic:", t.get("Title"))
-
 
 
 # --- UI DEFINITIONS (KV) ---
@@ -190,9 +184,9 @@ class LinuxHowToApp(App):
             return
 
         version = self.metadata.get("version", "0.0.0")
-        last_update = self.metadata.get("last_update", "")
+        last_update = self.metadata.get("last update", "")
 
-        version_str = f"v{version}\n{last_update}"
+        version_str = f"v{version} | {last_update}"
 
         screen_map = {
             'menu': 'version_label_menu',
@@ -226,7 +220,6 @@ class LinuxHowToApp(App):
         AppMenu().open()
 
     def open_database(self):
-        from src.runtime_paths import get_runtime_paths
         paths = get_runtime_paths()
         target_file = str(paths["data"] / "main.xlsx")
 
@@ -272,6 +265,12 @@ class LinuxHowToApp(App):
                     APP_DATA = r.json()
                     print("DEBUG: Data fetched successfully")
 
+                    # ✅ Check for missing icons AFTER data is loaded
+                    for t in APP_DATA.get("topics", []):
+                        for k in ("Cat_Icon", "Sub_Icon", "Topic_Icon"):
+                            if not t.get(k):
+                                print(f"⚠️ Empty {k} in topic:", t.get("Title"))
+
                     if 'metadata' in APP_DATA:
                         print(f"DEBUG: Found Metadata: {APP_DATA['metadata']}")
 
@@ -294,10 +293,9 @@ class LinuxHowToApp(App):
             return
 
         version = self.metadata.get("version", "0.0.0")
-        last_update = self.metadata.get("last_update", "")
+        last_update = self.metadata.get("last update", "")
 
-        version_str = f"v{version}"
-        version_str = f"v{version}\n{last_update}"
+        version_str = f"v{version} | {last_update}"
 
         # Map of Screen Name -> Label ID we created in KV
         screen_map = {
