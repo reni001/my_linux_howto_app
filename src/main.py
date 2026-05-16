@@ -139,7 +139,6 @@ def open_url(url):
 
 
 def get_icon_path(filename):
-    from src.runtime_paths import get_runtime_paths
 
     paths = get_runtime_paths()
     base = paths["assets"] / "icons"
@@ -193,7 +192,7 @@ class LinuxHowToApp(App):
         version = self.metadata.get("version", "0.0.0")
         last_update = self.metadata.get("last_update", "")
 
-        version_str = f"v{version}"
+        version_str = f"v{version}\n{last_update}"
 
         screen_map = {
             'menu': 'version_label_menu',
@@ -352,22 +351,6 @@ class LinuxHowToApp(App):
             self.sync_border = [1, 0, 0, 1]
             return
 
-        """Runs the sync.py script in the background."""
-        try:
-            import pandas  # noqa
-        except ImportError:
-            self.sync_text = "Developer Sync unavailable (pandas missing)"
-            self.sync_fg = [1, 0, 0, 1]
-            self.sync_border = [1, 0, 0, 1]
-            return
-
-        try:
-            import pandas  # noqa
-        except ImportError:
-            self.sync_text = "Developer Sync unavailable (pandas missing)"
-            self.sync_fg = [1, 0, 0, 1]
-            self.sync_border = [1, 0, 0, 1]
-            return
 
         from pathlib import Path
         sync_script = str(Path(__file__).parent / "sync.py")
@@ -401,10 +384,8 @@ class LinuxHowToApp(App):
                     Clock.schedule_once(self.sync_success, 0)
                 else:
 
-
                     print("❌ Sync failed:\n", stderr)
                     Clock.schedule_once(lambda dt: self.sync_failed(), 0)
-
 
             except Exception as e:
                 Clock.schedule_once(self.sync_failed, 0)
@@ -412,85 +393,58 @@ class LinuxHowToApp(App):
         Thread(target=run_proc, daemon=True).start()
 
 
-    def run_proc():
-        try:
-            cmd = sys.executable
 
-            process = subprocess.Popen(
-                [cmd, "-m", "src.sync"],
-                cwd=Path(__file__).resolve().parent.parent,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True
-            )
-
-            stdout, stderr = process.communicate()
-
-            if process.returncode == 0:
-                print("✅ Sync Successful")
-                self.fetch_database()
-                Clock.schedule_once(self.sync_success, 0)
-            else:
-                print(f"❌ Sync Failed:\n{stderr}")
-                Clock.schedule_once(self.sync_failed, 0)
-
-        except Exception as e:
-            print(f"❌ Error running sync: {e}")
-            Clock.schedule_once(self.sync_failed, 0)
-
-
-        Thread(target=run_proc, daemon=True).start()
 
     #---- update button behaviour -----
 
-    def update_app_from_git(self, *args):       
-        if not is_dev_mode():
-            self.update_text = "Content updates only"
-            self.update_bg = [0.9, 0.9, 0.9, 1]
-            self.update_fg = [0.4, 0.4, 0.4, 1]
-            self.update_border = [0, 0, 0, 0]
-        
-            def run_update():
-                try:
-                    if is_dev_mode():
-                        # ✅ DEV MODE: Git update
-                        subprocess.run(["git", "pull"], check=True)
-                    else:
-                        # ✅ PROD MODE: Content update via HTTP
-                        update_assets()
-                        update_excel()
+    def update_app_from_git(self, *args):
 
-                    Clock.schedule_once(self.update_success, 0)
-
-                except Exception as e:
-                    print(f"❌ Update failed: {e}")
-                    Clock.schedule_once(self.update_failed, 0)
-
-            Thread(target=run_update, daemon=True).start()
-
-    
-        # --- UI: updating state (Option C – light grey) ---
+        # UI state
         self.update_text = "Updating…"
-        self.update_bg = [0.9, 0.9, 0.9, 1]          # light grey
+        self.update_bg = [0.9, 0.9, 0.9, 1]
         self.update_fg = [0.1, 0.25, 0.45, 1]
 
         def run_update():
             try:
-                print("🔄 Updating application from Git…")
+                print(f"DEBUG: is_dev_mode = {is_dev_mode()}")
 
-                subprocess.run(
-                    ["git", "pull"],
+                if is_dev_mode():
+                    print("🔄 DEV MODE: Updating application from Git…")
 
-                    check=True
-                )
+                    subprocess.run(["git", "pull"], check=True)
 
-                print("✅ App updated successfully")
-                Clock.schedule_once(self.update_success, 0)   # ✅ show success state
+                    paths = get_runtime_paths()
+                    repo_root = Path(__file__).resolve().parent.parent
+                    repo_assets = repo_root / "assets"
+                    runtime_assets = paths["assets"]
+
+                    print(f"DEBUG repo_assets: {repo_assets}")
+                    print(f"DEBUG runtime_assets: {runtime_assets}")
+
+                    if repo_assets.exists():
+                        import shutil
+                        shutil.copytree(repo_assets, runtime_assets, dirs_exist_ok=True)
+
+                        print("✅ Runtime assets updated from Git")
+
+                        # verification
+                        copied_files = list((runtime_assets / "icons").glob("*"))
+                        print(f"DEBUG copied icons count: {len(copied_files)}")
+
+                    else:
+                        print("⚠ Repo assets folder not found!")
+
+                else:
+                    print("🌍 PROD MODE: Updating via HTTP")
+                    update_assets()
+                    update_excel()
+
+                Clock.schedule_once(self.update_success, 0)
 
             except Exception as e:
                 print(f"❌ Update failed: {e}")
                 traceback.print_exc()
-                Clock.schedule_once(self.update_failed, 0)    # ✅ show failure state
+                Clock.schedule_once(self.update_failed, 0)
 
         Thread(target=run_update, daemon=True).start()
 
