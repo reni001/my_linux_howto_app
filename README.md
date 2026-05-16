@@ -68,6 +68,11 @@ Example:
 
 ## Installation and running the App using the script:
 
+### Download the repo from git:
+```
+https://github.com/reni001/my_linux_howto_app.git
+```
+
 ### Installation
 run
 ``` bash
