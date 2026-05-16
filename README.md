@@ -68,13 +68,15 @@ Example:
 
 ## Installation and running the App using the script:
 
-### Download the repo from git:
+### Download the repo from git into the folder wherr you wanrt the app to be installed:
 ```
 https://github.com/reni001/my_linux_howto_app.git
 ```
+It will create a folder named: my_linux_howto_app
 
 ### Installation
-run
+
+go into the my_linux_howto_app folder and run
 ``` bash
 ./install.sh
 ```
