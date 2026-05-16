@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
-
 import json
 import sys
 import math
+import hashlib
+import shutil
 import subprocess
 from datetime import datetime
+from copy import deepcopy
+from pathlib import Path
 
 import pandas as pd
 import firebase_admin
@@ -14,40 +17,49 @@ from src.runtime_paths import get_runtime_paths
 from src.config import load_firebase_config
 
 
-# --------------------------------------------------
-# JSON sanitiser
-# --------------------------------------------------
-
+# ---------------------------
+# JSON safety
+# ---------------------------
 def json_safe(obj):
     if isinstance(obj, dict):
         return {k: json_safe(v) for k, v in obj.items()}
-    elif isinstance(obj, list):
+    if isinstance(obj, list):
         return [json_safe(v) for v in obj]
-    elif isinstance(obj, datetime):
+    if isinstance(obj, (datetime, pd.Timestamp)):
         return obj.isoformat()
-    elif isinstance(obj, float):
+    if isinstance(obj, float):
         if math.isnan(obj) or math.isinf(obj):
             return None
         return obj
+    try:
+        if pd.isna(obj):
+            return None
+    except Exception:
+        pass
     return obj
 
 
-# --------------------------------------------------
-# Paths
-# --------------------------------------------------
+def stable_dumps(obj) -> str:
+    return json.dumps(obj, sort_keys=True, ensure_ascii=False, separators=(",", ":"), default=str)
 
+
+def sha256_text(s: str) -> str:
+    return hashlib.sha256(s.encode("utf-8")).hexdigest()
+
+
+# ---------------------------
+# Runtime paths
+# ---------------------------
 paths = get_runtime_paths()
 DATA_DIR = paths["data"]
-
 EXCEL_FILE = DATA_DIR / "main.xlsx"
 CACHE_FILE = DATA_DIR / "cache.json"
 FIREBASE_KEY = DATA_DIR / "serviceAccountKey.json"
 
 
-# --------------------------------------------------
-# Firebase setup
-# --------------------------------------------------
-
+# ---------------------------
+# Firebase init
+# ---------------------------
 def init_firebase():
     if not FIREBASE_KEY.exists():
         print("❌ Firebase key not found:", FIREBASE_KEY)
@@ -59,143 +71,295 @@ def init_firebase():
         initialize_app(cred, {"databaseURL": cfg["database_url"]})
 
 
-# --------------------------------------------------
-# Version bump
-# --------------------------------------------------
+# ---------------------------
+# Version + date
+# ---------------------------
+def bump_version(version: str) -> str:
+    try:
+        major, minor, patch = map(int, version.strip().split("."))
+        return f"{major}.{minor}.{patch + 1}"
+    except Exception:
+        return "0.0.1"
 
-def bump_version(version):
-    parts = version.split(".")
-    major, minor, patch = map(int, parts)
-    patch += 1
-    return f"{major}.{minor}.{patch}"
+
+def today_ddmmyyyy() -> str:
+    return datetime.now().strftime("%d.%m.%Y")
 
 
-# --------------------------------------------------
-# Sync Excel → Firebase
-# --------------------------------------------------
+# ---------------------------
+# Excel <-> payload helpers
+# ---------------------------
+def read_all_sheets(xlsx: Path) -> dict[str, pd.DataFrame]:
+    xl = pd.ExcelFile(xlsx)
+    return {name: xl.parse(name) for name in xl.sheet_names}
 
-def sync_excel_to_firebase():
 
+def appinfo_df_to_meta(df: pd.DataFrame) -> dict:
+    """
+    Supports:
+    A) columns: app_name + value column
+    B) first two columns key/value
+    """
+    meta = {}
+    cols = [str(c).strip() for c in df.columns]
+    lower_cols = [c.lower() for c in cols]
+
+    if "app_name" in lower_cols and len(cols) >= 2:
+        key_col = cols[lower_cols.index("app_name")]
+        value_col = next(c for c in cols if c != key_col)
+        for _, row in df.iterrows():
+            k = row.get(key_col)
+            if k is None or (isinstance(k, float) and pd.isna(k)):
+                continue
+            meta[str(k).strip()] = row.get(value_col)
+        return meta
+
+    for _, row in df.iterrows():
+        if len(row) < 2:
+            continue
+        k = row.iloc[0]
+        v = row.iloc[1]
+        if k is None or (isinstance(k, float) and pd.isna(k)):
+            continue
+        meta[str(k).strip()] = v
+    return meta
+
+
+def meta_to_appinfo_df(existing: pd.DataFrame, meta: dict) -> pd.DataFrame:
+    df = existing.copy()
+    if df.shape[1] < 2:
+        df = pd.DataFrame(columns=["Key", "Value"])
+
+    key_series = df.iloc[:, 0].astype(str).str.strip()
+    idx_map = {k: i for i, k in enumerate(key_series) if k and k.lower() != "nan"}
+
+    for k, v in meta.items():
+        if k in idx_map:
+            df.iat[idx_map[k], 1] = v
+        else:
+            df.loc[len(df)] = [k, v]
+    return df
+
+
+def sheets_to_payload(sheets: dict[str, pd.DataFrame]) -> dict:
+    payload = {}
+    for sheet, df in sheets.items():
+        if sheet.strip().lower() == "appinfo":
+            payload["metadata"] = appinfo_df_to_meta(df)
+        else:
+            payload[sheet] = df.to_dict(orient="records")
+    return payload
+
+
+def normalise_for_change_detection(payload: dict) -> dict:
+    """Ignore volatile metadata fields so version/date changes don't trigger bumps."""
+    p = deepcopy(payload)
+    meta = p.get("metadata", {})
+    if isinstance(meta, dict):
+        meta.pop("version", None)
+        meta.pop("last update", None)
+        meta.pop("last_update", None)
+    p["metadata"] = meta
+    return p
+
+
+def load_cached_payload() -> dict | None:
+    if not CACHE_FILE.exists():
+        return None
+    try:
+        with open(CACHE_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return None
+
+
+# ---------------------------
+# Git helpers (CONTENT-ONLY + CONFLICT-PROOF)
+# ---------------------------
+def is_git_repo(repo_root: Path) -> bool:
+    try:
+        subprocess.run(["git", "-C", str(repo_root), "rev-parse", "--is-inside-work-tree"],
+                       check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        return True
+    except Exception:
+        return False
+
+
+def git(repo_root: Path, *args, check=True, capture=False):
+    if capture:
+        return subprocess.run(["git", "-C", str(repo_root), *args], check=check, text=True, capture_output=True)
+    return subprocess.run(["git", "-C", str(repo_root), *args], check=check)
+
+
+def git_status_porcelain(repo_root: Path) -> list[str]:
+    r = git(repo_root, "status", "--porcelain", check=True, capture=True)
+    return [line for line in r.stdout.splitlines() if line.strip()]
+
+
+def repo_has_conflict_markers(repo_root: Path) -> bool:
+    # checks tracked files only; fast and safe
+    r = git(repo_root, "grep", "-n", "<<<<<<<", check=False, capture=True)
+    return bool(r.stdout.strip())
+
+
+def git_has_non_content_changes(repo_root: Path, allowed: set[str]) -> bool:
+    lines = git_status_porcelain(repo_root)
+    for ln in lines:
+        path = ln[3:].strip().replace("\\", "/")
+        if path not in allowed:
+            return True
+    return False
+
+
+def git_commit_if_needed(repo_root: Path, msg: str, stage_paths: list[str]) -> bool:
+    for p in stage_paths:
+        git(repo_root, "add", p, check=True)
+
+    # only commit if staged diff exists
+    diff = subprocess.run(["git", "-C", str(repo_root), "diff", "--cached", "--quiet"])
+    if diff.returncode == 0:
+        print("ℹ️ No git changes to commit.")
+        return False
+
+    r = git(repo_root, "commit", "-m", msg, check=True, capture=True)
+    if r.stdout.strip():
+        print(r.stdout.strip())
+    return True
+
+
+def git_sync_content_only(repo_root: Path, version: str):
+    """
+    GitHub sync that cannot break src/main.py or src/main.kv:
+    - refuses to run if src/main.kv is missing
+    - refuses to run if conflict markers exist
+    - refuses to run if there are any changes outside allowlist
+    - stages/commits ONLY data/main.xlsx
+    """
+    if not is_git_repo(repo_root):
+        print("ℹ️ Not a git repo here — skipping GitHub sync.")
+        return
+
+    # Hard safety: refuse if KV missing (prevents accidental deletion commit)
+    kv_path = repo_root / "src" / "main.kv"
+    if not kv_path.exists():
+        print("⚠️ Git sync blocked: src/main.kv is missing in the repo working tree.")
+        print("👉 Restore it first (example): git restore src/main.kv")
+        return
+
+    # Hard safety: refuse if any conflict markers exist
+    if repo_has_conflict_markers(repo_root):
+        print("⚠️ Git sync blocked: conflict markers (<<<<<<<) found in tracked files.")
+        print("👉 Resolve conflicts and commit before syncing.")
+        return
+
+    allowed = {"data/main.xlsx"}  # allowlist: only publish Excel content
+
+    # If repo has code/UI changes, don't pull/rebase (this is how main.py got corrupted)
+    if git_has_non_content_changes(repo_root, allowed):
+        print("⚠️ Repo has non-content changes (code/UI/etc).")
+        print("ℹ️ To prevent conflicts or accidental deletions, Git sync is skipped.")
+        print("👉 Commit/push code changes manually, then re-run sync.")
+        return
+
+    # Pull safely (content-only clean state)
+    print("🔄 Git: pulling latest (rebase + autostash)…")
+    try:
+        git(repo_root, "pull", "--rebase", "--autostash", check=True)
+    except subprocess.CalledProcessError as e:
+        # Abort any partial rebase so we don't leave conflict markers behind
+        git(repo_root, "rebase", "--abort", check=False)
+        print("⚠ Git pull/rebase failed; Git sync skipped to avoid corrupting files.")
+        print("   Error:", e)
+        return
+
+    # Commit only if needed; message includes version
+    msg = f"content: v{version}"
+    created = git_commit_if_needed(repo_root, msg, ["data/main.xlsx"])
+    if not created:
+        print("ℹ️ Skipping push (no new commit).")
+        return
+
+    print("🚀 Git: pushing…")
+    try:
+        git(repo_root, "push", check=True)
+        print("✅ GitHub sync done")
+    except subprocess.CalledProcessError as e:
+        print("⚠ Git push failed:", e)
+        print("ℹ️ Remote may be ahead. Run `git pull --rebase` manually and retry.")
+
+
+# ---------------------------
+# Main sync
+# ---------------------------
+def main():
     if not EXCEL_FILE.exists():
         print("❌ Excel file not found:", EXCEL_FILE)
         sys.exit(1)
 
     print("📊 Reading Excel:", EXCEL_FILE)
 
-    xl = pd.ExcelFile(EXCEL_FILE)
-    sheets = {}
+    # 1) Read runtime sheets
+    sheets = read_all_sheets(EXCEL_FILE)
 
-    # ✅ STEP 1 — update version ONCE
-    version_updated = False
+    # 2) Build payload for change detection
+    payload_pre = json_safe(sheets_to_payload(sheets))
+    cached = load_cached_payload()
 
-    for sheet in xl.sheet_names:
-        df = xl.parse(sheet)
+    pre_norm = normalise_for_change_detection(payload_pre)
+    cached_norm = normalise_for_change_detection(cached) if cached else None
 
-        if sheet.strip().lower() == "appinfo" and not version_updated:
-            for i, row in df.iterrows():
-                key = str(row.iloc[0]).strip().lower()
+    if cached_norm is not None:
+        same = sha256_text(stable_dumps(pre_norm)) == sha256_text(stable_dumps(cached_norm))
+        if same:
+            print("✅ No content changes detected (compared to cache).")
+            print("ℹ️ Skipping version bump, Firebase upload, and GitHub sync.")
+            return
 
-                if key == "version":
-                    old_version = str(row.iloc[1])
-                    new_version = bump_version(old_version)
+    # 3) Bump version + date
+    meta = payload_pre.get("metadata", {}) if isinstance(payload_pre.get("metadata", {}), dict) else {}
+    old_version = str(meta.get("version", "0.0.0"))
+    new_version = bump_version(old_version)
+    meta["version"] = new_version
+    meta["last update"] = today_ddmmyyyy()
 
-                    df.iloc[i, 1] = new_version
-                    print(f"✅ Version updated: {old_version} → {new_version}")
+    print(f"✅ Version updated: {old_version} → {new_version}")
+    print(f"📅 Last update set to: {meta['last update']}")
 
-                    version_updated = True
-                    break
+    # 4) Write updated metadata back into AppInfo sheet
+    for sheet_name in list(sheets.keys()):
+        if sheet_name.strip().lower() == "appinfo":
+            sheets[sheet_name] = meta_to_appinfo_df(sheets[sheet_name], meta)
 
-        sheets[sheet] = df
-
-    # ✅ STEP 2 — save Excel ONCE
+    # 5) Save runtime Excel once
     with pd.ExcelWriter(EXCEL_FILE, engine="openpyxl") as writer:
         for sheet_name, df in sheets.items():
             df.to_excel(writer, sheet_name=sheet_name, index=False)
 
-    # ✅ STEP 3 — build payload ONCE
-    payload = {}
+    # 6) Build final payload and upload
+    payload = json_safe(sheets_to_payload(sheets))
 
-    for sheet, df in sheets.items():
-
-        if sheet.strip().lower() == "appinfo":
-            meta = {}
-            for _, row in df.iterrows():
-                key = str(row.iloc[0]).strip()
-                value = row.iloc[1]
-                meta[key] = value
-
-            payload["metadata"] = meta
-
-        else:
-            payload[sheet] = df.to_dict(orient="records")
-
-    # ✅ STEP 4 — upload ONCE
     print("☁ Uploading data to Firebase…")
-
-    payload = json_safe(payload)
     db.reference("/").set(payload)
-
-    with open(CACHE_FILE, "w", encoding="utf-8") as f:
-        json.dump(payload, f, indent=2)
-
     print("✅ Firebase sync complete")
 
-# -------------------------------------------------
-# Optional Git sync (safe)
-# -------------------------------------------------
+    # 7) Cache locally
+    with open(CACHE_FILE, "w", encoding="utf-8") as f:
+        json.dump(payload, f, indent=2, ensure_ascii=False)
 
-def sync_to_github(commit_message):
-    print("🚀 Pushing changes to Git")
+    # 8) GitHub sync section (safe, content-only)
+    repo_root = Path(__file__).resolve().parent.parent  # src/.. (repo root)
 
-    try:
-        # ✅ STEP 1: Stage everything (IMPORTANT)
-        subprocess.run(["git", "add", "-A"], check=True)
+    # Copy runtime Excel into repo Excel (explicit, controlled)
+    repo_excel = repo_root / "data" / "main.xlsx"
+    repo_excel.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(EXCEL_FILE, repo_excel)
+    print(f"📦 Copied runtime Excel to repo: {repo_excel}")
 
-        # ✅ STEP 2: Commit (safe even if nothing changed)
-        commit = subprocess.run(
-            ["git", "commit", "-m", commit_message],
-            capture_output=True,
-            text=True
-        )
+    git_sync_content_only(repo_root, new_version)
 
-        if "nothing to commit" not in commit.stdout.lower():
-            print(commit.stdout.strip())
-
-        # ✅ STEP 3: STASH any remaining changes (VERY IMPORTANT)
-        subprocess.run(["git", "stash", "--include-untracked"], check=False)
-
-        # ✅ STEP 4: Pull latest changes safely
-        subprocess.run(["git", "pull", "--rebase", "--autostash"], check=True)
-
-        # ✅ STEP 5: Restore stashed changes
-        subprocess.run(["git", "stash", "pop"], check=False)
-
-        # ✅ STEP 6: Stage again (important after stash pop)
-        subprocess.run(["git", "add", "-A"], check=True)
-
-        # ✅ STEP 7: Commit again if needed
-        subprocess.run(
-            ["git", "commit", "-m", commit_message],
-            check=False
-        )
-
-        # ✅ STEP 8: Push
-        subprocess.run(["git", "push"], check=True)
-
-        print("✅ GitHub sync done")
-
-    except subprocess.CalledProcessError as e:
-        print("⚠ Git sync failed:", e)
-
-
-
-# --------------------------------------------------
-# Main
-# --------------------------------------------------
 
 if __name__ == "__main__":
     print("=== Developer Sync started ===")
     init_firebase()
-    sync_excel_to_firebase()
-    sync_to_github("Update content + version bump")
+    main()
     print("=== Developer Sync finished ===")
