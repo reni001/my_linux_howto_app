@@ -1,0 +1,581 @@
+
+#:import os os
+#:import App kivy.app.App
+
+#:set color_blue [59/255, 101/255, 184/255, 1]
+#:set color_grey [230/255, 230/255, 230/255, 1]
+#:set panel_color [179/255, 209/255, 255/255, 1]
+
+<AppMenu>:
+    size_hint: (0.7, 0.6)  # Increased height for new button
+    background_color: [0, 0, 0, 0]
+    BoxLayout:
+        orientation: 'vertical'
+        padding: '20dp'
+        spacing: '15dp'
+        canvas.before:
+            Color:
+                rgba: [1, 1, 1, 1]
+            RoundedRectangle:
+                pos: self.pos
+                size: self.size
+                radius: [20,]
+        Label:
+            text: "APPLICATION MENU"
+            color: color_blue
+            bold: True
+            font_size: '20sp'
+            size_hint_y: None
+            height: '40dp'
+
+        Button:
+            text: "About App"
+            size_hint_y: None
+            height: '45dp'
+            on_release:
+                root.dismiss()      # Closes the slide-out menu first
+                app.show_about()     # Opens the new About popup
+
+        Button:
+            text: "Open Database (Excel)"
+            size_hint_y: None
+            height: '45dp'
+            background_normal: ''
+            background_down: ''   # ✅ pressed highlight
+            background_color: color_blue
+            color: [1, 1, 1, 1]
+            bold: True
+            on_release:
+                root.dismiss()
+                app.open_database()
+
+        Button:
+            text: "Open Assets Folder"
+            size_hint_y: None
+            height: '45dp'
+            background_normal: ''
+            background_down: ''   # ✅ pressed highlight
+            background_color: [0.2, 0.6, 0.2, 1]
+            color: [1, 1, 1, 1]
+            bold: True
+            on_release:
+                root.dismiss()
+                app.open_assets_folder()
+
+
+        Button:
+            text: app.update_text
+            size_hint_y: None
+            height: '45dp'
+            background_normal: ''
+            background_down: ''
+            background_color: app.update_bg
+            color: app.update_fg
+            bold: True
+            on_release:
+                app.update_app_from_git()
+
+            canvas.after:
+                Color:
+                    rgba: app.update_border
+                Line:
+                    rectangle: self.x + 1, self.y + 1, self.width - 2, self.height - 2
+                    width: 2
+
+        Button:
+            id: sync_btn
+            text: app.sync_text
+            size_hint_y: None
+            height: '45dp'
+            background_normal: ''
+            background_down: ''
+            background_color: app.sync_bg
+            color: app.sync_fg
+            bold: True
+            on_release:
+                app.run_sync_script()
+
+            canvas.after:
+                Color:
+                    rgba: app.sync_border
+                Line:
+                    rounded_rectangle: self.x + 1, self.y + 1, self.width - 2, self.height - 2, 0
+                    width: 2
+
+        Button:
+            text: "Quit Application"
+            size_hint_y: None
+            height: '45dp'
+            background_normal: ''
+            background_down: ''   # ✅ pressed highlight
+            background_color: [1, 0.3, 0.3, 1]
+            color: [1, 1, 1, 1]
+            bold: True
+            on_release:
+                root.dismiss()
+                app.stop()
+        Widget:
+
+<StyledPanel@BoxLayout>:
+    size_hint_y: None
+    height: '65dp'
+    padding: ['12dp', '8dp']
+    canvas.before:
+        Color:
+            rgba: panel_color
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+<JumpToTopButton@ButtonBehavior+Image>:
+    source: os.path.join(App.get_running_app().project_root, 'assets', 'icons', 'top.png')
+    size_hint: None, None
+    size: '52dp', '52dp'
+    opacity: 0.9
+    pos_hint: {'right': 0.98, 'y': 0.08}
+    canvas.before:
+        Color:
+            rgba: [1, 1, 1, 0.4]
+        Ellipse:
+            pos: [self.pos[0] + dp(3), self.pos[1] + dp(3)]
+            size: [self.size[0] - dp(6), self.size[1] - dp(6)]
+
+<CategoryCard>:
+    orientation: 'vertical'
+    padding: '15dp'
+    spacing: '5dp'
+    size_hint_y: None
+    height: '180dp'
+    canvas.before:
+        Color:
+            rgba: [0, 0, 0, 0.15]
+        RoundedRectangle:
+            pos: [self.pos[0] + dp(2), self.pos[1] - dp(4)]
+            size: self.size
+            radius: [20,]
+        Color:
+            rgba: [215/255, 230/255, 255/255, 1] if self.state == 'normal' else [179/255, 209/255, 255/255, 1]
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [20,]
+    Image:
+        source: root.icon_source
+        size_hint_y: 0.9
+        fit_mode: "contain"
+    Label:
+        text: root.name
+        color: color_blue
+        bold: True
+        font_size: '16sp'
+        size_hint_y: 0.2
+
+<EntryListItem>:
+    orientation: 'horizontal'
+    size_hint_y: None
+    height: '110dp'
+    padding: '12dp'
+    spacing: '15dp'
+    canvas.before:
+        Color:
+            rgba: [1, 1, 1, 1] if self.state == 'normal' else [0.92, 0.92, 0.92, 1]
+        RoundedRectangle:
+            pos: [self.pos[0]+2, self.pos[1]+2]
+            size: [self.size[0]-4, self.size[1]-4]
+            radius: [10,]
+    Image:
+        source: root.icon_source
+        size_hint_x: None
+        width: '60dp'
+    BoxLayout:
+        orientation: 'vertical'
+        Label:
+            text: root.title
+            color: color_blue
+            bold: True
+            font_size: '18sp'
+            halign: 'left'
+            text_size: (self.width, None)
+        Label:
+            text: root.desc
+            color: [0.4, 0.4, 0.4, 1]
+            font_size: '14sp'
+            halign: 'left'
+            text_size: (self.width, None)
+            shorten: True
+
+<MenuScreen>:
+    FloatLayout:
+        BoxLayout:
+            orientation: 'vertical'
+            StyledPanel:
+                # --- Top Panel Layout ---
+                BoxLayout:
+                    orientation: 'horizontal'
+                    size_hint_x: None
+                    width: self.minimum_width
+                    padding: [dp(10), 0] # Internal padding for the panel
+
+                    Image:
+                        source: os.path.join(App.get_running_app().project_root, 'assets', 'icons', 'howto.png')
+                        size_hint: (None, None)
+                        size: (dp(35), dp(35))
+                        pos_hint: {'center_y': .5}
+
+                    # --- SPACER WIDGET ---
+                    Widget:
+                        size_hint_x: None
+                        width: dp(15) # Adjust this value to increase/decrease the gap
+
+                    Label:
+                        text: "LINUX HOW-TO"
+                        color: color_blue
+                        bold: True
+                        font_size: '22sp'
+                        size_hint_x: None
+                        width: self.texture_size[0]
+
+                Widget: # This pushes the search button to the far right
+
+                Button:
+                    background_color: [0,0,0,0]
+                    size_hint_x: None
+                    width: '50dp'
+                    on_release: root.manager.current = 'search'
+                    Image:
+                        source: os.path.join(App.get_running_app().project_root, 'assets', 'icons', 'search.png')
+                        center: self.parent.center
+                        center_x: self.parent.center_x
+                        center_y: self.parent.center_y
+                        size: '32dp', '32dp'
+            ScrollView:
+                id: scroll_view
+                canvas.before:
+                    Color:
+                        rgba: color_grey
+                    Rectangle:
+                        pos: self.pos
+                        size: self.size
+                GridLayout:
+                    id: menu_container
+                    cols: 2
+                    padding: '25dp'
+                    spacing: '25dp'
+                    size_hint_y: None
+                    height: self.minimum_height
+            StyledPanel:
+                height: '65dp'
+
+                Button:
+                    background_normal: ''
+                    background_color: [0,0,0,0]
+                    size_hint_x: None
+                    width: '40dp'
+                    on_release: app.open_app_menu()
+                    Image:
+                        source: os.path.join(App.get_running_app().project_root, 'assets', 'icons', 'menu.png')
+                        center_x: self.parent.center_x
+                        center_y: self.parent.center_y
+                        size: '28dp', '28dp'
+                Widget:
+
+                Label:
+                    id: version_label_menu
+                    text: "v0.0.0"
+                    font_size: '12sp'
+                    color: [0.3, 0.5, 0.8, 1]
+                    size_hint_x: None
+                    width: dp(60)
+                Widget:
+
+                Button:
+                    background_normal: ''
+                    background_color: [0,0,0,0]
+                    size_hint_x: None
+                    width: '40dp'
+                    on_release: app.toggle_orientation()
+                    Image:
+                        source: os.path.join(App.get_running_app().project_root, 'assets', 'icons', 'screenformate.png')
+                        center_x: self.parent.center_x
+                        center_y: self.parent.center_y
+                        size: '28dp', '28dp'
+        JumpToTopButton:
+            on_release: scroll_view.scroll_y = 1
+
+<SearchScreen>:
+    BoxLayout:
+        orientation: 'vertical' # This allows the panel to sit below the scrollview
+
+        # --- Top Search Bar ---
+        StyledPanel:
+            height: '75dp'
+            spacing: '10dp'
+            Button:
+                background_normal: ''
+                background_color: [0,0,0,0]
+                size_hint_x: None
+                width: '50dp'
+                on_release: root.go_back()
+                Image:
+                    source: os.path.join(App.get_running_app().project_root, 'assets', 'icons', 'arrow_back.png')
+                    center_x: self.parent.center_x
+                    center_y: self.parent.center_y
+                    size: '32dp', '32dp'
+            TextInput:
+                id: search_input
+                hint_text: "Search articles..."
+                multiline: False
+                size_hint_y: None
+                height: '40dp'
+                pos_hint: {'center_y': 0.5}
+                on_text: root.filter_results(self.text)
+
+        # --- Middle Results Area ---
+        ScrollView:
+            canvas.before:
+                Color:
+                    rgba: color_grey
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
+            BoxLayout:
+                id: results_container
+                orientation: 'vertical'
+                size_hint_y: None
+                height: self.minimum_height
+                padding: '15dp'
+                spacing: '10dp'
+
+        # --- NEW Bottom Panel ---
+        StyledPanel:
+            height: '65dp'
+            Button:
+                background_normal: ''
+                background_color: [0,0,0,0]
+                size_hint_x: None
+                width: '40dp'
+                on_release: app.open_app_menu()
+                Image:
+                    source: os.path.join(App.get_running_app().project_root, 'assets', 'icons', 'menu.png')
+                    center_x: self.parent.center_x
+                    center_y: self.parent.center_y
+                    size: '28dp', '28dp'
+
+            Widget: # Spacer
+
+            Label:
+                id: version_label_search
+                text: "v0.0.0"
+                font_size: '12sp'
+                color: [0.3, 0.5, 0.8, 1]
+                size_hint_x: None
+                width: dp(60)
+
+            Widget: # Spacer
+
+            Button:
+                background_normal: ''
+                background_color: [0,0,0,0]
+                size_hint_x: None
+                width: '40dp'
+                on_release: app.toggle_orientation()
+                Image:
+                    source: os.path.join(App.get_running_app().project_root, 'assets', 'icons', 'screenformate.png')
+                    center_x: self.parent.center_x
+                    center_y: self.parent.center_y
+                    size: '28dp', '28dp'
+
+
+<DetailScreen>:
+    FloatLayout:
+        BoxLayout:
+            orientation: 'vertical'
+            StyledPanel:
+                height: '85dp'
+                spacing: '10dp'
+                Button:
+                    background_normal: ''
+                    background_color: [0,0,0,0]
+                    size_hint_x: None
+                    width: '40dp'
+                    on_release: root.manager.current = 'menu'
+                    Image:
+                        source: os.path.join(App.get_running_app().project_root, 'assets', 'icons', 'arrow_back.png')
+                        center_x: self.parent.center_x
+                        center_y: self.parent.center_y
+                        size: '32dp', '32dp'
+                TextInput:
+                    id: local_search
+                    hint_text: "Search..."
+                    multiline: False
+                    size_hint_y: None
+                    height: '45dp'
+                    pos_hint: {'center_y': 0.5}
+                    background_normal: ''
+                    background_color: [1, 1, 1, 0.7]
+                    on_text: root.load_content_from_cache(self.text)
+            ScrollView:
+                id: scroll_view
+                canvas.before:
+                    Color:
+                        rgba: color_grey
+                    Rectangle:
+                        pos: self.pos
+                        size: self.size
+                BoxLayout:
+                    id: list_container
+                    orientation: 'vertical'
+                    size_hint_y: None
+                    height: self.minimum_height
+                    padding: '15dp'
+                    spacing: '12dp'
+            StyledPanel:
+                height: '65dp'
+
+                Button:
+                    background_normal: ''
+                    background_color: [0,0,0,0]
+                    size_hint_x: None
+                    width: '40dp'
+                    on_release: app.open_app_menu()
+                    Image:
+                        source: os.path.join(App.get_running_app().project_root, 'assets', 'icons', 'menu.png')
+                        center_x: self.parent.center_x
+                        center_y: self.parent.center_y
+                        size: '28dp', '28dp'
+                Widget:
+
+                Label:
+                    id: version_label_details
+                    text: "v0.0.0"
+                    font_size: '12sp'
+                    color: [0.3, 0.5, 0.8, 1]
+                    size_hint_x: None
+                    width: dp(60)
+                Widget:
+
+                Button:
+                    background_normal: ''
+                    background_color: [0,0,0,0]
+                    size_hint_x: None
+                    width: '40dp'
+                    on_release: app.toggle_orientation()
+                    Image:
+                        source: os.path.join(App.get_running_app().project_root, 'assets', 'icons', 'screenformate.png')
+                        center_x: self.parent.center_x
+                        center_y: self.parent.center_y
+                        size: '28dp', '28dp'
+
+        JumpToTopButton:
+            on_release: scroll_view.scroll_y = 1
+
+<ArticleScreen>:
+    FloatLayout:
+        BoxLayout:
+            orientation: 'vertical'
+            StyledPanel:
+                height: '75dp'
+                spacing: '10dp'
+                padding: [dp(10), 0] # Added padding to keep icons off the screen edge
+
+                Button:
+                    background_normal: ''
+                    background_color: [0,0,0,0]
+                    size_hint_x: None
+                    width: '50dp'
+                    on_release: root.go_back()
+                    Image:
+                        source: os.path.join(App.get_running_app().project_root, 'assets', 'icons', 'arrow_back.png')
+                        center_x: self.parent.center_x
+                        center_y: self.parent.center_y
+                        size: '32dp', '32dp'
+
+                Label:
+                    text: "Documentation"
+                    color: color_blue
+                    bold: True
+                    font_size: '20sp'
+                    halign: 'left'
+                    size_hint_x: None # Don't let the label take all space
+                    width: self.texture_size[0]
+                    valign: 'middle'
+
+                # --- THE MAGIC SPACER ---
+                # This empty widget expands to push everything after it to the right
+                Widget:
+
+                # --- THE ICON ON THE RIGHT ---
+                Image:
+                    source: os.path.join(App.get_running_app().project_root, 'assets', 'icons', 'howto.png')
+                    size_hint: (None, None)
+                    size: (dp(35), dp(35))
+                    pos_hint: {'center_y': .5}
+
+            ScrollView:
+                id: scroll_view
+                canvas.before:
+                    Color:
+                        rgba: color_grey
+                    Rectangle:
+                        pos: self.pos
+                        size: self.size
+                BoxLayout:
+                    id: content_box
+                    orientation: 'vertical'
+                    size_hint_y: None
+                    height: self.minimum_height
+                    padding: '25dp'
+                    spacing: '25dp'
+
+            # Bottom panel (Menu and Orientation)
+
+            StyledPanel:
+                id: bottom_bar
+                height: '65dp'  # Property first!
+
+                Button:         # Child widgets second
+                    background_normal: ''
+                    background_color: [0,0,0,0]
+                    size_hint_x: None
+                    width: '40dp'
+                    on_release: app.open_app_menu()
+                    Image:
+                        source: os.path.join(App.get_running_app().project_root, 'assets', 'icons', 'menu.png')
+                        center_x: self.parent.center_x
+                        center_y: self.parent.center_y
+                        size: '28dp', '28dp'
+                Widget:
+
+                Label:
+                    id: version_label_article
+                    text: "v0.0.0"
+                    font_size: '12sp'
+                    color: [0.3, 0.5, 0.8, 1]
+                    size_hint_x: None
+                    width: dp(60)
+                Widget:
+
+                Button:
+                    background_normal: ''
+                    background_color: [0,0,0,0]
+                    size_hint_x: None
+                    width: '40dp'
+                    on_release: app.toggle_orientation()
+                    Image:
+                        source: os.path.join(App.get_running_app().project_root, 'assets', 'icons', 'screenformate.png')
+                        center_x: self.parent.center_x
+                        center_y: self.parent.center_y
+                        size: '28dp', '28dp'
+
+        JumpToTopButton:
+            on_release: scroll_view.scroll_y = 1
+
+<RotatableArrow>:
+    canvas.before:
+        PushMatrix
+        Rotate:
+            angle: self.angle
+            origin: self.center
+    canvas.after:
+        PopMatrix
+
