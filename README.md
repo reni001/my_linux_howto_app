@@ -40,12 +40,16 @@ It combines:
 ## ⚠️ Requirements & Compatibility
 
 ### ✅ Supported Systems
-- Arch Linux
-- Ubuntu
+It is designed to be supported on all linux based systems. I tested it on:
+
+- Garuda Arch Linux
+- Ubuntu 2020
 
 ---
 
 ### ⚠️ Python Version (CRITICAL)
+
+I developed this app on Garuda Linux and encountered during processing issues with the compatibility of Kivy with the newest python (3.14)
 
 - ✅ Python **3.12 works**
 - ❌ Python **3.14 does NOT work properly with the current Kivy (Kivy incompatibility)**
@@ -57,22 +61,28 @@ It combines:
 ## 📂 Project Location
 
 Example:
-~/Documents/apps//my_linux_howto_app/
+~/Documents/apps/my_linux_howto_app/
 
----
+<<<<<<< HEAD
+
+=======
+ 
+>>>>>>> 0191bb8 (change of app icon)
 ---
 
 # 👤 PART A — USER INSTALLATION
 
 ---
 
+ 
 ## Installation and running the App using the script:
 
-### Download the repo from git into the folder wherr you wanrt the app to be installed:
+### Download the repo from git into the folder where you want the app to be installed:
 ```
 https://github.com/reni001/my_linux_howto_app.git
 ```
 It will create a folder named: my_linux_howto_app
+ 
 
 ### Installation
 
@@ -113,7 +123,7 @@ python --version
     ### Why we had to do this:
     * **Kivy Wheels:** Sometimes Kivy doesn't have "pre-built" wheels for the brand-new Python version that Arch just released. By moving back to 3.12, we ensure all the library "parts" fit together without having to compile them from scratch (which takes forever).
 
-### Debian based (Ubuntu)
+### Debian-based (Ubuntu)
 sudo apt update
 sudo apt install python3.12 python3.12-venv python3-pip git
 
@@ -409,7 +419,7 @@ my_linux_howto_app-v3/
 You maintain:
 
 Firebase content
-Excel base dataset
+Excel-based dataset
 Assets (icons/screenshots)
 
 
@@ -438,7 +448,8 @@ data/main.xlsx
 
 ### Add Images
 ``` bash
-Shellcp image.png assets/screenshots/git add .git commit -m "add asset"git pushShow more lines
+cp image.png assets/screenshots/git add .
+git commit -m "add asset"git push 
 ```
 
 ---
@@ -484,6 +495,7 @@ firebase.json
 ### 🚀 Next Improvements
 
 Create AppImage
+Create apk for android
 Create apk for android phones
 
 
