@@ -1,4 +1,3 @@
-#---------- v2 24.05.2026 ----------
 import time
 import requests
 import os
@@ -579,30 +578,29 @@ class LinuxHowToApp(App):
         screen.edit_topic_id = str(data.get("Topic_ID") or "")
         screen.edit_topic_key = str(data.get("_key") or "")
 
-        # ✅ SHOW Topic_ID in the form when editing
+        # ✅ store originals for restore logic (THIS FIXES "no stored category")
+        screen._edit_category = str(data.get("Category") or "").strip()
+        screen._edit_subcategory = str(data.get("Subcategory") or "").strip()
+
+        # ✅ show Topic_ID in form (do NOT clear it)
         if "topic_id" in screen.ids:
             screen.ids.topic_id.text = screen.edit_topic_id
 
-        # reset
-        if "topic_id" in screen.ids:
-            screen.ids.topic_id.text = ""
+        # ✅ populate spinner values
+        screen.ids.category.values = sorted(screen.cat_to_icon.keys(), key=str.lower)
 
-        # ✅ block callbacks
-        screen._skip_callbacks = True
-
-        # ✅ set dropdown values
-        screen.ids.category.values = sorted(screen.cat_to_icon.keys())
+        # start with empty, we will fill it via on_category_changed
         screen.ids.subcategory.values = []
 
-        category = data.get("Category", "")
-        subcategory = data.get("Subcategory", "")
+        # ✅ temporarily block KV-triggered callbacks while setting text
+        screen._skip_callbacks = True
+        screen.ids.category.text = screen._edit_category
+        screen.ids.subcategory.text = screen._edit_subcategory
+        screen._skip_callbacks = False
 
-        # ✅ set category
-        screen.ids.category.text = category
-        screen.on_category_changed(category)
-
-        # ✅ set subcategory AFTER category update
-        screen.ids.subcategory.text = subcategory
+        # ✅ NOW build subcategory list properly and set icons
+        screen.on_category_changed(screen._edit_category)
+        screen.on_subcategory_changed(screen._edit_subcategory)
 
         # ✅ fill fields
         screen.ids.title.text = data.get("Title", "")
@@ -1441,7 +1439,6 @@ class AddTopicScreen(Screen):
     selected_step_index = NumericProperty(-1)   # -1 means "no step selected"
 
     def on_pre_enter(self):
-
         if not is_admin_enabled():
             self.ids.status_label.text = "Editor disabled (admin key missing)."
             self.ids.save_btn.disabled = True
@@ -1451,35 +1448,26 @@ class AddTopicScreen(Screen):
             self.ids.save_btn.disabled = False
             self.ids.add_step_btn.disabled = False
 
-        # ✅ EDIT MODE
         if self.edit_mode:
+            # keep Topic_ID locked
             if "topic_id" in self.ids:
-                self.ids.topic_id.text = self.edit_topic_id
                 self.ids.topic_id.readonly = True
 
-            # ✅ SET HEADER ICON
-            if "header_icon" in self.ids:
-                from kivy.app import App
-                icon_file = self.ids.topic_icon.text.strip()
-
-                if icon_file:
-                    self.ids.header_icon.source = App.get_running_app().get_icon_path(icon_file)
-                else:
-                    self.ids.header_icon.source = App.get_running_app().get_icon_path("howtolinux-icon.png")
-
             self.refresh_steps_preview()
+            self.refresh_steps_list()
+
+            # ✅ ensure dropdowns exist in edit mode too
+            self._schedule_populate_dropdowns()
             return
 
-        # ✅ ADD MODE
+        # ✅ ADD MODE (only here)
         if "topic_id" in self.ids:
-            self.ids.topic_id.text = ""             # ✅ CLEAR OLD VALUE
-            self.ids.topic_id.readonly = False      # ✅ MAKE EDITABLE
+            self.ids.topic_id.text = ""
+            self.ids.topic_id.readonly = False
 
-            # ✅ reset header icon
-            if "header_icon" in self.ids:
-                from kivy.app import App
-                self.ids.header_icon.source = App.get_running_app().get_icon_path("howtolinux-icon.png")
-
+        if "header_icon" in self.ids:
+            from kivy.app import App
+            self.ids.header_icon.source = App.get_running_app().get_icon_path("howtolinux-icon.png")
 
         self.refresh_steps_preview()
         self.refresh_steps_list()
@@ -1492,6 +1480,10 @@ class AddTopicScreen(Screen):
             if isinstance(APP_DATA, dict) and APP_DATA.get("topics"):
                 self._build_taxonomy_maps()
                 self._populate_category_spinner()
+
+                if self.edit_mode:
+                    Clock.schedule_once(lambda dt: self._restore_edit_values(), 0.1)
+
             else:
                 Clock.schedule_once(_try, 0.2)
         Clock.schedule_once(_try, 0)
@@ -1501,9 +1493,11 @@ class AddTopicScreen(Screen):
         global APP_DATA
         topics = APP_DATA.get("topics", [])
 
+
         self.cat_to_icon = {}
         self.all_subcategories = set()
-        self.sub_to_icon = {}
+        self.sub_to_icon = {}        # ✅ REQUIRED
+        self.sub_icon_global = {}    # ✅ REQUIRED
 
         for t in topics:
             if not isinstance(t, dict):
@@ -1527,36 +1521,45 @@ class AddTopicScreen(Screen):
                 sub = sub.lower()              # ✅ normalize (fix duplicates)
                 self.all_subcategories.add(sub)
 
-            # Subcategory icon
-            if sub and sub.lower() != "nan":
-                key = (cat, sub)
-                if key not in self.sub_to_icon:
-                    sicon = str(t.get("Sub_Icon", "") or "").strip()
-                    self.sub_to_icon[key] = sicon
+
+            # ✅ GLOBAL subcategory icon (NEW)
+            if sub and sub != "nan":
+                sicon = str(t.get("Sub_Icon", "") or "").strip()
+
+                if sicon:
+                    # ✅ global mapping
+                    if sub not in self.sub_icon_global:
+                        self.sub_icon_global[sub] = sicon
+
+                    # ✅ keep category-specific mapping
+                    key = (cat, sub)
+                    if key not in self.sub_to_icon:
+                        self.sub_to_icon[key] = sicon
+
 
     def _populate_category_spinner(self):
-        if self.edit_mode:
-            return
+        #if self.edit_mode:
+        #    return
 
         cats = sorted(self.cat_to_icon.keys(), key=str.lower)
 
         self.ids.category.values = cats
 
         # ✅ Always force placeholder AFTER values set
-        self.ids.category.text = "Click to choose category"
+        if not self.edit_mode:
+            self.ids.category.text = "Click to choose category"
 
         # ✅ Reset subcategory as well
-        self.ids.subcategory.values = []
-        self.ids.subcategory.text = "Click to choose subcategory"
+        if not self.edit_mode:
+            self.ids.subcategory.values = []
+            self.ids.subcategory.text = "Click to choose subcategory"
+
 
         # ✅ Clear icons until selection is made
         self.ids.cat_icon.text = ""
         self.ids.sub_icon.text = ""
 
     def on_category_changed(self, category_text):
-        print("DEBUG category:", category_text)
-        print("DEBUG subcategories:", self.all_subcategories)
-
         if not hasattr(self, "sub_to_icon"):
             return
 
@@ -1585,11 +1588,14 @@ class AddTopicScreen(Screen):
         if not subs:
             subs = ["General"]   # ✅ fallback
 
-        self.ids.subcategory.values = ["General"] + subs
+        self.ids.subcategory.values = subs
 
         # start clean: do NOT keep old selection
-        self.ids.subcategory.text = "Select Subcategory"
-        self.ids.sub_icon.text = ""
+        if not self.edit_mode:
+            # only reset in add mode
+            self.ids.subcategory.text = "Select Subcategory"
+            self.ids.sub_icon.text = ""
+
 
     def on_subcategory_changed(self, subcategory_text):
 
@@ -1604,9 +1610,21 @@ class AddTopicScreen(Screen):
         Auto-fills Sub_Icon using the (Category, Subcategory) mapping.
         """
         cat = str(self.ids.category.text).strip()
-        sub = str(subcategory_text).strip()
+        sub = str(subcategory_text).strip().lower()
+
+        # ✅ first try category-specific
         sub_icon = self.sub_to_icon.get((cat, sub), "")
+
+        # ✅ fallback to GLOBAL mapping
+        if not sub_icon:
+            sub_icon = self.sub_icon_global.get(sub, "")
+
+        # ✅ fallback to category icon
+        if not sub_icon:
+            sub_icon = self.ids.cat_icon.text
+
         self.ids.sub_icon.text = sub_icon
+
 
     def cancel_edit(self):
         self.edit_mode = False
@@ -2112,6 +2130,35 @@ class AddTopicScreen(Screen):
 
         self.refresh_steps_list()
 
+    def _restore_edit_values(self):
+        if not self.edit_mode:
+            return
+
+        cat = getattr(self, "_edit_category", "")
+        sub = getattr(self, "_edit_subcategory", "")
+
+        if not cat:
+            print("ERROR: no stored category")
+            return
+
+        # set category safely
+        self._skip_callbacks = True
+        self.ids.category.text = cat
+        self._skip_callbacks = False
+
+        # build sub list
+        self.on_category_changed(cat)
+
+        def _set_sub(_dt):
+            if sub:
+                self.ids.subcategory.text = sub
+                self.on_subcategory_changed(sub)
+
+        Clock.schedule_once(_set_sub, 0.05)
+
+
+#-----------------------
+
 class AddStepScreen(Screen):
     """
     Admin-only screen: add a Step tied to a Topic_ID.
@@ -2240,6 +2287,8 @@ class AddStepScreen(Screen):
 
         except Exception as e:
             self.ids.step_status.text = f"Save failed: {e}"
+
+#-------------------------
 
 class AppInfoScreen(Screen):
     def on_pre_enter(self):

@@ -321,88 +321,69 @@ def git_sync_content_only(repo_root: Path, version: str):
 # Main sync
 # ---------------------------
 def main():
-    if not EXCEL_FILE.exists():
-        print("❌ Excel file not found:", EXCEL_FILE)
-        sys.exit(1)
+    print("=== SAFE SYNC (Firebase → Excel) ===")
 
-    print("📊 Reading Excel:", EXCEL_FILE)
+    # ✅ 1. Get data from Firebase FIRST
+    print("☁ Downloading data from Firebase…")
+    data = db.reference("/").get()
 
-    # 1) Read runtime sheets
-    sheets = read_all_sheets(EXCEL_FILE)
-
-    # 2) Build payload for change detection
-    payload_pre = json_safe(sheets_to_payload(sheets))
-    cached = load_cached_payload()
-
-    pre_norm = normalise_for_change_detection(payload_pre)
-    cached_norm = normalise_for_change_detection(cached) if cached else None
-
-    same = False
-    if cached_norm is not None:
-        same = sha256_text(stable_dumps(pre_norm)) == sha256_text(stable_dumps(cached_norm))
-
-    repo_root = Path(__file__).resolve().parent.parent
-    repo_assets = repo_root / "assets"
-    runtime_assets = paths["assets"]
-
-    excel_changed = not same
-    assets_have_changed = any(
-        ln[3:].strip().replace("\\", "/").startswith(("assets/icons/", "assets/screenshots/"))
-        for ln in git_status_porcelain(repo_root)
-    )
-
-    if not excel_changed and not assets_have_changed:
-        print("✅ No content or asset changes detected")
-        print("ℹ Skipping version bump, Firebase upload, and GitHub sync")
+    if not data:
+        print("❌ Firebase is empty — aborting to protect Excel")
         return
 
-    if assets_have_changed:
-        print("📦 Asset changes detected")
-    if excel_changed:
-        print("📊 Excel changes detected")
+    if "topics" not in data or not data["topics"]:
+        print("❌ Firebase seems EMPTY (no topics) — aborting")
+        return
+
+    print("✅ Firebase data retrieved")
+
+
+    required = ["topics", "steps", "metadata"]
+    missing = [k for k in required if k not in data]
+    if missing:
+        print(f"❌ Firebase missing keys {missing} — aborting")
+        return
 
 
     # 3) Bump version + date
-    meta = payload_pre.get("metadata", {}) if isinstance(payload_pre.get("metadata", {}), dict) else {}
-    old_version = str(meta.get("version", "0.0.0"))
-    new_version = bump_version(old_version)
-    meta["version"] = new_version
-    meta["last update"] = today_ddmmyyyy()
+    #meta = payload_pre.get("metadata", {}) if isinstance(payload_pre.get("metadata", {}), dict) else {}
+    #old_version = str(meta.get("version", "0.0.0"))
+    #new_version = bump_version(old_version)
+    #meta["version"] = new_version
+    #meta["last update"] = today_ddmmyyyy()
 
-    print(f"✅ Version updated: {old_version} → {new_version}")
-    print(f"📅 Last update set to: {meta['last update']}")
+    #print(f"✅ Version updated: {old_version} → {new_version}")
+    #print(f"📅 Last update set to: {meta['last update']}")
 
-    # 4) Write updated metadata back into AppInfo sheet
-    for sheet_name in list(sheets.keys()):
-        if sheet_name.strip().lower() == "appinfo":
-            sheets[sheet_name] = meta_to_appinfo_df(sheets[sheet_name], meta)
+    # ✅ 2. Write to Excel
+    print("📊 Writing data to Excel:", EXCEL_FILE)
 
-    # 5) Save runtime Excel once
     with pd.ExcelWriter(EXCEL_FILE, engine="openpyxl") as writer:
-        for sheet_name, df in sheets.items():
-            df.to_excel(writer, sheet_name=sheet_name, index=False)
+        for key, value in data.items():
 
-    # 6) Build final payload and upload
-    payload = json_safe(sheets_to_payload(sheets))
+            if key == "metadata":
+                df = pd.DataFrame(list(value.items()), columns=["Key", "Value"])
+                df.to_excel(writer, sheet_name="AppInfo", index=False)
 
-    print("☁ Uploading data to Firebase…")
-    db.reference("/").set(payload)
-    print("✅ Firebase sync complete")
+            else:
+                df = pd.DataFrame(value)
+                df.to_excel(writer, sheet_name=key, index=False)
 
-    # 7) Cache locally
+    print("✅ Excel updated from Firebase")
+
+    # ✅ 3. Cache (safe)
     with open(CACHE_FILE, "w", encoding="utf-8") as f:
-        json.dump(payload, f, indent=2, ensure_ascii=False)
+        json.dump(data, f, indent=2, ensure_ascii=False)
 
-    # 8) GitHub sync section (safe, content-only)
-    repo_root = Path(__file__).resolve().parent.parent  # src/.. (repo root)
-
-    # Copy runtime Excel into repo Excel
+    # ✅ 4. Copy Excel to repo
+    repo_root = Path(__file__).resolve().parent.parent
     repo_excel = repo_root / "data" / "main.xlsx"
     repo_excel.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy2(EXCEL_FILE, repo_excel)
-    print(f"📦 Copied runtime Excel to repo: {repo_excel}")
 
-    # ✅ NEW: Copy assets
+    print(f"📦 Copied Excel to repo: {repo_excel}")
+
+    # ✅ 5. Copy assets
     runtime_assets = paths["assets"]
     repo_assets = repo_root / "assets"
 
@@ -410,9 +391,17 @@ def main():
         shutil.copytree(runtime_assets, repo_assets, dirs_exist_ok=True)
         print("📦 Copied assets to repo")
 
-    # ✅ Now sync Git
-    git_sync_content_only(repo_root, new_version)
+    # 6) Build final payload and upload --> writing excel to firebase
+    #payload = json_safe(sheets_to_payload(sheets))
+    #print("☁ Uploading data to Firebase…")
+    #db.reference("/").set(payload)
+    #print("✅ Firebase sync complete")
 
+    # ✅ 6. Git sync (safe, no Firebase impact)
+    version = str(data.get("metadata", {}).get("version", "unknown"))
+    git_sync_content_only(repo_root, version)
+
+    print("✅ Sync finished (SAFE MODE)")
 
 if __name__ == "__main__":
     print("=== Developer Sync started ===")

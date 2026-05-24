@@ -498,4 +498,77 @@ Create AppImage
 Create apk for android
 Create apk for android phones
 
+# Changelog 
+
+## 🚀 Version 1.1.0 — Topic Editor & UI Improvements
+
+### ✨ New Features
+
+✅ Introduced full Topic Editor screen
+Create, edit, and update topics within the app
+Integrated steps editor with preview and ordering
+
+✅ Added step management system
+Add, edit, delete, and reorder steps
+Step buffer (pending_steps) for batch saving
+
+✅ Implemented dynamic Topic Icon handling
+Live preview when selecting or typing icon
+Automatic copying of icons into assets
+Consistent icon display across screens
+
+
+### 🧠 Data & Logic Improvements
+
+✅ Redesigned Topic_ID generation
+Short format: cat4_sub4_title6
+Automatic duplicate handling with numeric suffix
+
+✅ Fixed step persistence
+Steps now saved correctly using unique Firebase keys
+Replaced numeric IDs with push-based keys
+
+✅ Improved edit mode behaviour
+No longer creates duplicate topics on save
+Correct handling of Firebase _key
+
+✅ Added full overwrite logic
+Topic updates replace previous version cleanly
+Steps re-synchronised on save
+
+
+### 🔐 Security & Role Management
+
+✅ Introduced Admin/User mode separation
+Edit and delete actions disabled in user mode
+UI reflects permissions (buttons greyed out or hidden)
+
+✅ Backend protection maintained (Firebase key required)
+
+### 🎨 UI & UX Improvements
+
+✅ Improved header layout
+Proper alignment of icons and title
+Single-line title display
+
+
+✅ Added dynamic topic icon in editor header
+Shows correct icon in edit mode
+Live update after icon selection and save
+
+✅ Improved form behaviour
+Form persists after saving (supports iterative editing)
+
+✅ Enhanced step list display
+Clean layout with edit / delete / reorder buttons
+
+
+### 🐛 Bug Fixes
+
+✅ Fixed crash when opening older topics (missing method)
+✅ Fixed Topic_ID overwrite issues
+✅ Fixed icon preview inconsistencies
+✅ Fixed Firebase step write overwriting
+✅ Fixed incorrect UI reset after save
+
 
