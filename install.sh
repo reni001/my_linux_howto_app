@@ -31,7 +31,7 @@ echo "[INFO] Session type: $SESSION_TYPE"
 if [ "$SESSION_TYPE" = "wayland" ]; then
     echo "[INFO] Wayland detected → forcing X11 compatibility for Kivy"
     export KIVY_GL_BACKEND=gl
-    export SDL_VIDEODRIVER=x11
+    export SDL_VIDEODRIVER=${SDL_VIDEODRIVER:-x11}
 else
     echo "[INFO] X11 detected"
 fi
@@ -79,7 +79,11 @@ echo "[INFO] Using $PYTHON_BIN"
 
 echo "[INFO] Creating virtual environment..."
 
-$PYTHON_BIN -m venv "$VENV_DIR"
+if [ -d "$VENV_DIR" ]; then
+    echo "[INFO] Reusing existing virtual environment"
+else
+    $PYTHON_BIN -m venv "$VENV_DIR"
+fi
 source "$VENV_DIR/bin/activate"
 
 # ----------------------------------------
@@ -87,9 +91,19 @@ source "$VENV_DIR/bin/activate"
 # ----------------------------------------
 
 echo "[INFO] Installing dependencies..."
+echo "[INFO] If Kivy installation fails, install system deps:"
+echo " Arch: sudo pacman -S base-devel sdl2 sdl2_image sdl2_ttf sdl2_mixer mesa"
+echo " Ubuntu: sudo apt install build-essential libsdl2-dev"
+
+
+if ! ping -c 1 github.com &> /dev/null; then
+    echo "[ERROR] No internet connection detected"
+    exit 1
+fi
 
 pip install --upgrade pip setuptools wheel
 pip install kivy pandas requests firebase-admin openpyxl cython
+
 
 # ----------------------------------------
 # CREATE RUNTIME DIRECTORIES
@@ -134,14 +148,20 @@ ASSETS_DST="$HOME/.local/share/linux-howto/assets"
 mkdir -p "$ASSETS_DST"
 
 if [ -d "$ASSETS_SRC" ]; then
-    rsync -av --delete "$ASSETS_SRC/" "$ASSETS_DST/"
+
+    if command -v rsync &> /dev/null; then
+        rsync -av --delete "$ASSETS_SRC/" "$ASSETS_DST/"
+    else
+        echo "[WARNING] rsync not found → using cp fallback"
+        rm -rf "$ASSETS_DST"
+        cp -r "$ASSETS_SRC" "$ASSETS_DST"
+    fi
+
     echo "[INFO] ✅ Assets (icons + screenshots) copied successfully"
 else
     echo "[ERROR] ❌ Assets folder not found at: $ASSETS_SRC"
     exit 1
 fi
-
-
 
 # ----------------------------------------
 # VERIFY INSTALLATION (VERY IMPORTANT)
@@ -162,7 +182,7 @@ fi
 
 echo "[INFO] Running first test..."
 
-if python -m src.main; then
+if $PYTHON_BIN -m src.main; then
     echo "[INFO] ✅ App started successfully"
 else
     echo "[WARNING] App exited with warnings (can be normal on first run)"

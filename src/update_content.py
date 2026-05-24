@@ -1,12 +1,14 @@
 import requests
 import zipfile
 import io
+import tempfile
+from pathlib import Path
+import shutil
 from src.runtime_paths import get_runtime_paths
 
 # 🔧 Adjust these URLs to your real GitHub raw links
 #ASSETS_ZIP_URL = "https://raw.githubusercontent.com/reni001/my_linux_howto_app/main/assets.zip"
 #EXCEL_URL = "https://raw.githubusercontent.com/reni001/my_linux_howto_app/main/data/main.xlsx"
-
 
 # ✅ Always-existing GitHub repo ZIP
 REPO_ZIP_URL = "https://github.com/reni001/my_linux_howto_app/archive/refs/heads/main.zip"
@@ -23,6 +25,7 @@ def update_assets():
 
         # ✅ Download repo
         r = requests.get(REPO_ZIP_URL, timeout=30)
+        r.raise_for_status()
         with open(zip_path, "wb") as f:
             f.write(r.content)
 
@@ -31,11 +34,14 @@ def update_assets():
             zip_ref.extractall(tmpdir)
 
         # ✅ Find extracted assets folder
-        extracted_root = next(Path(tmpdir).glob("*"))
+        extracted_root = next(p for p in Path(tmpdir).iterdir() if p.is_dir())
         assets_src = extracted_root / "assets"
 
         # ✅ Copy assets
-        shutil.copytree(assets_src, assets_dst, dirs_exist_ok=True)
+        if assets_dst.exists():
+            shutil.rmtree(assets_dst)
+
+        shutil.copytree(assets_src, assets_dst)
 
     print("✅ Assets updated")
 

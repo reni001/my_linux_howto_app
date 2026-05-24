@@ -16,7 +16,6 @@ from firebase_admin import credentials, db, initialize_app
 from src.runtime_paths import get_runtime_paths
 from src.config import load_firebase_config
 
-
 # ---------------------------
 # JSON safety
 # ---------------------------
@@ -38,14 +37,12 @@ def json_safe(obj):
         pass
     return obj
 
-
 def stable_dumps(obj) -> str:
     return json.dumps(obj, sort_keys=True, ensure_ascii=False, separators=(",", ":"), default=str)
 
 
 def sha256_text(s: str) -> str:
     return hashlib.sha256(s.encode("utf-8")).hexdigest()
-
 
 # ---------------------------
 # Runtime paths
@@ -55,7 +52,6 @@ DATA_DIR = paths["data"]
 EXCEL_FILE = DATA_DIR / "main.xlsx"
 CACHE_FILE = DATA_DIR / "cache.json"
 FIREBASE_KEY = DATA_DIR / "serviceAccountKey.json"
-
 
 # ---------------------------
 # Firebase init
@@ -68,8 +64,10 @@ def init_firebase():
     if not firebase_admin._apps:
         cred = credentials.Certificate(str(FIREBASE_KEY))
         cfg = load_firebase_config()
-        initialize_app(cred, {"databaseURL": cfg["database_url"]})
-
+        db_url = cfg.get("database_url") or cfg.get("databaseURL")
+        if not db_url:
+            raise KeyError("firebase.json must contain 'database_url' or 'databaseURL'")
+        initialize_app(cred, {"databaseURL": db_url})
 
 # ---------------------------
 # Version + date
@@ -84,7 +82,6 @@ def bump_version(version: str) -> str:
 
 def today_ddmmyyyy() -> str:
     return datetime.now().strftime("%d.%m.%Y")
-
 
 # ---------------------------
 # Excel <-> payload helpers
@@ -131,11 +128,12 @@ def meta_to_appinfo_df(existing: pd.DataFrame, meta: dict) -> pd.DataFrame:
         df = pd.DataFrame(columns=["Key", "Value"])
 
     key_series = df.iloc[:, 0].astype(str).str.strip()
-    idx_map = {k: i for i, k in enumerate(key_series) if k and k.lower() != "nan"}
+    idx_map = {k.lower(): i for i, k in enumerate(key_series) if k and k.lower() != "nan"}
 
     for k, v in meta.items():
-        if k in idx_map:
-            df.iat[idx_map[k], 1] = v
+        lk = str(k).strip().lower()
+        if lk in idx_map:
+            df.iat[idx_map[lk], 1] = v
         else:
             df.loc[len(df)] = [k, v]
     return df
@@ -185,8 +183,6 @@ def assets_changed(runtime_assets, repo_assets):
 
     return runtime_files != repo_files
 
-
-
 # ---------------------------
 # Git helpers (CONTENT-ONLY + CONFLICT-PROOF)
 # ---------------------------
@@ -197,7 +193,6 @@ def is_git_repo(repo_root: Path) -> bool:
         return True
     except Exception:
         return False
-
 
 def git(repo_root: Path, *args, check=True, capture=False):
     if capture:
@@ -287,7 +282,7 @@ def git_sync_content_only(repo_root: Path, version: str):
         "assets/screenshots"
     }
 
-        # If repo has code/UI changes, don't pull/rebase (this is how main.py got corrupted)
+    # If repo has code/UI changes, don't pull/rebase (this is how main.py got corrupted)
     if git_has_non_content_changes(repo_root, allowed):
         print("⚠️ Repo has non-content changes (code/UI/etc).")
         print("ℹ️ To prevent conflicts or accidental deletions, Git sync is skipped.")
@@ -307,7 +302,8 @@ def git_sync_content_only(repo_root: Path, version: str):
 
     # Commit only if needed; message includes version
     msg = f"content: v{version}"
-    created = git_commit_if_needed(repo_root, msg, ["data", "assets"])
+    created = git_commit_if_needed(repo_root, msg, ["data/main.xlsx", "assets/icons", "assets/screenshots"])
+
 
     if not created:
         print("ℹ️ Skipping push (no new commit).")
@@ -320,7 +316,6 @@ def git_sync_content_only(repo_root: Path, version: str):
     except subprocess.CalledProcessError as e:
         print("⚠ Git push failed:", e)
         print("ℹ️ Remote may be ahead. Run `git pull --rebase` manually and retry.")
-
 
 # ---------------------------
 # Main sync
@@ -351,7 +346,10 @@ def main():
     runtime_assets = paths["assets"]
 
     excel_changed = not same
-    assets_have_changed = assets_changed(runtime_assets, repo_assets)
+    assets_have_changed = any(
+        ln[3:].strip().replace("\\", "/").startswith(("assets/icons/", "assets/screenshots/"))
+        for ln in git_status_porcelain(repo_root)
+    )
 
     if not excel_changed and not assets_have_changed:
         print("✅ No content or asset changes detected")

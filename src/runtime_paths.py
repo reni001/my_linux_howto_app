@@ -1,8 +1,12 @@
+import os
 from pathlib import Path
 
 APP_NAME = "linux-howto"
 
-USER_DATA_DIR = Path.home() / ".local" / "share" / APP_NAME
+
+USER_DATA_DIR = Path(
+    os.environ.get("XDG_DATA_HOME", Path.home() / ".local" / "share")
+) / APP_NAME
 ASSETS_DIR = USER_DATA_DIR / "assets"
 DATA_DIR = USER_DATA_DIR / "data"
 
@@ -15,12 +19,15 @@ def ensure_runtime_dirs():
 def get_runtime_paths():
     ensure_runtime_dirs()
     return {
+        "base": USER_DATA_DIR,
         "assets": ASSETS_DIR,
         "data": DATA_DIR,
+        "icons": ASSETS_DIR / "icons",
     }
+
     
 def get_icon_path(filename):
-    from src.runtime_paths import get_runtime_paths
+    #from src.runtime_paths import get_runtime_paths
 
     paths = get_runtime_paths()
     base = paths["assets"] / "icons"
@@ -35,12 +42,11 @@ def get_icon_path(filename):
 
     icon_path = base / filename
     if not icon_path.is_file():
-        print(f"⚠️ Missing icon file: {icon_path}")
+        print(f"⚠️ Missing icon → fallback used: {filename}")
         return str(default_icon)
 
     return str(icon_path)    
     
-
 
 # ✅ PHASE 3 ADDITION (ONLY THIS)
 def is_dev_mode():
@@ -48,4 +54,9 @@ def is_dev_mode():
     DEV = running from Git checkout
     PROD = AppImage or copied folder
     """
-    return (Path.cwd() / ".git").exists()    
+    def is_dev_mode():
+        try:
+            return (Path(__file__).resolve().parent.parent / ".git").exists()
+        except Exception:
+                return False
+

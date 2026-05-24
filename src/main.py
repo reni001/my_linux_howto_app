@@ -7,38 +7,52 @@ import subprocess
 import sys
 import traceback
 import shutil
+import uuid
+import re
 from threading import Thread
 from src.first_run import initialize_first_run
 from pathlib import Path
 from src.config import load_firebase_config
 from src.runtime_paths import is_dev_mode
 from src.update_content import update_assets, update_excel
-
 from src.runtime_paths import get_runtime_paths
-
+from src.editor import (
+    is_admin_enabled,
+    copy_icon_to_assets,
+    add_topic_to_firebase,
+    add_step_to_firebase,
+    export_backup_excel,
+)
 
 # Kivy imports
-from kivy.lang import Builder
-from kivy.properties import StringProperty
 from kivy.app import App
-from kivy.uix.screenmanager import ScreenManager, Screen, FadeTransition
-from kivy.properties import StringProperty, DictProperty, BooleanProperty, NumericProperty, ListProperty
+from kivy.lang import Builder
+from kivy.clock import Clock
 from kivy.core.window import Window
+from kivy.core.clipboard import Clipboard
+from kivy.properties import (
+    StringProperty,
+    DictProperty,
+    BooleanProperty,
+    NumericProperty,
+    ListProperty
+)
+from kivy.metrics import dp
+from kivy.uix.screenmanager import ScreenManager, Screen, FadeTransition
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.anchorlayout import AnchorLayout
+from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.label import Label
 from kivy.uix.button import Button
 from kivy.uix.image import Image
 from kivy.uix.widget import Widget
 from kivy.uix.behaviors import ButtonBehavior
 from kivy.uix.modalview import ModalView
-from kivy.graphics import Color, RoundedRectangle, Rectangle, Ellipse
-from kivy.metrics import dp
-from kivy.core.clipboard import Clipboard
-from kivy.clock import Clock
-from kivy.properties import StringProperty, ListProperty
 from kivy.uix.popup import Popup
 from kivy.uix.scrollview import ScrollView
+from kivy.uix.textinput import TextInput
+from kivy.uix.filechooser import FileChooserListView
+from kivy.graphics import Color, RoundedRectangle, Rectangle, Ellipse, Line
 
 # ----- Check if python 3.12 is installed ---------
 
@@ -51,13 +65,12 @@ if sys.version_info >= (3, 14):
 Window.size = (500, 850)
 
 # ✅ ensure runtime dirs & config exist
-#initialize_first_run()
-Clock.schedule_once(lambda dt: initialize_first_run(), 1)
+initialize_first_run()
+#Clock.schedule_once(lambda dt: initialize_first_run(), 1)
 
 # ✅ now it is safe to load firebase.json
 firebase_cfg = load_firebase_config()
-DB_URL = firebase_cfg["database_url"] + "/.json"
-
+DB_URL = (firebase_cfg.get("database_url") or firebase_cfg.get("databaseURL")) + "/.json"
 
 # --- UI DEFINITIONS (KV) ---
 # The KV layout was moved from the inlined KV string to an external file.
@@ -65,7 +78,8 @@ DB_URL = firebase_cfg["database_url"] + "/.json"
 KV = None  # KV now lives in main.kv
 #KV_FILE = os.path.join(SRC_DIR, "main.kv")
 KV_FILE = str(Path(__file__).parent / "main.kv")
-Builder.load_file(KV_FILE)
+if KV_FILE not in Builder.files:
+    Builder.load_file(KV_FILE)
 
 
 APP_DATA = {}
@@ -74,47 +88,54 @@ COLOR_BLUE = [59/255, 101/255, 184/255, 1]
 COLOR_ORANGE = [255/255, 139/255, 2/255, 1]
 PANEL_COLOR = [179/255, 209/255, 255/255, 1]
 NOTE_BG = [255/255, 250/255, 230/255, 1]
+COLOR_GREEN = [0.2, 0.6, 0.2, 1]
+COLOR_RED = [1, 0.3, 0.3, 1]
 
-# --- HELPER FUNCTIONS ---
 def load_app_metadata():
-    import pandas as pd
-    from pathlib import Path
+    global APP_DATA
 
     metadata = {}
 
-    # ✅ 1. Try Excel first
-    try:
-        paths = get_runtime_paths()
-        excel_path = paths["data"] / "main.xlsx"
+    # ✅ 1. PRIMARY SOURCE: Firebase
+    firebase_meta = APP_DATA.get("metadata", {}) or {}
 
-        if excel_path.exists():
-            df = pd.read_excel(excel_path, sheet_name="AppInfo")
+    if isinstance(firebase_meta, list):
+        firebase_meta = firebase_meta[0] if firebase_meta else {}
 
-            for _, row in df.iterrows():
-                key = str(row.iloc[0]).strip().lower()
-                value = str(row.iloc[1]).strip()
-
-                metadata[key] = value
-
-            #print("✅ Metadata loaded from Excel:", metadata)
-
-    except Exception as e:
-        print("[ERROR] Excel metadata failed:", e)
-
-    # ✅ 2. FALLBACK to Firebase if Excel failed
-    if not metadata:
-        global APP_DATA
-        firebase_meta = APP_DATA.get("metadata", {})
-
-        print("✅ Using Firebase metadata:", firebase_meta)
-
+    if isinstance(firebase_meta, dict):
         metadata = {
+            "app_name": firebase_meta.get("app_name", "Linux HowTo"),
             "version": firebase_meta.get("version", "0.0.0"),
-            "last_update": firebase_meta.get("last update", "unknown"),
+            "last update": firebase_meta.get("last update", "unknown"),
             "description": firebase_meta.get("description", ""),
             "developer": firebase_meta.get("developer", ""),
             "changelog": firebase_meta.get("changelog", "")
         }
+
+        print("✅ Metadata loaded from Firebase:", metadata)
+
+    # ✅ 2. FALLBACK: Excel (only if Firebase is empty)
+    if not metadata or metadata.get("version") == "0.0.0":
+        try:
+            import pandas as pd
+            paths = get_runtime_paths()
+            excel_path = paths["data"] / "main.xlsx"
+
+            if excel_path.exists():
+                df = pd.read_excel(excel_path, sheet_name="AppInfo")
+
+                if df.shape[1] >= 2:
+                    for _, row in df.iterrows():
+                        key = str(row.iloc[0]).strip().lower()
+                        value = "" if pd.isna(row.iloc[1]) else str(row.iloc[1]).strip()
+                        metadata[key] = value
+
+                    print("⚠️ Fallback metadata from Excel:", metadata)
+
+        except Exception as e:
+            print("[ERROR] Excel fallback failed:", e)
+
+    metadata.setdefault("app_name", "Linux HowTo")
 
     return metadata
 
@@ -160,7 +181,70 @@ class AppMenu(ModalView):
 
 # --- MAIN APP CLASS ---
 
+class HoverBehavior(object):
+    hovered = BooleanProperty(False)
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        Window.bind(mouse_pos=self.on_mouse_pos)
+
+    def on_mouse_pos(self, *args):
+        if not self.get_root_window():
+            return
+
+        pos = args[1]
+        inside = self.collide_point(*self.to_widget(*pos))
+        if inside != self.hovered:
+            self.hovered = inside
+
+class HoverRow(BoxLayout, HoverBehavior):
+    selected = BooleanProperty(False)
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+        self.orientation = "horizontal"
+        self.size_hint_y = None
+        self.height = dp(40)
+        self.spacing = dp(6)
+
+        from kivy.graphics import Color, RoundedRectangle
+        with self.canvas.before:
+            self.bg_color = Color(1, 1, 1, 0)
+            self.bg_rect = RoundedRectangle(pos=self.pos, size=self.size, radius=[dp(6)])
+
+        self.bind(
+            pos=self.update_rect,
+            size=self.update_rect,
+            hovered=self.update_bg,
+            selected=self.update_bg
+        )
+
+    def update_rect(self, *args):
+        self.bg_rect.pos = self.pos
+        self.bg_rect.size = self.size
+
+    def update_bg(self, *args):
+        if self.selected:
+            self.bg_color.rgba = [0.75, 0.85, 1, 1]   # ✅ strong blue (selected)
+        elif self.hovered:
+            self.bg_color.rgba = [0.90, 0.93, 0.98, 1]  # ✅ light blue (hover)
+        else:
+            self.bg_color.rgba = [1, 1, 1, 0]
+
+
+    def on_hover(self, *args):
+        if self.hovered:
+            self.bg_color.rgba = [0.90, 0.93, 0.98, 1]
+        else:
+            self.bg_color.rgba = [1, 1, 1, 0]
+
+
 class LinuxHowToApp(App):
+    COLOR_BLUE_DARK   = [59/255, 101/255, 184/255, 1]   # already your main theme
+    COLOR_BLUE_MEDIUM = [100/255, 140/255, 210/255, 1]
+    COLOR_BLUE_LIGHT  = [170/255, 200/255, 240/255, 1]
+
     project_root = StringProperty("")
 
     # --- Update button visuals ---
@@ -175,6 +259,20 @@ class LinuxHowToApp(App):
     sync_bg = ListProperty([1, 0.5, 0, 1])          # orange
     sync_fg = ListProperty([0.1, 0.25, 0.45, 1])            # dark text
     sync_border = ListProperty([0, 0, 0, 0])        # invisible
+
+    admin_enabled = BooleanProperty(False)   # ✅ for disabeling admin buttons
+    admin_override = BooleanProperty(False)
+
+    def open_app_info(self):
+        self.sm.current = "app_info"
+
+    def _open_app_info_from_popup(self, popup):
+        popup.dismiss()              # ✅ close popup first
+        self.sm.current = "app_info" # ✅ then switch screen
+
+    def get_icon_path(self, filename):
+        return get_icon_path(filename)
+
 
     def update_version_labels(self):
         """
@@ -213,7 +311,9 @@ class LinuxHowToApp(App):
         Window.size = (850, 500) if w < h else (500, 850)
 
     def open_app_menu(self):
-        AppMenu().open()
+        self._menu_popup = AppMenu()
+        self._menu_popup.open()
+
 
     def open_database(self):
         paths = get_runtime_paths()
@@ -258,7 +358,33 @@ class LinuxHowToApp(App):
                 print(f"DEBUG: Fetching from {DB_URL}")
                 r = requests.get(DB_URL, timeout=10)
                 if r.status_code == 200:
-                    APP_DATA = r.json()
+                    data = r.json() or {}
+
+                    # ✅ NEVER reassign APP_DATA
+                    APP_DATA.clear()
+
+                    # ✅ update in place so UI keeps reference
+                    APP_DATA.update(data)
+
+
+                    # ✅ NORMALISE FIREBASE SHAPES (push keys -> dicts)
+                    # topics: {pushKey: {...}}  -> [{...}, {...}]
+                    if isinstance(APP_DATA.get("topics"), dict):
+                        APP_DATA["topics"] = [
+                            {"_key": k, **v} for k, v in APP_DATA["topics"].items()
+                            if isinstance(v, dict)
+                        ]
+
+                    if isinstance(APP_DATA.get("steps"), dict):
+                        APP_DATA["steps"] = [
+                            {"_key": k, **v} for k, v in APP_DATA["steps"].items()
+                            if isinstance(v, dict)
+                        ]
+
+                    if isinstance(APP_DATA.get("metadata"), list):
+                        APP_DATA["metadata"] = APP_DATA["metadata"][0] if APP_DATA["metadata"] else {}
+
+
                     print("DEBUG: Data fetched successfully")
 
                     # ✅ Check for missing icons AFTER data is loaded
@@ -312,25 +438,79 @@ class LinuxHowToApp(App):
         # Also trigger the standard menu population
         try:
             menu_screen = self.sm.get_screen('menu')
-            if hasattr(menu_screen, 'populate_menu'):
-                menu_screen.populate_menu()
-        except:
+            menu_screen.ids.menu_container.clear_widgets()
+            menu_screen.populate_menu()
+
+            # ✅ NEW: If user is currently on DetailScreen, reload it after data refresh
+            try:
+                if self.sm.current == "details":
+                    detail_screen = self.sm.get_screen("details")
+
+                    # keep current search filter if present
+                    q = ""
+                    if "local_search" in detail_screen.ids:
+                        q = detail_screen.ids.local_search.text
+
+                    detail_screen.load_content_from_cache(q)
+            except Exception as e:
+                print("DEBUG: detail screen refresh failed:", e)
+
+            try:
+                if self.sm.current == "article":
+                    article_screen = self.sm.get_screen("article")
+                    current_id = getattr(article_screen, "current_topic_id", None)
+
+                    if current_id:
+                        exists = any(
+                            t.get("Topic_ID") == current_id
+                            for t in APP_DATA.get("topics", [])
+                        )
+                        if not exists:
+                            self.sm.current = "details"
+            except Exception as e:
+                print("DEBUG: article screen refresh failed:", e)
+
+
+        except Exception as e:
+            print(f"[ERROR] Failed to open file: {e}")
             pass
 
     def build(self):
-        #initialize_first_run()
-        initialize_first_run()
+        self.admin_enabled = is_admin_enabled()
+        self.admin_override = False
 
-        self.icon = get_icon_path("howto.png")
-
+        self.icon = get_icon_path("howtolinux-icon.png")
         self.sm = ScreenManager(transition=FadeTransition())
         self.sm.add_widget(MenuScreen(name='menu'))
         self.sm.add_widget(SearchScreen(name='search'))
         self.sm.add_widget(DetailScreen(name='details'))
         self.sm.add_widget(ArticleScreen(name='article'))
+        self.sm.add_widget(AddTopicScreen(name="add_topic"))
+        self.sm.add_widget(AddStepScreen(name="add_step"))
+        self.sm.add_widget(AppInfoScreen(name="app_info"))
 
         self.fetch_database()
         return self.sm      
+
+    def is_admin_mode(self):
+        if self.admin_override:
+            return not self.admin_enabled   # ✅ flips mode
+        return self.admin_enabled          # ✅ normal behaviour
+
+    def toggle_admin_mode(self):
+        self.admin_override = not self.admin_override
+        print(f"DEBUG: override = {self.admin_override}")
+
+        # ✅ close and reopen menu so UI refreshes
+        self._reopen_app_menu()
+
+    def _reopen_app_menu(self):
+        # close current popup - helper -
+        if hasattr(self, "_menu_popup") and self._menu_popup:
+            self._menu_popup.dismiss()
+
+        # reopen fresh instance
+        self.open_app_menu()
 
     def run_sync_script(self, *args):
 
@@ -387,6 +567,148 @@ class LinuxHowToApp(App):
         Thread(target=run_proc, daemon=True).start()
 
 
+    #--------- editin and deleting --------
+    def edit_topic(self, data):
+        screen = self.sm.get_screen("add_topic")
+
+        # ✅ build taxonomy FIRST
+        screen._build_taxonomy_maps()
+
+        screen.edit_mode = True
+        screen.edit_topic_id = str(data.get("Topic_ID") or "")
+        screen.edit_topic_key = str(data.get("_key") or "")
+
+        # ✅ SHOW Topic_ID in the form when editing
+        if "topic_id" in screen.ids:
+            screen.ids.topic_id.text = screen.edit_topic_id
+
+        # reset
+        if "topic_id" in screen.ids:
+            screen.ids.topic_id.text = ""
+
+        # ✅ block callbacks
+        screen._skip_callbacks = True
+
+        # ✅ set dropdown values
+        screen.ids.category.values = sorted(screen.cat_to_icon.keys())
+        screen.ids.subcategory.values = []
+
+        category = data.get("Category", "")
+        subcategory = data.get("Subcategory", "")
+
+        # ✅ set category
+        screen.ids.category.text = category
+        screen.on_category_changed(category)
+
+        # ✅ set subcategory AFTER category update
+        screen.ids.subcategory.text = subcategory
+
+        # ✅ fill fields
+        screen.ids.title.text = data.get("Title", "")
+        screen.ids.description.text = data.get("Description", "")
+        screen.ids.urls.text = data.get("URLs", "")
+        screen.ids.cat_icon.text = data.get("Cat_Icon", "")
+        screen.ids.sub_icon.text = data.get("Sub_Icon", "")
+        screen.ids.topic_icon.text = data.get("Topic_Icon", "")
+        screen.ids.icon_path.text = ""
+        screen.ids.topic_icon.text = data.get("Topic_Icon", "")
+
+        # ✅ set header icon
+        icon_file = data.get("Topic_Icon", "")
+
+        if "header_icon" in screen.ids:
+            if icon_file:
+                try:
+                    screen.ids.header_icon.source = self.get_icon_path(icon_file)
+                except Exception as e:
+                    print("DEBUG: failed loading topic icon:", e)
+            else:
+                # fallback
+                screen.ids.header_icon.source = self.get_icon_path("howtolinux-icon.png")
+
+        # ✅ LOAD STEPS BEFORE UI SWITCH
+        screen.pending_steps = []
+
+        for step in APP_DATA.get("steps", []):
+            if step.get("Topic_ID") == data.get("Topic_ID"):
+                screen.pending_steps.append({
+                    "Step_Order": step.get("Step_Order"),
+                    "Headline": step.get("Headline"),
+                    "Header_2": step.get("Header_2"),
+                    "Instruction": step.get("Instruction"),
+                    "Code_Snippet": step.get("Code_Snippet"),
+                    "Notes": step.get("Notes"),
+                })
+
+        screen.pending_steps.sort(key=lambda x: int(x.get("Step_Order", 999)))
+        screen.refresh_steps_preview()
+        screen.refresh_steps_list()
+
+        # ✅ NOW switch screen
+        self.sm.current = "add_topic"
+        Clock.schedule_once(lambda dt: screen.refresh_steps_list(), 0)
+
+        # ✅ ONLY ONE callback re-enable
+        #Clock.schedule_once(
+        #    lambda dt: setattr(screen, "_skip_callbacks", False),
+        #    0.1
+        #)
+
+    def delete_topic(self, data):
+        from src.editor import delete_topic_from_firebase
+
+
+        node_key = str(data.get("_key") or "")
+        topic_id = str(data.get("Topic_ID") or "")
+
+        if not topic_id:
+            return
+
+        def confirm_delete(instance):
+            popup.dismiss()
+
+            try:
+                deleted_topics, deleted_steps = delete_topic_from_firebase(node_key, topic_id)
+                print(f"✅ Deleted topics: {deleted_topics}, steps: {deleted_steps}")
+
+                # ✅ Step 1: trigger fresh fetch
+
+                # 👇 IMPORTANT: chain refresh AFTER fetch
+                self.fetch_database()
+                Clock.schedule_once(after_fetch, 0.5)
+
+            except Exception as e:
+                print(f"❌ Delete failed: {e}")
+        print("DEBUG deleting Topic_ID:", topic_id)
+
+
+        # ✅ Popup UI
+        content = BoxLayout(orientation="vertical", spacing=10, padding=10)
+        content.add_widget(Label(text="Are you sure you want to delete this topic?"))
+
+        btn_box = BoxLayout(size_hint_y=None, height="40dp", spacing=10)
+
+        btn_yes = Button(text="DELETE", background_color=[1, 0.3, 0.3, 1])
+        btn_no = Button(text="Cancel")
+
+        btn_box.add_widget(btn_yes)
+        btn_box.add_widget(btn_no)
+        content.add_widget(btn_box)
+
+        popup = Popup(
+            #title="About Application",
+            title="Delete Topic",
+            content=content,
+            size_hint=(0.5, 0.4),
+
+            background="",                      # ✅ remove default background
+            background_color=(0, 0, 0, 0)       # ✅ fully transparent
+        )
+
+        btn_yes.bind(on_release=confirm_delete)
+        btn_no.bind(on_release=lambda x: popup.dismiss())
+
+        popup.open()
 
 
     #---- update button behaviour -----
@@ -494,16 +816,13 @@ class LinuxHowToApp(App):
 
         Clock.schedule_once(self.restore_sync_button, 3)
 
-
     def restore_sync_button(self, *args):
         self.sync_text = "Developer Sync (Firebase & Git)"
         self.sync_bg = [1, 0.5, 0, 1]              # orange
         self.sync_fg = [0.1, 0.25, 0.45, 1]        # dark text
         self.sync_border = [0, 0, 0, 0]            # no border
 
-
     def show_about(self):
-
         metadata = self.metadata
 
         name = metadata.get('app_name', 'Linux HowTo')
@@ -513,23 +832,129 @@ class LinuxHowToApp(App):
         desc = metadata.get('description', '')
         change = metadata.get('changelog', '').replace("\\n", "\n")
 
-        # ✅ OUTER layout (fixed size)
-        outer = BoxLayout(orientation='vertical', padding=20, spacing=15)
+        RADIUS = 22
+        BORDER_W = 2
 
-        # ✅ HEADER (no scroll)
-        outer.add_widget(Label(
-           text=f"[b][size=28sp]{name}[/size][/b]\n"
-                f"[size=16sp]Version {version}[/size]\n"
-                f"[size=14sp]Last update: {last_update}[/size]\n"
-                f"[size=14sp][color=888888]Developed by: {dev_name}[/color][/size]",
-            markup=True,
+        # ✅ ONE rounded outer container (background + orange border)
+        root_layout = FloatLayout()
+
+        with root_layout.canvas.before:
+            Color(0.12, 0.18, 0.30, 1)  # darker blue
+            root_layout.bg = RoundedRectangle(pos=root_layout.pos, size=root_layout.size, radius=[RADIUS])
+
+        with root_layout.canvas.after:
+            Color(1, 0.55, 0, 1)  # orange
+            root_layout.border = Line(
+                rounded_rectangle=(root_layout.x + 1, root_layout.y + 1,
+                                root_layout.width - 2, root_layout.height - 2,
+                                RADIUS),
+                width=BORDER_W
+            )
+
+        def _sync_popup_bg(*_):
+            root_layout.bg.pos = root_layout.pos
+            root_layout.bg.size = root_layout.size
+            root_layout.border.rounded_rectangle = (
+                root_layout.x + 1, root_layout.y + 1,
+                root_layout.width - 2, root_layout.height - 2,
+                RADIUS
+            )
+
+        root_layout.bind(pos=_sync_popup_bg, size=_sync_popup_bg)
+        _sync_popup_bg()  # ✅ apply once immediately
+
+        # ✅ Content (NO inner border/card)
+        outer = BoxLayout(
+            orientation='vertical',
+            padding=[20, 15, 20, 20],
+            spacing=15,
+            size_hint=(0.95, 0.95),
+            pos_hint={"center_x": 0.5, "center_y": 0.5}
+        )
+
+        # ✅ Header block
+        header = BoxLayout(
+            orientation="horizontal",
             size_hint_y=None,
-            height=120,
-            halign='center'
+            height=110,
+            spacing=20
+        )
+
+        # ✅ left: TEXT BLOCK
+        text_block = BoxLayout(
+            orientation="vertical",
+            spacing=4
+        )
+
+        text_block.add_widget(Label(
+            text=f"[b]{name}[/b]",
+            markup=True,
+            font_size="28sp",   # ✅ bigger title
+            halign="left",
+            valign="middle",
+            color=[1, 1, 1, 1],
+            size_hint_y=None,
+            height=35
         ))
 
-        # ✅ SCROLLABLE AREA
-        scroll = ScrollView(size_hint=(1, 1))
+        text_block.add_widget(Label(
+            text=f"Version {version}",
+            halign="left",
+            color=[0.9, 0.9, 1, 1],
+            size_hint_y=None,
+            height=25
+        ))
+
+        text_block.add_widget(Label(
+            text=f"Last update: {last_update}",
+            halign="left",
+            color=[0.9, 0.9, 1, 1],
+            size_hint_y=None,
+            height=25
+        ))
+
+        text_block.add_widget(Label(
+            text=f"[color=ffaa33]{dev_name}[/color]",
+            markup=True,
+            halign="left",
+            size_hint_y=None,
+            height=25
+        ))
+
+        header.add_widget(text_block)
+
+        # ✅ right: LOGO
+        header.add_widget(Image(
+            source=self.get_icon_path("howtolinux-icon.png"),
+            size_hint=(None, None),
+            size=(95, 95),
+            pos_hint={"center_y": 0.5}
+        ))
+
+        outer.add_widget(header)
+        # ✅ subtle divider under header
+        divider = BoxLayout(
+            size_hint_y=None,
+            height=1,
+            padding=[0, 5, 0, 5]
+        )
+
+        with divider.canvas.before:
+            Color(1, 0.55, 0, 0.3)   # ✅ very subtle light line
+            divider.line = Line(points=[])
+
+        def update_line(*_):
+            divider.line.points = [
+                divider.x, divider.y + divider.height / 2,
+                divider.right, divider.y + divider.height / 2
+            ]
+
+        divider.bind(pos=update_line, size=update_line)
+
+        outer.add_widget(divider)
+
+        # ✅ Scrollable content
+        scroll = ScrollView(size_hint=(1, 1), bar_width=8)
 
         scroll_content = BoxLayout(
             orientation='vertical',
@@ -537,26 +962,22 @@ class LinuxHowToApp(App):
             spacing=10,
             padding=[15, 10]
         )
-
         scroll_content.bind(minimum_height=scroll_content.setter('height'))
 
-        # ✅ DESCRIPTION
         desc_label = Label(
             text=f"[i]{desc}[/i]",
             markup=True,
             size_hint_y=None,
             halign='center',
-            valign='top'
+            valign='top',
+            color=[0.9, 0.9, 1, 1]
         )
-
         desc_label.bind(
             width=lambda inst, val: setattr(inst, 'text_size', (val, None)),
             texture_size=lambda inst, val: setattr(inst, 'height', val[1])
         )
-
         scroll_content.add_widget(desc_label)
 
-        # ✅ CHANGELOG TITLE
         title_label = Label(
             text="[b]WHAT'S NEW[/b]",
             markup=True,
@@ -564,56 +985,97 @@ class LinuxHowToApp(App):
             height=30,
             halign='left',
             valign='middle',
-            color=[0.7, 0.7, 1, 1]
+            color=[1, 1, 1, 1]
         )
-
-        title_label.bind(
-            width=lambda inst, val: setattr(inst, 'text_size', (val, None))
-        )
-
+        title_label.bind(width=lambda inst, val: setattr(inst, 'text_size', (val, None)))
         scroll_content.add_widget(title_label)
 
-
-        # ✅ CHANGELOG TEXT (NOW SCROLLABLE ✅)
         changelog_label = Label(
             text=change,
             size_hint_y=None,
             halign='left',
-            valign='top'
+            valign='top',
+            color=[0.9, 0.9, 1, 1]
         )
-
         changelog_label.bind(
             width=lambda inst, val: setattr(inst, 'text_size', (val, None)),
             texture_size=lambda inst, val: setattr(inst, 'height', val[1])
         )
-
-
-        changelog_label.bind(
-            texture_size=lambda inst, val: setattr(inst, 'height', val[1])
-        )
-
         scroll_content.add_widget(changelog_label)
 
         scroll.add_widget(scroll_content)
         outer.add_widget(scroll)
 
-        # ✅ CLOSE BUTTON (fixed bottom)
-        btn = Button(
+        # ✅ Buttons row
+        btn_row = BoxLayout(size_hint_y=None, height=50, spacing=10)
+
+        btn_close = Button(
             text='CLOSE',
-            size_hint_y=None,
-            height=50
+            background_normal='',
+            background_color=self.COLOR_BLUE_MEDIUM,
+            color=[1, 1, 1, 1],
+            bold=True
         )
 
-        outer.add_widget(btn)
+        app = App.get_running_app()
+
+        btn_edit = Button(
+            size_hint=(None, None),
+            size=(40, 40),
+            disabled=not app.is_admin_mode(),
+            opacity=1 if app.is_admin_mode() else 0.3,
+            background_normal=self.get_icon_path("edit.png"),
+            background_down=self.get_icon_path("edit.png"),
+            background_color=[1, 1, 1, 1],
+            border=(0, 0, 0, 0),
+            text=""
+        )
+
+        btn_row.add_widget(btn_close)
+        btn_row.add_widget(btn_edit)
+        outer.add_widget(btn_row)
+
+        root_layout.add_widget(outer)
 
         popup = Popup(
-            title="About Application",
-            content=outer,
-            size_hint=(0.9, 0.9)
+            title="About the App",
+            content=root_layout,
+            size_hint=(0.9, 0.9),
+            background="",
+            background_color=(0, 0, 0, 0),
+            separator_height=0   # ✅ THIS removes the top line
         )
 
-        btn.bind(on_release=popup.dismiss)
+        btn_close.bind(on_release=popup.dismiss)
+        btn_edit.bind(on_release=lambda x: self._open_app_info_from_popup(popup))
+
         popup.open()
+
+    def open_new_topic(self):
+        screen = self.sm.get_screen("add_topic")
+
+        # ✅ FIRST build taxonomy maps
+        screen._build_taxonomy_maps()
+
+        # ✅ THEN set mode
+        screen.edit_mode = False
+        screen.edit_topic_id = ""
+
+        # ✅ TEMPORARILY disable callbacks
+        screen._skip_callbacks = True
+
+        # ✅ THEN reset form safely
+        screen.cancel_edit()
+
+        # ✅ populate dropdowns AFTER reset
+        screen._populate_category_spinner()
+
+        # ✅ re-enable callbacks AFTER UI update
+        Clock.schedule_once(
+            lambda dt: setattr(screen, "_skip_callbacks", False), 0.1
+        )
+
+        self.sm.current = "add_topic"
 
 
 # (Rest of the Screen and Widget classes remain same as your main.py)
@@ -665,7 +1127,7 @@ class ExpandableSection(BoxLayout):
         self.header.add_widget(self.title_label)
 
         self.arrow = RotatableArrow(
-            source='assets/icons/down_arrow.png', size_hint_x=None, width=dp(25)
+            source=get_icon_path("down_arrow.png"), size_hint_x=None, width=dp(25)
         )
         self.header.add_widget(self.arrow)
 
@@ -695,17 +1157,25 @@ class ExpandableSection(BoxLayout):
             self.list_box.clear_widgets()
             self.arrow.angle = +90
 
+#---------------Screen Classes--------------------
+
 class MenuScreen(Screen):
     def on_enter(self):
-        if not self.ids.menu_container.children: self.check_data()
+        self.check_data()
+        #if not self.ids.menu_container.children: self.check_data()
+
     def check_data(self, *args):
-        if APP_DATA: self.populate_menu()
-        else: Clock.schedule_once(self.check_data, 0.2)
+        if not APP_DATA:
+            Clock.schedule_once(self.check_data, 0.2)
+            return
+
+        self.populate_menu()
+
     def populate_menu(self):
         topics = APP_DATA.get('topics', [])
         unique_cats = {}
         for t in topics:
-            if t and 'Category' in t:
+            if isinstance(t, dict) and t.get("Category"):
                 unique_cats[t['Category']] = t.get('Cat_Icon')
         self.ids.menu_container.clear_widgets()
         for name, icon in unique_cats.items():
@@ -748,10 +1218,29 @@ class SearchScreen(Screen):
 
 class DetailScreen(Screen):
     header_title = StringProperty("")
+
     def on_pre_enter(self):
         self.header_title = getattr(self.manager, 'selected_category', "")
         self.ids.local_search.text = ""
         self.load_content_from_cache()
+
+    def on_kv_post(self, base_widget):
+        """
+        Called after KV ids are ready.
+        Bind focus handlers to all TextInput fields so ScrollView stops     stealing focus.
+        """
+        for w in self.walk():
+            if isinstance(w, TextInput):
+                w.bind(focus=self._on_any_textinput_focus)
+
+    def _on_any_textinput_focus(self, instance, focused):
+        """
+        When a TextInput is focused, disable scrolling.
+        When focus is lost, re-enable scrolling.
+        """
+        if "form_scroll" in self.ids:
+            self.ids.form_scroll.do_scroll_y = not focused
+
     def load_content_from_cache(self, query=""):
         self.ids.list_container.clear_widgets()
         if not APP_DATA: return
@@ -782,14 +1271,21 @@ class DetailScreen(Screen):
         self.manager.get_screen('article').setup_article(instance.data)
         self.manager.current = 'article'
 
-############# Article Screen
+#---------- Article Screen ------
+
 class ArticleScreen(Screen):
     def go_back(self):
         dest = getattr(self.manager, 'last_screen', 'details')
         self.manager.current = dest
 
     def setup_article(self, data):
-        if not data: return
+        if not data:
+            return
+
+        # ✅ STORE CURRENT TOPIC
+        self.current_topic_id = data.get("Topic_ID")
+        self.current_topic_key = data.get("_key")
+
         self.ids.content_box.clear_widgets()
         self.ids.content_box.spacing = dp(15)
         topic_id = data.get('Topic_ID')
@@ -911,7 +1407,7 @@ class ArticleScreen(Screen):
                 note_container.bind(minimum_height=note_container.setter('height'))
                 note_container.bind(pos=self._update_graphics, size=self._update_graphics)
                 note_container.add_widget(
-                    Image(source='assets/icons/note.png', 
+                    Image(source=get_icon_path("note.png"),
                         size_hint=(None, None), 
                         size=(dp(24), dp(24)), pos_hint={'top': 1})
                 )
@@ -935,6 +1431,864 @@ class ArticleScreen(Screen):
         Clock.schedule_once(lambda dt: setattr(btn, 'text', 'Copy'), 2)
         Clock.schedule_once(lambda dt: setattr(btn, 'background_color', [0.3, 0.3, 0.3, 1]), 2)
 
+#-------------- editor screen---------------
+class AddTopicScreen(Screen):
+    edit_topic_key = StringProperty("")
+    edit_mode = BooleanProperty(False)     # ✅ THIS FIXES YOUR CRASH
+    edit_topic_id = StringProperty("")     # ✅ needed for edit tracking
+    pending_steps = ListProperty([])  # list of step dicts to save together with the topic
+    selected_step_index = NumericProperty(-1)   # -1 means "no step selected"
+
+    def on_pre_enter(self):
+
+        if not is_admin_enabled():
+            self.ids.status_label.text = "Editor disabled (admin key missing)."
+            self.ids.save_btn.disabled = True
+            self.ids.add_step_btn.disabled = True
+        else:
+            self.ids.status_label.text = ""
+            self.ids.save_btn.disabled = False
+            self.ids.add_step_btn.disabled = False
+
+        # ✅ EDIT MODE
+        if self.edit_mode:
+            if "topic_id" in self.ids:
+                self.ids.topic_id.text = self.edit_topic_id
+                self.ids.topic_id.readonly = True
+
+            # ✅ SET HEADER ICON
+            if "header_icon" in self.ids:
+                from kivy.app import App
+                icon_file = self.ids.topic_icon.text.strip()
+
+                if icon_file:
+                    self.ids.header_icon.source = App.get_running_app().get_icon_path(icon_file)
+                else:
+                    self.ids.header_icon.source = App.get_running_app().get_icon_path("howtolinux-icon.png")
+
+            self.refresh_steps_preview()
+            return
+
+        # ✅ ADD MODE
+        if "topic_id" in self.ids:
+            self.ids.topic_id.text = ""             # ✅ CLEAR OLD VALUE
+            self.ids.topic_id.readonly = False      # ✅ MAKE EDITABLE
+
+            # ✅ reset header icon
+            if "header_icon" in self.ids:
+                from kivy.app import App
+                self.ids.header_icon.source = App.get_running_app().get_icon_path("howtolinux-icon.png")
+
+
+        self.refresh_steps_preview()
+        self.refresh_steps_list()
+        self._schedule_populate_dropdowns()
+
+    def _schedule_populate_dropdowns(self):
+        # APP_DATA might still be empty if fetch is in progress
+        def _try(_dt):
+            global APP_DATA
+            if isinstance(APP_DATA, dict) and APP_DATA.get("topics"):
+                self._build_taxonomy_maps()
+                self._populate_category_spinner()
+            else:
+                Clock.schedule_once(_try, 0.2)
+        Clock.schedule_once(_try, 0)
+
+    def _build_taxonomy_maps(self):
+
+        global APP_DATA
+        topics = APP_DATA.get("topics", [])
+
+        self.cat_to_icon = {}
+        self.all_subcategories = set()
+        self.sub_to_icon = {}
+
+        for t in topics:
+            if not isinstance(t, dict):
+                continue
+            cat = str(t.get("Category", "")).strip()
+            sub = str(t.get("Subcategory", "")).strip()
+
+            # ✅ normalise case (important!)
+            sub = sub.lower()
+
+            if not cat:
+                continue
+
+            # Category icon
+            if cat not in self.cat_to_icon:
+                icon = str(t.get("Cat_Icon", "") or "").strip()
+                self.cat_to_icon[cat] = icon
+
+            # Subcategory list
+            if sub and sub.lower() != "nan":
+                sub = sub.lower()              # ✅ normalize (fix duplicates)
+                self.all_subcategories.add(sub)
+
+            # Subcategory icon
+            if sub and sub.lower() != "nan":
+                key = (cat, sub)
+                if key not in self.sub_to_icon:
+                    sicon = str(t.get("Sub_Icon", "") or "").strip()
+                    self.sub_to_icon[key] = sicon
+
+    def _populate_category_spinner(self):
+        if self.edit_mode:
+            return
+
+        cats = sorted(self.cat_to_icon.keys(), key=str.lower)
+
+        self.ids.category.values = cats
+
+        # ✅ Always force placeholder AFTER values set
+        self.ids.category.text = "Click to choose category"
+
+        # ✅ Reset subcategory as well
+        self.ids.subcategory.values = []
+        self.ids.subcategory.text = "Click to choose subcategory"
+
+        # ✅ Clear icons until selection is made
+        self.ids.cat_icon.text = ""
+        self.ids.sub_icon.text = ""
+
+    def on_category_changed(self, category_text):
+        print("DEBUG category:", category_text)
+        print("DEBUG subcategories:", self.all_subcategories)
+
+        if not hasattr(self, "sub_to_icon"):
+            return
+
+        if getattr(self, "_skip_callbacks", False):
+            return
+
+        #if category_text == "Click to choose category":
+        #    return
+        """
+        Called by KV on category spinner change.
+        Updates subcategory dropdown and auto-fills cat_icon / sub_icon.
+        """
+        cat = str(category_text).strip()
+
+        # auto-fill Cat_Icon
+        cat_icon = self.cat_to_icon.get(cat, "")
+        self.ids.cat_icon.text = cat_icon
+
+        # update subcategory list
+        subs = sorted(
+            [s.capitalize() for s in self.all_subcategories],
+            key=str.lower
+        )
+
+
+        if not subs:
+            subs = ["General"]   # ✅ fallback
+
+        self.ids.subcategory.values = ["General"] + subs
+
+        # start clean: do NOT keep old selection
+        self.ids.subcategory.text = "Select Subcategory"
+        self.ids.sub_icon.text = ""
+
+    def on_subcategory_changed(self, subcategory_text):
+
+        if getattr(self, "_skip_callbacks", False):
+            return
+
+        if subcategory_text == "Click to choose subcategory":
+            return
+
+        """
+        Called by KV on subcategory spinner change.
+        Auto-fills Sub_Icon using the (Category, Subcategory) mapping.
+        """
+        cat = str(self.ids.category.text).strip()
+        sub = str(subcategory_text).strip()
+        sub_icon = self.sub_to_icon.get((cat, sub), "")
+        self.ids.sub_icon.text = sub_icon
+
+    def cancel_edit(self):
+        self.edit_mode = False
+
+        # reset fields
+        self.ids.category.text = "Click to choose category"
+        self.ids.subcategory.text = "Click to choose subcategory"
+        self.ids.title.text = ""
+        self.ids.description.text = ""
+        self.ids.urls.text = ""
+        self.ids.cat_icon.text = ""
+        self.ids.sub_icon.text = ""
+        self.ids.topic_icon.text = ""
+        self.ids.icon_path.text = ""
+
+        self.pending_steps = []
+        self.refresh_steps_preview()
+
+        # go back
+        App.get_running_app().sm.current = "menu"
+
+    # -----------------------------
+    # ICON PICKER
+    # -----------------------------
+    def pick_icon(self):
+        # You already use a file picker pattern elsewhere; simplest: keep text path entry.
+        # If you want a FileChooser popup later, we can add it – for now this won't crash.
+        #self.ids.status_label.text = "Tip: paste an icon path into 'icon_path' then Save."
+
+        layout = BoxLayout(orientation="vertical")
+
+        filechooser = FileChooserListView(
+            path=str(Path.home()),
+            filters=["*.png", "*.jpg", "*.jpeg"]
+        )
+
+        def select_file(instance):
+            if filechooser.selection:
+                selected = filechooser.selection[0]
+                self.ids.icon_path.text = selected
+
+                # ✅ update header icon immediately
+                from kivy.app import App
+                try:
+                    filename = Path(selected).name
+                    # ✅ preview direct file (correct)
+                    self.ids.header_icon.source = selected
+                    # ✅ keep UI consistent
+                    self.ids.topic_icon.text = Path(selected).name
+
+                except Exception as e:
+                    print("DEBUG: preview icon failed:", e)
+
+            popup.dismiss()
+
+        btn = Button(text="Select", size_hint_y=None, height=50)
+        btn.bind(on_release=select_file)
+
+        layout.add_widget(filechooser)
+        layout.add_widget(btn)
+
+        popup = Popup(title="Select Icon", content=layout, size_hint=(0.9, 0.9))
+        popup.open()
+
+
+    def on_topic_icon_change(self, value):
+        if "header_icon" not in self.ids:
+            return
+
+        from kivy.app import App
+        icon_path = App.get_running_app().get_icon_path(value)
+
+        if value and os.path.exists(icon_path):
+            self.ids.header_icon.source = icon_path
+        else:
+            # ✅ fallback icon
+            self.ids.header_icon.source = App.get_running_app().get_icon_path("howtolinux-icon.png")
+
+    # -----------------------------
+    # STEPS (local buffer)
+    # -----------------------------
+    def add_step_local(self):
+        try:
+            step_order = int(self.ids.step_order.text.strip())
+        except Exception:
+            self.ids.status_label.text = "Step_Order must be an integer (e.g. 1, 2, 3)."
+            return
+
+        instruction = self.ids.step_instruction.text.strip()
+        if not instruction:
+            self.ids.status_label.text = "Instruction is required."
+            return
+
+        # Build step dict
+        step = {
+            "Step_Order": step_order,
+            "Headline": self.ids.step_headline.text.strip(),
+            "Header_2": self.ids.step_header2.text.strip(),
+            "Instruction": instruction,
+            "Code_Snippet": self.ids.step_code.text.strip(),
+            "Notes": self.ids.step_notes.text.strip(),
+        }
+
+        # ✅ If a step is selected → overwrite that slot
+        if self.selected_step_index != -1 and 0 <= self.selected_step_index < len(self.pending_steps):
+            self.pending_steps[self.selected_step_index] = step
+            self.selected_step_index = -1
+            if "add_step_btn" in self.ids:
+                self.ids.add_step_btn.text = "Add Step"
+        else:
+            # fallback: replace any existing step with same order
+            self.pending_steps = [s for s in self.pending_steps if int(s.get("Step_Order", 9999)) != step_order]
+            self.pending_steps.append(step)
+
+        # reorder + renumber
+        self.pending_steps.sort(key=lambda s: int(s.get("Step_Order", 9999)))
+        self.renumber_steps()
+
+        self.clear_step_form()
+        self.refresh_steps_preview()
+        self.refresh_steps_list()
+        self.ids.form_scroll.scroll_y = 0.3
+
+        self.ids.status_label.text = f"Step saved."
+
+
+    def remove_last_step(self):
+        if self.pending_steps:
+            self.pending_steps = self.pending_steps[:-1]
+            self.renumber_steps()
+            self.refresh_steps_preview()
+            self.refresh_steps_list()
+            self.ids.status_label.text = "Last step removed."
+
+    def clear_step_form(self):
+        self.ids.step_order.text = ""
+        self.ids.step_headline.text = ""
+        self.ids.step_header2.text = ""
+        self.ids.step_instruction.text = ""
+        self.ids.step_code.text = ""
+        self.ids.step_notes.text = ""
+
+        # ✅ 🔥 RESET selection highlight
+        self.selected_step_index = -1
+        self.refresh_steps_list()
+
+        # ✅ reset button text
+        if "add_step_btn" in self.ids:
+            self.ids.add_step_btn.text = "Add Step"
+
+    def refresh_steps_preview(self):
+        # Only update if you still have a steps_preview label in KV
+        if "steps_preview" not in self.ids:
+            return
+
+        if not self.pending_steps:
+            self.ids.steps_preview.text = "No steps added yet."
+            return
+
+        lines = []
+        for s in self.pending_steps:
+            order = s.get("Step_Order", "?")
+            title = s.get("Headline") or s.get("Header_2") or "(no headline)"
+            lines.append(f"{order}. {title}")
+        self.ids.steps_preview.text = "\n".join(lines)
+
+
+    def _clean_step_title(self, title: str) -> str:
+        """Remove leading numbering like '3.' or '3)' from stored titles."""
+        if not title:
+            return "(no headline)"
+        return re.sub(r'^\s*\d+[\.\)\:\-]\s*', '', str(title).strip())
+
+    def refresh_steps_list(self):
+        if "steps_container" not in self.ids:
+            return
+
+        container = self.ids.steps_container
+        container.clear_widgets()
+
+        if not self.pending_steps:
+            container.add_widget(Label(
+                text="No steps added yet.",
+                size_hint_y=None,
+                height=dp(30),
+                color=[0.3, 0.3, 0.3, 1]
+            ))
+            return
+
+        app = App.get_running_app()
+
+        for idx, s in enumerate(self.pending_steps):
+            order = int(s.get("Step_Order", idx + 1))
+            title_raw = s.get("Headline") or s.get("Header_2") or ""
+            title = self._clean_step_title(title_raw)
+
+            row = HoverRow()
+            row.selected = (idx == self.selected_step_index)
+
+            # LEFT: TEXT (flexible width)
+            lbl = Label(
+                text=f"{order}. {title}",
+                size_hint_x=1,          # ✅ takes remaining space
+                halign="left",
+                valign="middle",
+                color=[0.1, 0.25, 0.45, 1]   # ✅ dark reada
+            )
+            lbl.bind(size=lambda s, w: setattr(s, 'text_size', (w[0], None)))
+            row.add_widget(lbl)
+
+            # RIGHT: BUTTON GROUP (fixed width!)
+            btn_box = BoxLayout(
+                orientation="horizontal",
+                size_hint_x=None,
+                width=dp(160),          # ✅ FIXED SPACE for buttons
+                spacing=dp(4)
+            )
+
+            # EDIT
+
+            btn_edit = Button(
+                size_hint=(None, None),
+                size=(dp(36), dp(36)),
+                background_normal=app.get_icon_path("edit.png"),
+                background_down=app.get_icon_path("edit.png"),
+                background_color=[1, 1, 1, 1],
+                border=(0, 0, 0, 0),
+                text=""
+            )
+
+            btn_edit.bind(on_release=lambda _b, i=idx: self.load_step_into_form(i))
+            btn_box.add_widget(btn_edit)
+
+            # DELETE
+            btn_del = Button(
+                size_hint=(None, None),
+                size=(dp(36), dp(36)),
+                background_normal=app.get_icon_path("delete.png"),
+                background_down=app.get_icon_path("delete.png"),
+                background_color=[1, 1, 1, 1],
+                border=(0, 0, 0, 0),
+                text=""
+            )
+            btn_del.bind(on_release=lambda _b, i=idx: self.delete_step(i))
+            btn_box.add_widget(btn_del)
+
+
+            # UP
+            btn_up = Button(
+                size_hint=(None, None),
+                size=(dp(36), dp(36)),
+                background_normal=app.get_icon_path("up.png"),
+                background_down=app.get_icon_path("up.png"),
+                background_color=[1, 1, 1, 1],
+                border=(0, 0, 0, 0),
+                text=""
+            )
+            btn_up.bind(on_release=lambda _b, i=idx: self.move_step(i, -1))
+            btn_box.add_widget(btn_up)
+
+            # DOWN
+            btn_down = Button(
+                size_hint=(None, None),
+                size=(dp(36), dp(36)),
+                background_normal=app.get_icon_path("down.png"),
+                background_down=app.get_icon_path("down.png"),
+                background_color=[1, 1, 1, 1],
+                border=(0, 0, 0, 0),
+                text=""
+            )
+            btn_down.bind(on_release=lambda _b, i=idx: self.move_step(i, +1))
+            btn_box.add_widget(btn_down)
+
+            row.add_widget(btn_box)
+            container.add_widget(row)
+
+
+    def load_step_into_form(self, idx):
+        """Load a pending step into the step form for editing."""
+        if idx < 0 or idx >= len(self.pending_steps):
+            return
+
+        s = self.pending_steps[idx]
+        self.selected_step_index = idx
+        self.refresh_steps_list()
+
+        self.ids.step_order.text = str(s.get("Step_Order", ""))
+        self.ids.step_headline.text = s.get("Headline", "") or ""
+        self.ids.step_header2.text = s.get("Header_2", "") or ""
+        self.ids.step_instruction.text = s.get("Instruction", "") or ""
+        self.ids.step_code.text = s.get("Code_Snippet", "") or ""
+        self.ids.step_notes.text = s.get("Notes", "") or ""
+
+        # visual cue: turn Add Step button into Update
+        if "add_step_btn" in self.ids:
+            self.ids.add_step_btn.text = "Update Step"
+
+    def renumber_steps(self):
+        """Force Step_Order to be 1..n in the current order."""
+        for i, s in enumerate(self.pending_steps):
+            s["Step_Order"] = i + 1
+
+        self.refresh_steps_preview()
+        self.refresh_steps_list()
+
+    def delete_step(self, idx):
+        if idx < 0 or idx >= len(self.pending_steps):
+            return
+        self.pending_steps.pop(idx)
+        self.selected_step_index = -1
+        if "add_step_btn" in self.ids:
+            self.ids.add_step_btn.text = "Add Step"
+        self.renumber_steps()
+        self.refresh_steps_preview()
+        self.refresh_steps_list()
+
+    def move_step(self, idx, direction):
+        new_idx = idx + direction
+        if new_idx < 0 or new_idx >= len(self.pending_steps):
+            return
+
+        self.pending_steps[idx], self.pending_steps[new_idx] = self.pending_steps[new_idx], self.pending_steps[idx]
+        self.renumber_steps()
+        self.refresh_steps_preview()
+        self.refresh_steps_list()
+
+
+    # -----------------------------
+    # SAVE TOPIC + ALL STEPS TO FIREBASE
+    # -----------------------------
+    def save_topic(self):
+        if not is_admin_enabled():
+            self.ids.status_label.text = "Editor disabled (admin key missing)."
+            return
+
+        # Copy icon if a file path is provided
+        icon_filename = self.ids.topic_icon.text.strip()
+        icon_path = self.ids.icon_path.text.strip()
+        if icon_path:
+            try:
+                icon_filename = copy_icon_to_assets(icon_path)
+                # ✅ sync UI with saved filename
+                self.ids.topic_icon.text = icon_filename
+
+                # ✅ update header icon after saving
+                if "header_icon" in self.ids:
+                    from kivy.app import App
+                    try:
+                        self.ids.header_icon.source = App.get_running_app().get_icon_path(icon_filename)
+                    except Exception as e:
+                        print("DEBUG: header icon update failed:", e)
+
+            except Exception as e:
+                self.ids.status_label.text = f"Icon copy failed: {e}"
+                return
+
+
+        # ✅ 1. Build topic dict FIRST
+        topic = {
+            "Category": self.ids.category.text.strip(),
+            "Subcategory": self.ids.subcategory.text.strip(),
+            "Title": self.ids.title.text.strip(),
+            "Description": self.ids.description.text.strip(),
+            "URLs": self.ids.urls.text.strip(),
+            "Cat_Icon": self.ids.cat_icon.text.strip(),
+            "Sub_Icon": self.ids.sub_icon.text.strip(),
+            "Topic_Icon": icon_filename,
+        }
+
+        # ✅ 2. Optional user-provided Topic_ID
+        if "topic_id" in self.ids:
+            user_id = self.ids.topic_id.text.strip()
+            if self.edit_mode and user_id:
+                topic["Topic_ID"] = user_id
+
+        if not topic["Category"] or not topic["Title"]:
+            self.ids.status_label.text = "Category and Title are required."
+            return
+
+        try:
+            if self.edit_mode:
+                # ✅ keep Firebase key (VERY IMPORTANT)
+                topic["_key"] = self.edit_topic_key
+
+                # ✅ keep Topic_ID or updated one
+                topic["Topic_ID"] = self.edit_topic_id
+
+                topic_key, topic_id = add_topic_to_firebase(topic, overwrite=True)
+
+            else:
+                topic_key, topic_id = add_topic_to_firebase(topic)
+
+            # ✅ FORCE STRING ID (important)
+            topic_id = str(topic_id)
+
+            if "topic_id" in self.ids:
+                self.ids.topic_id.text = topic_id
+
+            # ✅ update header icon after save
+            if "header_icon" in self.ids:
+                from kivy.app import App
+
+                icon_file = self.ids.topic_icon.text.strip()
+
+                if icon_file:
+                    try:
+                        self.ids.header_icon.source = App.get_running_app().get_icon_path(icon_file)
+                    except Exception as e:
+                        print("DEBUG: header icon update failed:", e)
+                else:
+                    self.ids.header_icon.source = App.get_running_app().get_icon_path("howtolinux-icon.png")
+
+            # ✅ Delete old steps (FIXED TYPE)
+            from src.editor import delete_steps_for_topic
+            delete_steps_for_topic(topic_id)
+
+            # ✅ Save steps
+            for s in self.pending_steps:
+                payload = dict(s)
+                payload["Topic_ID"] = topic_id
+                add_step_to_firebase(payload)
+
+            # ✅ refresh + export backup (FIXED)
+
+            #if not self.edit_mode:
+            #    self.reset_form_only()
+
+            # ✅ Keep topic fields so user can continue editing after save
+            # Only clear the step entry inputs (not the topic data)
+            self.clear_step_form()
+
+            app = App.get_running_app()
+
+            # reload data from Firebase
+            app.fetch_database()
+            # fetch_database is async -> repopulate menu shortly after
+            Clock.schedule_once(lambda dt: app.root.get_screen("menu").populate_menu(), 0.5)
+
+            # ✅ refresh visible UI (IMPORTANT)
+            try:
+                app.root.get_screen("menu").populate_categories()
+            except Exception as e:
+                print("UI refresh error:", e)
+
+            # ✅ FIXED EXPORT (no crash anymore)
+
+            from src.main import APP_DATA
+            export_backup_excel(APP_DATA.copy())
+
+            # Reset UI
+            #self.pending_steps = []
+            self.refresh_steps_preview()
+            self.clear_step_form()
+
+
+            # THEN set ID again
+            if "topic_id" in self.ids:
+                self.ids.topic_id.text = topic_id
+
+
+            self.ids.status_label.text = f"✅ Saved topic + steps (Topic_ID: {str(topic_id)[:8]}…)"
+
+            # ✅ ensure Topic_ID stays visible
+            if "topic_id" in self.ids:
+                self.ids.topic_id.text = topic_id
+
+            # ✅ mark screen as edit mode after first save
+            self.edit_mode = True
+            self.edit_topic_id = topic_id
+            self.edit_topic_key = topic_key  # returned from add_topic_to_firebase
+
+        except Exception as e:
+            self.ids.status_label.text = f"❌ Save failed: {e}"
+
+    def on_kv_post(self, base_widget):
+        from kivy.uix.textinput import TextInput
+
+        for widget in self.walk():
+            if isinstance(widget, TextInput) and not widget.readonly:
+                widget.bind(focus=self._handle_focus)
+
+    def _handle_focus(self, instance, value):
+
+        # ✅ DO NOT disable scrolling anymore
+        pass
+    def reset_form_only(self):
+        self.edit_mode = False
+        self.edit_topic_id = ""
+        self.selected_step_index = -1
+        self.pending_steps = []
+
+        self.ids.category.text = "Select Category"
+        self.ids.subcategory.text = "Click to choose subcategory"
+        self.ids.subcategory.values = []
+
+        self.ids.title.text = ""
+        self.ids.description.text = ""
+        self.ids.urls.text = ""
+        self.ids.cat_icon.text = ""
+        self.ids.sub_icon.text = ""
+        self.ids.topic_icon.text = ""
+        self.ids.icon_path.text = ""
+
+        self.refresh_steps_list()
+
+class AddStepScreen(Screen):
+    """
+    Admin-only screen: add a Step tied to a Topic_ID.
+    """
+    topic_map = {}   # display_text -> topic_id
+
+    def on_pre_enter(self):
+        if not is_admin_enabled():
+            self.ids.status_label.text = "Editor disabled (admin key missing)."
+            self.ids.save_btn.disabled = True
+            self.ids.add_step_btn.disabled = True
+        else:
+            self.ids.status_label.text = ""
+            self.ids.save_btn.disabled = False
+            self.ids.add_step_btn.disabled = False
+
+        # ✅ ALWAYS reset when NOT editing
+        if not self.edit_mode:
+            if "topic_id" in self.ids:
+                self.ids.topic_id.text = ""
+
+            self.reset_form()
+
+        self.refresh_steps_preview()
+        self.refresh_steps_list()
+        self._schedule_populate_dropdowns()
+
+        def reset_form(self):
+            self.ids.category.text = "Select Category"
+            self.ids.subcategory.text = "Select Subcategory"
+
+            self.ids.title.text = ""
+            self.ids.description.text = ""
+            self.ids.urls.text = ""
+
+            self.ids.cat_icon.text = ""
+            self.ids.sub_icon.text = ""
+            self.ids.topic_icon.text = ""
+            self.ids.icon_path.text = ""
+
+            self.pending_steps = []
+            self.selected_step_index = -1
+
+    def populate_topics(self):
+        global APP_DATA
+        topics = APP_DATA.get("topics", []) if isinstance(APP_DATA, dict) else []
+
+        values = []
+        self.topic_map = {}
+
+        for t in topics:
+            if not isinstance(t, dict):
+                continue
+            topic_id = t.get("Topic_ID")
+            title = str(t.get("Title", "")).strip()
+            cat = str(t.get("Category", "")).strip()
+
+            if not topic_id or not title:
+                continue
+
+            # display string: Category — Title (short id)
+            display = f"{cat} — {title} ({str(topic_id)[:8]})"
+            values.append(display)
+            self.topic_map[display] = topic_id
+
+        values.sort()
+
+        # update spinner
+        self.ids.topic_spinner.values = values
+        if values:
+            self.ids.topic_spinner.text = values[0]
+        else:
+            self.ids.topic_spinner.text = "No topics available"
+
+    def save_step(self):
+        if not is_admin_enabled():
+            self.ids.step_status.text = "Editor disabled (admin key missing)."
+            return
+
+        chosen = self.ids.topic_spinner.text
+        topic_id = self.topic_map.get(chosen)
+
+        if not topic_id:
+            self.ids.step_status.text = "Please select a valid topic."
+            return
+
+        # Validate Step_Order
+        try:
+            step_order = int(self.ids.step_order.text.strip())
+        except Exception:
+            self.ids.step_status.text = "Step_Order must be an integer (e.g. 1, 2, 3)."
+            return
+
+        step = {
+            "Topic_ID": topic_id,
+            "Step_Order": step_order,
+            "Headline": self.ids.step_headline.text.strip(),
+            "Header_2": self.ids.step_header2.text.strip(),
+            "Instruction": self.ids.step_instruction.text.strip(),
+            "Code_Snippet": self.ids.step_code.text.strip(),
+            "Notes": self.ids.step_notes.text.strip(),
+        }
+
+        # Basic validation
+        if not step["Instruction"]:
+            self.ids.step_status.text = "Instruction is required."
+            return
+
+        try:
+            key = add_step_to_firebase(step)
+            self.ids.step_status.text = f"Saved step to Firebase (key: {key})"
+
+            # Refresh data in the background
+            app = App.get_running_app()
+            app.fetch_database()
+
+            # Backup export (optional, but matches your 'Excel is backup' goal)
+            ##export_backup_excel(globals().get("APP_DATA", {}))
+
+            # Clear fields except topic + step order
+            self.ids.step_headline.text = ""
+            self.ids.step_header2.text = ""
+            self.ids.step_instruction.text = ""
+            self.ids.step_code.text = ""
+            self.ids.step_notes.text = ""
+
+        except Exception as e:
+            self.ids.step_status.text = f"Save failed: {e}"
+
+class AppInfoScreen(Screen):
+    def on_pre_enter(self):
+        app = App.get_running_app()
+
+        # ✅ fetch fresh data
+        app.fetch_database()
+
+        # ✅ load after short delay
+        Clock.schedule_once(lambda dt: self._load_after_fetch(app), 0.3)
+
+
+    def _load_after_fetch(self, app):
+        meta = app.metadata
+
+        print("DEBUG metadata in AppInfo:", meta)
+
+        self.ids.app_name.text = meta.get("app_name", "")
+        self.ids.version.text = meta.get("version", "")
+        self.ids.last_update.text = meta.get("last update", "")
+        self.ids.developer.text = meta.get("developer", "")
+        self.ids.description.text = meta.get("description", "")
+        self.ids.changelog.text = meta.get("changelog", "")
+
+    def save_metadata(self):
+        from src.editor import save_metadata_to_firebase
+
+        metadata = {
+            "app_name": self.ids.app_name.text.strip(),
+            "version": self.ids.version.text.strip(),
+            "last update": self.ids.last_update.text.strip(),
+            "developer": self.ids.developer.text.strip(),
+            "description": self.ids.description.text.strip(),
+            "changelog": self.ids.changelog.text.strip(),
+        }
+
+        try:
+            save_metadata_to_firebase(metadata)
+
+            # refresh UI
+            app = App.get_running_app()
+            app.fetch_database()
+            Clock.schedule_once(lambda dt: self.on_pre_enter(), 0.5)
+
+            self.ids.status_label.text = "✅ Metadata saved"
+
+        except Exception as e:
+            self.ids.status_label.text = f"❌ Save failed: {e}"
+
+#----------
 
 if __name__ == '__main__':
     LinuxHowToApp().run()

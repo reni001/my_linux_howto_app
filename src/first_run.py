@@ -18,7 +18,6 @@ DEFAULT_CONFIG = REPO_ROOT / "config"
 DEFAULT_DATA = REPO_ROOT / "data"
 DEFAULT_ASSETS = REPO_ROOT / "assets"
 
-
 # ----------------------------------------
 # FILE COPY HELPERS
 # ----------------------------------------
@@ -34,12 +33,11 @@ def copy_file(src: Path, dst: Path):
 
 def copy_folder(src: Path, dst: Path):
     try:
-        shutil.copytree(src, dst)
+        shutil.copytree(src, dst, dirs_exist_ok=True)
         print(f"[OK] Copied folder → {dst}")
     except Exception as e:
         print(f"[ERROR] Failed to copy folder {src}")
         print(f"        {e}")
-
 
 # ----------------------------------------
 # FILE PICKER (KIVY)
@@ -83,7 +81,6 @@ def ask_for_service_account(target_path: Path):
     skip_btn.bind(on_release=skip)
 
     popup.open()
-
 
 # ----------------------------------------
 # MAIN INITIALIZATION
@@ -130,7 +127,7 @@ def initialize_first_run():
         print("[INFO] Opening file picker for serviceAccountKey.json...")
 
         # ⚠️ must be delayed until UI is ready
-        Clock.schedule_once(lambda dt: ask_for_service_account(service_dst), 1)
+        Clock.schedule_once(lambda dt: ask_for_service_account(service_dst), 0.5)
     else:
         print(f"[OK] Found → {service_dst}")
 
@@ -149,7 +146,7 @@ def initialize_first_run():
                     print(f"[INFO] Copying {file.name}")
                     copy_file(file, dst)
                 else:
-                    print(f"[OK] Exists → {file.name}")
+                    print(f"[OK] Exists → {file.name} (skipped)")
     else:
         print("[WARNING] No data folder found in repo")
 
@@ -168,3 +165,4 @@ def initialize_first_run():
         print(f"[OK] Assets already exist")
 
     print("\n[DONE] First run setup complete\n")
+    return True
