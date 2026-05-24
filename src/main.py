@@ -1,3 +1,4 @@
+#---------- v2 24.05.2026 ----------
 import time
 import requests
 import os
