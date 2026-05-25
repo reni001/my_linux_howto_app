@@ -31,6 +31,7 @@ from src.ui.theme import (
     COLOR_BLUE,
     COLOR_BLUE_MEDIUM,
     COLOR_BLUE_LIGHT,
+    COLOR_BLUE_DARK,
     COLOR_ORANGE,
     COLOR_ORANGE_SOFT,
     COLOR_BG_DARK,
@@ -52,7 +53,8 @@ from src.ui.theme import (
     COLOR_GREY_DARK,
     COLOR_GREY_LIGHT,
     COLOR_CYAN_DARK,
-    COLOR_RED_DARK
+    COLOR_RED_DARK,
+    COLOR_ORANGE_LIGHT_UI
 )
 
 
@@ -194,6 +196,7 @@ class LinuxHowToApp(App):
     COLOR_ORANGE = COLOR_ORANGE
     COLOR_ORANGE_SOFT = COLOR_ORANGE_SOFT
     COLOR_ORANGE_DARK_UI = COLOR_ORANGE_DARK_UI
+    COLOR_ORANGE_LIGHT_UI = COLOR_ORANGE_LIGHT_UI
 
     COLOR_CYAN = COLOR_CYAN
     COLOR_CYAN_DARK = COLOR_CYAN_DARK
@@ -219,6 +222,7 @@ class LinuxHowToApp(App):
     COLOR_TEXT_LIGHT = COLOR_TEXT_LIGHT
     COLOR_TEXT_DARK = COLOR_TEXT_DARK
     COLOR_TEXT_SOFT = COLOR_TEXT_SOFT
+    COLOR_BLUE_DARK = COLOR_BLUE_DARK
 
 
 
@@ -517,7 +521,7 @@ class LinuxHowToApp(App):
 
 
         from pathlib import Path
-        sync_script = str(Path(__file__).parent / "sync.py")
+        sync_script = str(Path(__file__).parent / "services" /"sync.py")
 
         if not os.path.exists(sync_script):
             self.sync_text = "sync.py missing!"
@@ -535,7 +539,7 @@ class LinuxHowToApp(App):
         def run_proc():
             try:
                 process = subprocess.Popen(
-                    [sys.executable, "-m", "src.sync"],
+                    [sys.executable, "-m", "src.services.sync"],
                     cwd=Path(__file__).resolve().parent.parent,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
@@ -711,8 +715,8 @@ class LinuxHowToApp(App):
 
     def restore_update_button(self, *args):
         self.update_text = "Update App & Icons"
-        self.update_bg = self.COLOR_ORANGE
-        self.update_fg = self.COLOR_TEXT_DARK
+        self.update_bg = self.COLOR_ORANGE_LIGHT_UI
+        self.update_fg = self.COLOR_BLUE_DARK
         self.update_border = self.COLOR_TRANSPARENT           # ✅ reset
 
 
@@ -742,7 +746,7 @@ class LinuxHowToApp(App):
     def restore_sync_button(self, *args):
         self.sync_text = "Developer Sync (Firebase & Git)"
         self.sync_bg = self.COLOR_ORANGE
-        self.sync_fg = self.COLOR_TEXT_DARK
+        self.sync_fg = self.COLOR_BLUE_DARK
         self.sync_border = self.COLOR_TRANSPARENT
 
 

@@ -48,6 +48,7 @@ COLOR_GREY_LIGHT = [0.7, 0.7, 0.7, 1]
 COLOR_BLUE_DARK_UI = [0.2, 0.3, 0.6, 1]
 COLOR_GREEN_DARK_UI = [0.15, 0.45, 0.15, 1]
 COLOR_ORANGE_DARK_UI = [0.8, 0.6, 0.3, 1]
+COLOR_ORANGE_LIGHT_UI = [1, 0.7, 0.3, 1]
 
 # --- Cyan (only used in one place) ---
 COLOR_CYAN = [0, 0.7, 1, 1]
