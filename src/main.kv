@@ -4,11 +4,7 @@
 #:import ButtonBehavior kivy.uix.behaviors.ButtonBehavior
 
 
-#:set color_blue [59/255, 101/255, 184/255, 1]
-#:set color_blue_light [0, 178/255, 255/255, 1]
-#:set color_green [0, 153/255, 0, 1]
-#:set color_grey [230/255, 230/255, 230/255, 1]
-#:set panel_color [179/255, 209/255, 255/255, 1]
+
 
 <ClickableStatus@ButtonBehavior+BoxLayout>:
     canvas.before:
@@ -22,7 +18,7 @@
 <StyledButton@Button>:
     background_normal: ''
     background_down: ''
-    color: [1, 1, 1, 1]
+    color: app.COLOR_WHITE
 
 <AppMenu>:
     size_hint: (0.7, 0.6)  # Increased height for new button
@@ -34,7 +30,7 @@
         spacing: '15dp'
         canvas.before:
             Color:
-                rgba: [1, 1, 1, 1]
+                rgba: app.COLOR_WHITE
             RoundedRectangle:
                 pos: self.pos
                 size: self.size
@@ -57,7 +53,7 @@
             # ✅ CENTER: TITLE
             Label:
                 text: "APPLICATION MENU"
-                color: color_blue
+                color: app.COLOR_BLUE
                 bold: True
                 font_size: '16sp'
                 halign: "left"
@@ -86,7 +82,7 @@
 
                 Label:
                     text: "ADMIN" if app.is_admin_mode() else "USER"
-                    color: color_green if app.is_admin_mode() else (0.6, 0.6, 0.6, 1)
+                    color: app.COLOR_GREEN if app.is_admin_mode() else app.COLOR_TEXT_SOFT
                     font_size: '13sp'
                     halign: "left"
                     valign: "middle"
@@ -94,10 +90,10 @@
 
         StyledButton:
             text: "About App"
-            background_color: [0.3, 0.3, 0.3, 1] if self.state == 'normal' else [0.7, 0.7, 0.7, 1]
+            background_color: app.COLOR_GREY_DARK if self.state == 'normal' else app.COLOR_GREY_LIGHT
             size_hint_y: None
             height: '45dp'
-            color: [1, 1, 1, 1]
+            color: app.COLOR_WHITE
             bold: True
             on_release:
                 root.dismiss()      # Closes the slide-out menu first
@@ -109,8 +105,8 @@
             height: '45dp'
             background_normal: ''
             background_down: ''   # ✅ pressed highlight
-            background_color: color_blue if self.state == 'normal' else [0.2, 0.3, 0.6, 1]
-            color: [1, 1, 1, 1]
+            background_color: app.COLOR_BLUE if self.state == 'normal' else app.COLOR_BLUE_DARK_UI
+            color: app.COLOR_WHITE
             bold: True
             on_release:
                 root.dismiss()
@@ -122,8 +118,8 @@
             height: '45dp'
             background_normal: ''
             background_down: ''   # ✅ pressed highlight
-            background_color: [0, 0.7, 1, 1] if self.state == 'normal' else [0, 0.5, 0.7, 1]
-            color: [1, 1, 1, 1]
+            background_color: app.COLOR_CYAN if self.state == 'normal' else app.COLOR_CYAN_DARK
+            color: app.COLOR_WHITE
             bold: True
             on_release:
                 root.dismiss()
@@ -137,8 +133,8 @@
             height: '45dp'
             background_normal: ''
             background_down: ''   # ✅ pressed highlight
-            background_color: color_green if self.state == 'normal' else [0.15, 0.45, 0.15, 1]
-            color: [1, 1, 1, 1]
+            background_color: app.COLOR_GREEN if self.state == 'normal' else app.COLOR_GREEN_DARK_UI
+            color: app.COLOR_WHITE
             bold: True
             on_release:
                 root.dismiss()
@@ -150,7 +146,7 @@
             height: '45dp'
             background_normal: ''
             background_down: ''
-            background_color: app.update_bg if self.state == 'normal' else [0.8, 0.6, 0.3, 1]
+            background_color: app.update_bg if self.state == 'normal' else app.COLOR_ORANGE_DARK_UI
             color: app.update_fg
             bold: True
             on_release:
@@ -172,7 +168,7 @@
             height: '45dp'
             background_normal: ''
             background_down: ''
-            background_color: app.sync_bg if self.state == 'normal' else [0.8, 0.6, 0.3, 1]
+            background_color: app.sync_bg if self.state == 'normal' else app.COLOR_ORANGE_DARK_UI
             color: app.sync_fg
             bold: True
             on_release:
@@ -191,8 +187,8 @@
             height: '45dp'
             background_normal: ''
             background_down: ''   # ✅ pressed highlight
-            background_color: [1, 0.3, 0.3, 1] if self.state == 'normal' else [0.8, 0.2, 0.2, 1]
-            color: [1, 1, 1, 1]
+            background_color: app.COLOR_RED if self.state == 'normal' else app.COLOR_RED_DARK
+            color: app.COLOR_WHITE
             bold: True
             on_release:
                 root.dismiss()
@@ -205,7 +201,7 @@
     padding: ['12dp', '8dp']
     canvas.before:
         Color:
-            rgba: panel_color
+            rgba: app.COLOR_PANEL
         Rectangle:
             pos: self.pos
             size: self.size
@@ -218,7 +214,7 @@
     pos_hint: {'right': 0.98, 'y': 0.08}
     canvas.before:
         Color:
-            rgba: [1, 1, 1, 0.4]
+            rgba: app.COLOR_WHITE_SOFT
         Ellipse:
             pos: [self.pos[0] + dp(3), self.pos[1] + dp(3)]
             size: [self.size[0] - dp(6), self.size[1] - dp(6)]
@@ -236,7 +232,7 @@
             angle: 180            # ✅ flip vertically
             origin: self.center
         Color:
-            rgba: [1, 1, 1, 0.4]
+            rgba: app.COLOR_WHITE_SOFT
         Ellipse:
             pos: self.pos
             size: self.size
@@ -259,7 +255,7 @@
             size: self.size
             radius: [20,]
         Color:
-            rgba: [215/255, 230/255, 255/255, 1] if self.state == 'normal' else [179/255, 209/255, 255/255, 1]
+            rgba: app.COLOR_PANEL if self.state == 'normal' else [179/255, 209/255, 255/255, 1]
         RoundedRectangle:
             pos: self.pos
             size: self.size
@@ -270,7 +266,7 @@
         fit_mode: "contain"
     Label:
         text: root.name
-        color: color_blue
+        color: app.COLOR_BLUE
         bold: True
         font_size: '16sp'
         size_hint_y: 0.2
@@ -283,7 +279,7 @@
     spacing: '15dp'
     canvas.before:
         Color:
-            rgba: [1, 1, 1, 1] if self.state == 'normal' else [0.92, 0.92, 0.92, 1]
+            rgba: app.COLOR_WHITE if self.state == 'normal' else app.COLOR_GREY_HOVER
         RoundedRectangle:
             pos: [self.pos[0]+2, self.pos[1]+2]
             size: [self.size[0]-4, self.size[1]-4]
@@ -297,14 +293,14 @@
         orientation: 'vertical'
         Label:
             text: root.title
-            color: color_blue
+            color: app.COLOR_BLUE
             bold: True
             font_size: '18sp'
             halign: 'left'
             text_size: (self.width, None)
         Label:
             text: root.desc
-            color: [0.4, 0.4, 0.4, 1]
+            color: app.COLOR_TEXT_DARK
             font_size: '14sp'
             halign: 'left'
             text_size: (self.width, None)
@@ -320,7 +316,7 @@
             opacity: 1 if app.is_admin_mode() else 0.3
             background_normal: ''
             background_down: ''
-            background_color: [0, 0, 0, 0]
+            background_color: app.COLOR_TRANSPARENT
             size_hint: None, None
             size: "40dp", "40dp"
             on_release: app.edit_topic(root.data)
@@ -336,7 +332,7 @@
             opacity: 1 if app.is_admin_mode() else 0.3
             background_normal: ''
             background_down: ''
-            background_color: [0, 0, 0, 0]
+            background_color: app.COLOR_TRANSPARENT
             size_hint: None, None
             size: "40dp", "40dp"
             on_release: app.delete_topic(root.data)
@@ -372,7 +368,7 @@
 
                     Label:
                         text: "LINUX HOW-TO"
-                        color: color_blue
+                        color: app.COLOR_BLUE
                         bold: True
                         font_size: '22sp'
                         size_hint_x: None
@@ -381,7 +377,7 @@
                 Widget: # This pushes the search button to the far right
 
                 Button:
-                    background_color: [0,0,0,0]
+                    background_color: app.COLOR_TRANSPARENT
                     size_hint_x: None
                     width: '50dp'
                     on_release: root.manager.current = 'search'
@@ -393,7 +389,7 @@
                 id: scroll_view
                 canvas.before:
                     Color:
-                        rgba: color_grey
+                        rgba: app.COLOR_GREY
                     Rectangle:
                         pos: self.pos
                         size: self.size
@@ -411,7 +407,7 @@
 
                 Button:
                     background_normal: ''
-                    background_color: [0,0,0,0]
+                    background_color: app.COLOR_TRANSPARENT
                     size_hint_x: None
                     width: '40dp'
                     on_release: app.open_app_menu()
@@ -433,7 +429,7 @@
 
                 Button:
                     background_normal: ''
-                    background_color: [0,0,0,0]
+                    background_color: app.COLOR_TRANSPARENT
                     size_hint_x: None
                     width: '40dp'
                     on_release: app.toggle_orientation()
@@ -455,7 +451,7 @@
             spacing: '10dp'
             Button:
                 background_normal: ''
-                background_color: [0,0,0,0]
+                background_color: app.COLOR_TRANSPARENT
                 size_hint_x: None
                 width: '50dp'
                 on_release: root.go_back()
@@ -477,7 +473,7 @@
         ScrollView:
             canvas.before:
                 Color:
-                    rgba: color_grey
+                    rgba: app.COLOR_GREY
                 Rectangle:
                     pos: self.pos
                     size: self.size
@@ -494,7 +490,7 @@
             height: '65dp'
             Button:
                 background_normal: ''
-                background_color: [0,0,0,0]
+                background_color: app.COLOR_TRANSPARENT
                 size_hint_x: None
                 width: '40dp'
                 on_release: app.open_app_menu()
@@ -518,7 +514,7 @@
 
             Button:
                 background_normal: ''
-                background_color: [0,0,0,0]
+                background_color: app.COLOR_TRANSPARENT
                 size_hint_x: None
                 width: '40dp'
                 on_release: app.toggle_orientation()
@@ -539,7 +535,7 @@
 
                 Button:
                     background_normal: ''
-                    background_color: [0,0,0,0]
+                    background_color: app.COLOR_TRANSPARENT
                     size_hint_x: None
                     width: '40dp'
                     on_release: root.manager.current = 'menu'
@@ -558,7 +554,7 @@
                     height: '45dp'
                     pos_hint: {'center_y': 0.5}
                     background_normal: ''
-                    background_color: [1, 1, 1, 0.7]
+                    background_color: app.COLOR_WHITE_SOFT
                     on_text: root.load_content_from_cache(self.text)
 
             ScrollView:
@@ -566,7 +562,7 @@
 
                 canvas.before:
                     Color:
-                        rgba: color_grey
+                        rgba: app.COLOR_GREY
                     Rectangle:
                         pos: self.pos
                         size: self.size
@@ -584,7 +580,7 @@
 
                 Button:
                     background_normal: ''
-                    background_color: [0,0,0,0]
+                    background_color: app.COLOR_TRANSPARENT
                     size_hint_x: None
                     width: '40dp'
                     on_release: app.open_app_menu()
@@ -606,7 +602,7 @@
 
                 Button:
                     background_normal: ''
-                    background_color: [0,0,0,0]
+                    background_color: app.COLOR_TRANSPARENT
                     size_hint_x: None
                     width: '40dp'
                     on_release: app.toggle_orientation()
@@ -630,7 +626,7 @@
 
                 Button:
                     background_normal: ''
-                    background_color: [0,0,0,0]
+                    background_color: app.COLOR_TRANSPARENT
                     size_hint_x: None
                     width: '50dp'
                     on_release: root.go_back()
@@ -642,7 +638,7 @@
 
                 Label:
                     text: "Documentation"
-                    color: color_blue
+                    color: app.COLOR_BLUE
                     bold: True
                     font_size: '20sp'
                     halign: 'left'
@@ -665,7 +661,7 @@
                 id: scroll_view
                 canvas.before:
                     Color:
-                        rgba: color_grey
+                        rgba: app.COLOR_GREY
                     Rectangle:
                         pos: self.pos
                         size: self.size
@@ -685,7 +681,7 @@
 
                 Button:         # Child widgets second
                     background_normal: ''
-                    background_color: [0,0,0,0]
+                    background_color: app.COLOR_TRANSPARENT
                     size_hint_x: None
                     width: '40dp'
                     on_release: app.open_app_menu()
@@ -707,7 +703,7 @@
 
                 Button:
                     background_normal: ''
-                    background_color: [0,0,0,0]
+                    background_color: app.COLOR_TRANSPARENT
                     size_hint_x: None
                     width: '40dp'
                     on_release: app.toggle_orientation()
@@ -739,7 +735,7 @@
                     # ✅ LEFT: back button
                     Button:
                         background_normal: ''
-                        background_color: [0, 0, 0, 0]
+                        background_color: app.COLOR_TRANSPARENT
                         size_hint_x: None
                         width: '50dp'
                         on_release: app.root.current = 'menu'
@@ -753,7 +749,7 @@
 
                     Label:
                         text: "Editing Topic" if root.edit_mode else "Add Topic"
-                        color: color_blue
+                        color: app.COLOR_BLUE
                         bold: True
                         font_size: '20sp'
                         size_hint_x: None                  # ✅ important
@@ -789,7 +785,7 @@
                             pos_hint: {"center_y": 0.5}   # ✅ ALIGN WITH BUTTON
                             background_normal: app.get_icon_path("cancel.png")
                             background_down: app.get_icon_path("cancel.png")
-                            background_color: 1,1,1,1
+                            background_color: app.COLOR_WHITE
                             border: 0,0,0,0
                             text: ""
                             on_release: root.cancel_edit()
@@ -813,7 +809,7 @@
 
                 canvas.before:
                     Color:
-                        rgba: color_grey
+                        rgba: app.COLOR_GREY
                     Rectangle:
                         pos: self.pos
                         size: self.size
@@ -841,7 +837,7 @@
                         size_hint_y: None
                         height: "35dp"
                         background_normal: ''
-                        background_color: [1, 1, 1, 1]
+                        background_color: app.COLOR_WHITE
                         color: [0.1, 0.25, 0.45, 1]
                         on_text: root.on_category_changed(self.text)
 
@@ -852,7 +848,7 @@
                         size_hint_y: None
                         height: "35dp"
                         background_normal: ''
-                        background_color: [1, 1, 1, 1]
+                        background_color: app.COLOR_WHITE
                         color: [0.1, 0.25, 0.45, 1]
                         on_text: root.on_subcategory_changed(self.text)
 
@@ -932,15 +928,15 @@
                             text: "Browse"
                             background_normal: ''
                             background_down: ''
-                            background_color: color_blue
-                            color: [1, 1, 1, 1]
+                            background_color: app.COLOR_BLUE
+                            color: app.COLOR_WHITE
                             bold: True
                             on_release: root.pick_icon()
 
                     # ---- steps section ----
                     Label:
                         text: "STEPS FOR THIS TOPIC"
-                        color: color_blue
+                        color: app.COLOR_BLUE
                         bold: True
                         size_hint_y: None
                         height: "28dp"
@@ -1015,49 +1011,10 @@
                         height: "80dp"
                         write_tab: False
 
-                    BoxLayout:
-                        size_hint_y: None
-                        height: "48dp"
-                        spacing: "10dp"
-
-                        Button:
-                            id: add_step_btn
-                            text: "Add Step"
-                            background_normal: ''
-                            background_color: app.COLOR_BLUE_DARK
-                            color: [1,1,1,1]
-                            bold: True
-                            on_release: root.add_step_local()
-
-                        Button:
-                            text: "Remove Last"
-                            background_normal: ''
-                            background_color: app.COLOR_BLUE_MEDIUM
-                            color: [1,1,1,1]
-                            on_release: root.remove_last_step()
-
-                        Button:
-                            text: "Clear Step Fields"
-                            background_normal: ''
-                            background_color: app.COLOR_BLUE_LIGHT
-                            color: 0.1,0.25,0.45,1   # ✅ dark text for readability
-                            on_release: root.clear_step_form()
-
-                    # ---- save row ----
-                    Button:
-                        id: save_btn
-                        text: "Save Topic + Steps"
-                        size_hint_y: None
-                        height: "50dp"
-                        background_normal: ''
-                        background_color: [0.2,0.6,0.2,1]
-                        color: [1,1,1,1]
-                        bold: True
-                        on_release: root.save_topic()
 
                     Widget:
                         size_hint_y: None
-                        height: "100dp"
+                        height: "60dp"
 
 
             # Bottom bar (optional, consistent)
@@ -1070,7 +1027,7 @@
                 # ✅ LEFT: menu icon (fixed width)
                 Button:
                     background_normal: ''
-                    background_color: [0,0,0,0]
+                    background_color: app.COLOR_TRANSPARENT
                     size_hint_x: None
                     width: '40dp'
                     on_release: app.open_app_menu()
@@ -1087,7 +1044,7 @@
                         text: "Add Step"
                         background_normal: ''
                         background_color: app.COLOR_BLUE_MEDIUM
-                        color: [1,1,1,1]
+                        color: app.COLOR_WHITE
                         bold: True
                         on_release: root.add_step_local()
 
@@ -1095,7 +1052,7 @@
                         text: "Remove Last"
                         background_normal: ''
                         background_color: app.COLOR_BLUE_MEDIUM
-                        color: [1,1,1,1]
+                        color: app.COLOR_WHITE
                         bold: True
                         on_release: root.remove_last_step()
 
@@ -1103,7 +1060,7 @@
                         text: "Clear"
                         background_normal: ''
                         background_color: app.COLOR_BLUE_MEDIUM
-                        color: [1,1,1,1]
+                        color: app.COLOR_WHITE
                         bold: True
                         on_release: root.clear_step_form()
 
@@ -1111,7 +1068,7 @@
                         text: "Save"
                         background_normal: ''
                         background_color: [0.2,0.6,0.2,1]
-                        color: [1,1,1,1]
+                        color: app.COLOR_WHITE
                         bold: True
                         on_release: root.save_topic()
 
@@ -1148,7 +1105,7 @@
                 # ✅ LEFT: back
                 Button:
                     background_normal: ''
-                    background_color: [0, 0, 0, 0]
+                    background_color: app.COLOR_TRANSPARENT
                     size_hint_x: None
                     width: '50dp'
                     on_release: app.root.current = 'menu'
@@ -1162,7 +1119,7 @@
                 # ✅ CENTER title
                 Label:
                     text: "App Info"
-                    color: color_blue
+                    color: app.COLOR_BLUE
                     bold: True
                     font_size: '20sp'
                     size_hint_x: 1
@@ -1184,7 +1141,7 @@
                         size: "42dp", "42dp"
                         background_normal: app.get_icon_path("cancel.png")
                         background_down: app.get_icon_path("cancel.png")
-                        background_color: 1,1,1,1
+                        background_color: app.COLOR_WHITE
                         border: 0,0,0,0
                         text: ""
                         on_release: app.root.current = 'menu'
@@ -1198,7 +1155,7 @@
 
             canvas.before:
                 Color:
-                    rgba: color_grey
+                    rgba: app.COLOR_GREY
                 Rectangle:
                     pos: self.pos
                     size: self.size
@@ -1257,7 +1214,7 @@
                     text: "Changelog"
                     size_hint_y: None
                     height: "28dp"
-                    color: color_blue
+                    color: app.COLOR_BLUE
                     bold: True
 
                 ScrollView:

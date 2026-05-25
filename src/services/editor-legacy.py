@@ -7,8 +7,8 @@ from pathlib import Path
 import firebase_admin
 from firebase_admin import credentials, db, initialize_app
 
-from src.runtime_paths import get_runtime_paths
-from src.config import load_firebase_config
+from src.utils.runtime_paths import get_runtime_paths
+from src.utils.config import load_firebase_config
 
 
 def _ensure_admin_firebase():

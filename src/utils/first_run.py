@@ -6,7 +6,7 @@ from kivy.uix.filechooser import FileChooserListView
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 
-from src.runtime_paths import ensure_runtime_dirs, get_runtime_paths
+from src.utils.runtime_paths import ensure_runtime_dirs, get_runtime_paths
 
 # ----------------------------------------
 # REPO PATHS

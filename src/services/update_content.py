@@ -4,7 +4,7 @@ import io
 import tempfile
 from pathlib import Path
 import shutil
-from src.runtime_paths import get_runtime_paths
+from src.utils.runtime_paths import get_runtime_paths
 
 # 🔧 Adjust these URLs to your real GitHub raw links
 #ASSETS_ZIP_URL = "https://raw.githubusercontent.com/reni001/my_linux_howto_app/main/assets.zip"

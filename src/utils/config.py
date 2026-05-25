@@ -1,5 +1,5 @@
 import json
-from src.runtime_paths import get_runtime_paths
+from src.utils.runtime_paths import get_runtime_paths
 
 
 def load_firebase_config():
