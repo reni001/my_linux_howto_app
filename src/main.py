@@ -24,6 +24,8 @@ from src.screens.article_screen import ArticleScreen
 from src.screens.add_step_screen import AddStepScreen
 from src.screens.app_info_screen import AppInfoScreen
 from src.utils.icon_utils import get_icon_path
+from src.ui.about_popup import show_about_popup
+from src.services.data_service import fetch_database, load_app_metadata, APP_DATA
 from src.ui.theme import (
     COLOR_TRANSPARENT,
     COLOR_WHITE_SOFT,
@@ -57,7 +59,6 @@ from src.ui.theme import (
     COLOR_ORANGE_LIGHT_UI
 )
 
-
 # --- Kivy ---
 from kivy.app import App
 from kivy.lang import Builder
@@ -76,8 +77,6 @@ from kivy.uix.modalview import ModalView
 from kivy.uix.popup import Popup
 from kivy.uix.scrollview import ScrollView
 from kivy.graphics import Color, RoundedRectangle, Line
-
-
 
 # ----- Check if python 3.12 is installed ---------
 
@@ -107,57 +106,6 @@ if KV_FILE not in Builder.files:
     Builder.load_file(KV_FILE)
 
 
-APP_DATA = {}
-
-
-def load_app_metadata():
-    global APP_DATA
-
-    metadata = {}
-
-    # ✅ 1. PRIMARY SOURCE: Firebase
-    firebase_meta = APP_DATA.get("metadata", {}) or {}
-
-    if isinstance(firebase_meta, list):
-        firebase_meta = firebase_meta[0] if firebase_meta else {}
-
-    if isinstance(firebase_meta, dict):
-        metadata = {
-            "app_name": firebase_meta.get("app_name", "Linux HowTo"),
-            "version": firebase_meta.get("version", "0.0.0"),
-            "last update": firebase_meta.get("last update", "unknown"),
-            "description": firebase_meta.get("description", ""),
-            "developer": firebase_meta.get("developer", ""),
-            "changelog": firebase_meta.get("changelog", "")
-        }
-
-        print("✅ Metadata loaded from Firebase:", metadata)
-
-    # ✅ 2. FALLBACK: Excel (only if Firebase is empty)
-    if not metadata or metadata.get("version") == "0.0.0":
-        try:
-            import pandas as pd
-            paths = get_runtime_paths()
-            excel_path = paths["data"] / "main.xlsx"
-
-            if excel_path.exists():
-                df = pd.read_excel(excel_path, sheet_name="AppInfo")
-
-                if df.shape[1] >= 2:
-                    for _, row in df.iterrows():
-                        key = str(row.iloc[0]).strip().lower()
-                        value = "" if pd.isna(row.iloc[1]) else str(row.iloc[1]).strip()
-                        metadata[key] = value
-
-                    print("⚠️ Fallback metadata from Excel:", metadata)
-
-        except Exception as e:
-            print("[ERROR] Excel fallback failed:", e)
-
-    metadata.setdefault("app_name", "Linux HowTo")
-
-    return metadata
-
 def open_url(url):
     if not url: return
     full_url = url.strip()
@@ -170,8 +118,6 @@ def open_url(url):
             webbrowser.open(full_url, new=2, autoraise=True)
     except:
         webbrowser.open(full_url, new=2, autoraise=True)
-
-
 
 # --- CLASSES ---
 
@@ -224,7 +170,7 @@ class LinuxHowToApp(App):
     COLOR_TEXT_SOFT = COLOR_TEXT_SOFT
     COLOR_BLUE_DARK = COLOR_BLUE_DARK
 
-
+    version_string = StringProperty("v0.0.0")
 
     project_root = StringProperty("")
 
@@ -282,7 +228,6 @@ class LinuxHowToApp(App):
             except Exception as e:
                 print(f"DEBUG: Could not update {screen_name}: {e}")
 
-
     def on_start(self):
         pass
 
@@ -331,77 +276,9 @@ class LinuxHowToApp(App):
         except Exception:
             pass
 
-       
-    def fetch_database(self):
-        def _task():
-            global APP_DATA
-            try:
-                print(f"DEBUG: Fetching from {DB_URL}")
-                r = requests.get(DB_URL, timeout=10)
-                if r.status_code == 200:
-                    data = r.json() or {}
-
-                    # ✅ NEVER reassign APP_DATA
-                    APP_DATA.clear()
-
-                    # ✅ update in place so UI keeps reference
-                    APP_DATA.update(data)
-
-                    # ✅ NORMALISE FIREBASE SHAPES (push keys -> dicts)
-                    raw_topics = APP_DATA.get("topics")
-                    if isinstance(raw_topics, dict):
-                        APP_DATA["topics"] = [
-                            {"_key": str(k), **v}
-                            for k, v in raw_topics.items()
-                            if isinstance(v, dict)
-                        ]
-                    elif isinstance(raw_topics, list):
-                        # If someone stored topics as a list, create _key from index (stable for overwrite)
-                        new_topics = []
-                        for idx, v in enumerate(raw_topics):
-                            if isinstance(v, dict):
-                                v = dict(v)
-                                v.setdefault("_key", str(idx))
-                                new_topics.append(v)
-                        APP_DATA["topics"] = new_topics
-                    else:
-                        APP_DATA["topics"] = []
-
-                    raw_steps = APP_DATA.get("steps")
-                    if isinstance(raw_steps, dict):
-                        APP_DATA["steps"] = [
-                            {"_key": str(k), **v}
-                            for k, v in raw_steps.items()
-                            if isinstance(v, dict)
-                        ]
-                    elif isinstance(raw_steps, list):
-                        new_steps = []
-                        for idx, v in enumerate(raw_steps):
-                            if isinstance(v, dict):
-                                v = dict(v)
-                                v.setdefault("_key", str(idx))
-                                new_steps.append(v)
-                        APP_DATA["steps"] = new_steps
-                    else:
-                        APP_DATA["steps"] = []
-
-                    # metadata: keep dict
-                    if isinstance(APP_DATA.get("metadata"), list):
-                        APP_DATA["metadata"] = APP_DATA["metadata"][0] if APP_DATA["metadata"] else {}
-
-                    print("DEBUG first topic keys:", list((APP_DATA.get("topics") or [{}])[0].keys()))
-
-                    Clock.schedule_once(lambda dt: self.refresh_ui_data())
-                else:
-                    print(f"DEBUG: Server returned status {r.status_code}")
-            except Exception as e:
-                print(f"DEBUG: Fetch failed: {e}")
-
-        Thread(target=_task, daemon=True).start()
-
     def refresh_ui_data(self):
         self.metadata = load_app_metadata()
-        self.update_version_labels()
+
         """Updates the version label across all application screens."""
         if not hasattr(self, 'sm'):
             Clock.schedule_once(lambda dt: self.refresh_ui_data(), 0.1)
@@ -410,23 +287,8 @@ class LinuxHowToApp(App):
         version = self.metadata.get("version", "0.0.0")
         last_update = self.metadata.get("last update", "")
 
-        version_str = f"v{version} | {last_update}"
+        self.version_string = f"v{version} | {last_update}"
 
-        # Map of Screen Name -> Label ID we created in KV
-        screen_map = {
-            'menu': 'version_label_menu',
-            'search': 'version_label_search',
-            'details': 'version_label_details',
-            'article': 'version_label_article'
-        }
-
-        for screen_name, label_id in screen_map.items():
-            try:
-                screen_obj = self.sm.get_screen(screen_name)
-                if label_id in screen_obj.ids:
-                    screen_obj.ids[label_id].text = version_str
-            except Exception as e:
-                print(f"DEBUG: Could not update version on {screen_name}: {e}")
 
         # Also trigger the standard menu population
         try:
@@ -483,8 +345,8 @@ class LinuxHowToApp(App):
         self.sm.add_widget(AddStepScreen(name="add_step"))
         self.sm.add_widget(AppInfoScreen(name="app_info"))
 
-        self.fetch_database()
-        return self.sm      
+        fetch_database(self)
+        return self.sm
 
     def is_admin_mode(self):
         if self.admin_override:
@@ -600,7 +462,7 @@ class LinuxHowToApp(App):
                 # ✅ Step 1: trigger fresh fetch
 
                 # 👇 IMPORTANT: chain refresh AFTER fetch
-                self.fetch_database()
+                fetch_database(self)
                 Clock.schedule_once(after_fetch, 0.5)
 
             except Exception as e:
@@ -705,7 +567,7 @@ class LinuxHowToApp(App):
     def update_failed(self, *args):
         self.update_text = "Update failed ✗"
         self.update_bg = self.COLOR_WHITE_SOFT
-        self.update_fg = self.COLOR_RE
+        self.update_fg = self.COLOR_RED
         self.update_border = self.COLOR_RED       # ✅ red border
         self.metadata = load_app_metadata()
         self.refresh_ui_data()
@@ -750,235 +612,6 @@ class LinuxHowToApp(App):
         self.sync_border = self.COLOR_TRANSPARENT
 
 
-    def show_about(self):
-        metadata = self.metadata
-
-        name = metadata.get('app_name', 'Linux HowTo')
-        version = metadata.get('version', '0.0.0')
-        last_update = metadata.get('last update', 'unknown')
-        dev_name = metadata.get('developer', '')
-        desc = metadata.get('description', '')
-        change = metadata.get('changelog', '').replace("\\n", "\n")
-
-        RADIUS = 22
-        BORDER_W = 2
-
-        # ✅ ONE rounded outer container (background + orange border)
-        root_layout = FloatLayout()
-
-        with root_layout.canvas.before:
-            Color(*COLOR_BG_DARK)  # darker blue
-            root_layout.bg = RoundedRectangle(pos=root_layout.pos, size=root_layout.size, radius=[RADIUS])
-
-        with root_layout.canvas.after:
-            Color(*COLOR_ORANGE)  # orange
-            root_layout.border = Line(
-                rounded_rectangle=(root_layout.x + 1, root_layout.y + 1,
-                                root_layout.width - 2, root_layout.height - 2,
-                                RADIUS),
-                width=BORDER_W
-            )
-
-        def _sync_popup_bg(*_):
-            root_layout.bg.pos = root_layout.pos
-            root_layout.bg.size = root_layout.size
-            root_layout.border.rounded_rectangle = (
-                root_layout.x + 1, root_layout.y + 1,
-                root_layout.width - 2, root_layout.height - 2,
-                RADIUS
-            )
-
-        root_layout.bind(pos=_sync_popup_bg, size=_sync_popup_bg)
-        _sync_popup_bg()  # ✅ apply once immediately
-
-        # ✅ Content (NO inner border/card)
-        outer = BoxLayout(
-            orientation='vertical',
-            padding=[20, 15, 20, 20],
-            spacing=15,
-            size_hint=(0.95, 0.95),
-            pos_hint={"center_x": 0.5, "center_y": 0.5}
-        )
-
-        # ✅ Header block
-        header = BoxLayout(
-            orientation="horizontal",
-            size_hint_y=None,
-            height=110,
-            spacing=20
-        )
-
-        # ✅ left: TEXT BLOCK
-        text_block = BoxLayout(
-            orientation="vertical",
-            spacing=4
-        )
-
-        text_block.add_widget(Label(
-            text=f"[b]{name}[/b]",
-            markup=True,
-            font_size="28sp",   # ✅ bigger title
-            halign="left",
-            valign="middle",
-            color=self.COLOR_WHITE,
-            size_hint_y=None,
-            height=35
-        ))
-
-        text_block.add_widget(Label(
-            text=f"Version {version}",
-            halign="left",
-            color=self.COLOR_TEXT_LIGHT,
-            size_hint_y=None,
-            height=25
-        ))
-
-        text_block.add_widget(Label(
-            text=f"Last update: {last_update}",
-            halign="left",
-            color=self.COLOR_TEXT_LIGHT,
-            size_hint_y=None,
-            height=25
-        ))
-
-        text_block.add_widget(Label(
-            text=f"[color=ffaa33]{dev_name}[/color]",
-            markup=True,
-            halign="left",
-            size_hint_y=None,
-            height=25
-        ))
-
-        header.add_widget(text_block)
-
-        # ✅ right: LOGO
-        header.add_widget(Image(
-            source=self.get_icon_path("howtolinux-icon.png"),
-            size_hint=(None, None),
-            size=(95, 95),
-            pos_hint={"center_y": 0.5}
-        ))
-
-        outer.add_widget(header)
-        # ✅ subtle divider under header
-        divider = BoxLayout(
-            size_hint_y=None,
-            height=1,
-            padding=[0, 5, 0, 5]
-        )
-
-        with divider.canvas.before:
-            Color(*self.COLOR_ORANGE_SOFT)   # ✅ very subtle light line
-            divider.line = Line(points=[])
-
-        def update_line(*_):
-            divider.line.points = [
-                divider.x, divider.y + divider.height / 2,
-                divider.right, divider.y + divider.height / 2
-            ]
-
-        divider.bind(pos=update_line, size=update_line)
-
-        outer.add_widget(divider)
-
-        # ✅ Scrollable content
-        scroll = ScrollView(size_hint=(1, 1), bar_width=8)
-
-        scroll_content = BoxLayout(
-            orientation='vertical',
-            size_hint_y=None,
-            spacing=10,
-            padding=[15, 10]
-        )
-        scroll_content.bind(minimum_height=scroll_content.setter('height'))
-
-        desc_label = Label(
-            text=f"[i]{desc}[/i]",
-            markup=True,
-            size_hint_y=None,
-            halign='center',
-            valign='top',
-            color=self.COLOR_TEXT_LIGHT
-        )
-        desc_label.bind(
-            width=lambda inst, val: setattr(inst, 'text_size', (val, None)),
-            texture_size=lambda inst, val: setattr(inst, 'height', val[1])
-        )
-        scroll_content.add_widget(desc_label)
-
-        title_label = Label(
-            text="[b]WHAT'S NEW[/b]",
-            markup=True,
-            size_hint_y=None,
-            height=30,
-            halign='left',
-            valign='middle',
-            color=self.COLOR_WHITE
-        )
-        title_label.bind(width=lambda inst, val: setattr(inst, 'text_size', (val, None)))
-        scroll_content.add_widget(title_label)
-
-        changelog_label = Label(
-            text=change,
-            size_hint_y=None,
-            halign='left',
-            valign='top',
-            color=self.COLOR_TEXT_LIGHT
-        )
-        changelog_label.bind(
-            width=lambda inst, val: setattr(inst, 'text_size', (val, None)),
-            texture_size=lambda inst, val: setattr(inst, 'height', val[1])
-        )
-        scroll_content.add_widget(changelog_label)
-
-        scroll.add_widget(scroll_content)
-        outer.add_widget(scroll)
-
-        # ✅ Buttons row
-        btn_row = BoxLayout(size_hint_y=None, height=50, spacing=10)
-
-        btn_close = Button(
-            text='CLOSE',
-            background_normal='',
-            background_color=self.COLOR_BLUE_MEDIUM,
-            color=self.COLOR_WHITE,
-            bold=True
-        )
-
-        app = App.get_running_app()
-
-        btn_edit = Button(
-            size_hint=(None, None),
-            size=(40, 40),
-            disabled=not app.is_admin_mode(),
-            opacity=1 if app.is_admin_mode() else 0.3,
-            background_normal=self.get_icon_path("edit.png"),
-            background_down=self.get_icon_path("edit.png"),
-            background_color=self.COLOR_WHITE,
-            border=(0, 0, 0, 0),
-            text=""
-        )
-
-        btn_row.add_widget(btn_close)
-        btn_row.add_widget(btn_edit)
-        outer.add_widget(btn_row)
-
-        root_layout.add_widget(outer)
-
-        popup = Popup(
-            title="About the App",
-            content=root_layout,
-            size_hint=(0.9, 0.9),
-            background="",
-            background_color=(0, 0, 0, 0),
-            separator_height=0   # ✅ THIS removes the top line
-        )
-
-        btn_close.bind(on_release=popup.dismiss)
-        btn_edit.bind(on_release=lambda x: self._open_app_info_from_popup(popup))
-
-        popup.open()
-
     def open_new_topic(self):
         screen = self.sm.get_screen("add_topic")
 
@@ -1000,6 +633,10 @@ class LinuxHowToApp(App):
         self.sm.current = "add_topic"
 
 
+    def open_about_popup(self, *args):
+        show_about_popup(self)
+
+
 class ClickableHeader(ButtonBehavior, BoxLayout):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -1008,7 +645,6 @@ class ClickableHeader(ButtonBehavior, BoxLayout):
         self.height = dp(50)
         self.padding = [dp(10), dp(5)]
         self.spacing = dp(10)
-
 
 
 if __name__ == '__main__':

@@ -3,6 +3,7 @@ from kivy.clock import Clock
 from kivy.app import App
 
 from src.services.editor_service import save_metadata_to_firebase
+from src.services.data_service import fetch_database
 
 
 class AppInfoScreen(Screen):
@@ -12,12 +13,10 @@ class AppInfoScreen(Screen):
         app = App.get_running_app()
 
         # ✅ fetch fresh data
-        app.fetch_database()
+        fetch_database(app)
 
         # ✅ delay load
         Clock.schedule_once(lambda dt: self._load_after_fetch(app), 0.3)
-
-
 
 
     def _load_after_fetch(self, app):
@@ -49,7 +48,7 @@ class AppInfoScreen(Screen):
 
             # refresh UI
             app = App.get_running_app()
-            app.fetch_database()
+            fetch_database(app)
             Clock.schedule_once(lambda dt: self.on_pre_enter(), 0.5)
 
             self.ids.status_label.text = "✅ Metadata saved"

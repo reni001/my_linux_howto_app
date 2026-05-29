@@ -4,6 +4,8 @@
 #:import ButtonBehavior kivy.uix.behaviors.ButtonBehavior
 
 
+
+
 <ClickableStatus@ButtonBehavior+BoxLayout>:
     canvas.before:
         Color:
@@ -17,203 +19,6 @@
     background_normal: ''
     background_down: ''
     color: app.COLOR_WHITE
-
-
-# ------ Button Definitions -------
-
-# ✅ BASE BUTTON (inherits your StyledButton)
-<BaseButton@StyledButton>:
-    size_hint_y: None
-    height: '45dp'
-    bold: True
-
-# ✅ PRIMARY (blue)
-<PrimaryButton@BaseButton>:
-    background_color: app.COLOR_BLUE if self.state == 'normal' else app.COLOR_BLUE_DARK_UI
-
-# ✅ SECONDARY (grey)
-<SecondaryButton@BaseButton>:
-    background_color: app.COLOR_GREY_DARK if self.state == 'normal' else app.COLOR_GREY_LIGHT
-
-# ✅ second SECONDARY (light blue)
-<SecondaryBlueButton@BaseButton>:
-    background_color: app.COLOR_BLUE_MEDIUM if self.state == 'normal' else app.COLOR_GREY_LIGHT
-
-# ✅ SUCCESS (green)
-<SuccessButton@BaseButton>:
-    background_color: app.COLOR_GREEN if self.state == 'normal' else app.COLOR_GREEN_DARK_UI
-
-# ✅ DANGER (red)
-<DangerButton@BaseButton>:
-    background_color: app.COLOR_RED if self.state == 'normal' else app.COLOR_RED_DARK
-
-# ✅ ACCENT (cyan)
-<AccentButton@BaseButton>:
-    background_color: app.COLOR_CYAN if self.state == 'normal' else app.COLOR_CYAN_DARK
-
-# ✅ ACCENT (light orange)
-<UpdateButton@BaseButton>:
-    background_color: app.update_bg if self.state == 'normal' else app.COLOR_ORANGE_LIGHT_UI
-    color: app.update_fg
-
-# ✅ ACCENT (dark orange)
-<OrangeButton@BaseButton>:
-    background_color: app.sync_bg if self.state == 'normal' else app.COLOR_ORANGE_DARK_UI
-    color: app.sync_fg
-
-# ✅ Disabled (transparent)
-<IconButton@Button>:
-    background_normal: ''
-    background_down: ''
-    background_color: app.COLOR_TRANSPARENT
-    size_hint: None, None
-    size: "40dp", "40dp"
-
-#----------- Panel Definitions ------------------------
-
-<StyledPanel@BoxLayout>:
-    size_hint_y: None
-    height: '65dp'
-    padding: ['12dp', '8dp']
-    canvas.before:
-        Color:
-            rgba: app.COLOR_PANEL
-        Rectangle:
-            pos: self.pos
-            size: self.size
-
-<BottomBar@StyledPanel>:
-    height: '55dp'        # ✅ thinner bar
-    spacing: "8dp"
-    padding: [dp(12), dp(8)]   # ✅ reduce vertical padding
-
-
-    IconButton:
-        size_hint_x: None
-        width: '40dp'
-        pos_hint: {"center_y": 0.5}
-        on_release: app.open_app_menu()
-        Image:
-            source: app.get_icon_path("menu.png")
-            center: self.parent.center
-            size: '28dp', '28dp'
-            center_x: self.parent.center_x
-            center_y: self.parent.center_y
-
-    Widget:
-
-    Label:
-        text: app.version_string   # ✅ KEY CHANGE
-        font_size: '12sp'
-        color: [0.3, 0.5, 0.8, 1]
-        size_hint_x: None
-        width: dp(120)
-
-    Widget:
-
-    IconButton:
-        size_hint_x: None
-        width: '40dp'
-        pos_hint: {"center_y": 0.5}
-        on_release: app.toggle_orientation()
-
-        Image:
-            source: app.get_icon_path("screenformate.png")
-            center: self.parent.center
-            size: '28dp', '28dp'
-            center_x: self.parent.center_x
-            center_y: self.parent.center_y
-
-<TopBar@StyledPanel>:
-    size_hint_y: None
-    height: '65dp'
-
-    title: "TITLE"                  # ✅ dynamic title
-    left_action: None               # ✅ optional ("back" or "")
-    right_icon: ""                  # ✅ optional (icon filename)
-    right_action: None              # ✅ optional function
-
-    spacing: '10dp'
-    padding: [dp(10), 0]
-
-    # ---- LEFT BUTTON ----
-    IconButton:
-        size_hint: None, None
-        size: dp(50), dp(50)
-        pos_hint: {"center_y": 0.5}
-        opacity: 1 if root.left_action is not None else 0
-        disabled: root.left_action is None
-
-        on_release:
-            root.left_action() if root.left_action else None
-
-        Image:
-            source: app.get_icon_path("arrow_back.png")
-            center: self.parent.center
-            size: '32dp', '32dp'
-
-    # ---- TITLE ----
-    Label:
-        text: root.title
-        color: app.COLOR_BLUE
-        bold: True
-        font_size: '20sp'
-        halign: 'center'
-        valign: 'middle'
-        text_size: self.size
-        size_hint_x: 1   # ✅ KEY FIX → allows stretching
-
-    # ---- RIGHT ICON ----
-    IconButton:
-        size_hint: None, None
-        size: dp(50), dp(50)
-        pos_hint: {"center_y": 0.5}
-        opacity: 1 if root.right_icon else 0
-        disabled: not root.right_icon
-
-        on_release:
-            root.right_action() if root.right_action else None
-
-        Image:
-            source: app.get_icon_path(root.right_icon) if root.right_icon else ""
-            center: self.parent.center
-            size: '32dp', '32dp'
-
-# -----------------
-
-<JumpToTopButton@ButtonBehavior+Image>:
-    source: app.get_icon_path("top.png")
-    size_hint: None, None
-    size: '52dp', '52dp'
-    opacity: 0.9
-    pos_hint: {'right': 0.98, 'y': 0.08}
-    canvas.before:
-        Color:
-            rgba: app.COLOR_WHITE_SOFT
-        Ellipse:
-            pos: [self.pos[0] + dp(3), self.pos[1] + dp(3)]
-            size: [self.size[0] - dp(6), self.size[1] - dp(6)]
-
-# scroll down button
-<ScrollDownButton@ButtonBehavior+Image>:
-    source: app.get_icon_path("top.png")   # ✅ reuse same icon
-    size_hint: None, None
-    size: '52dp', '52dp'
-    opacity: 0.9
-
-    canvas.before:
-        PushMatrix
-        Rotate:
-            angle: 180            # ✅ flip vertically
-            origin: self.center
-        Color:
-            rgba: app.COLOR_WHITE_SOFT
-        Ellipse:
-            pos: self.pos
-            size: self.size
-
-    canvas.after:
-        PopMatrix
 
 <AppMenu>:
     size_hint: (0.7, 0.6)  # Increased height for new button
@@ -262,7 +67,8 @@
                 width: dp(95)
                 spacing: dp(5)
 
-
+                background_normal: ''
+                background_down: ''
                 background_color: (0, 0, 0, 0) if self.state == 'normal' else (0.9, 0.9, 0.9, 0.3)
 
                 on_release:
@@ -282,34 +88,67 @@
                     valign: "middle"
                     text_size: self.size
 
-        SecondaryButton:
+        StyledButton:
             text: "About App"
+            background_color: app.COLOR_GREY_DARK if self.state == 'normal' else app.COLOR_GREY_LIGHT
+            size_hint_y: None
+            height: '45dp'
+            color: app.COLOR_WHITE
+            bold: True
             on_release:
                 root.dismiss()      # Closes the slide-out menu first
-                app.open_about_popup()     # Opens the new About popup
+                app.show_about()     # Opens the new About popup
 
-        PrimaryButton:
+        StyledButton:
             text: "Open Database (Excel)"
+            size_hint_y: None
+            height: '45dp'
+            background_normal: ''
+            background_down: ''   # ✅ pressed highlight
+            background_color: app.COLOR_BLUE if self.state == 'normal' else app.COLOR_BLUE_DARK_UI
+            color: app.COLOR_WHITE
+            bold: True
             on_release:
                 root.dismiss()
                 app.open_database()
 
-        AccentButton:
+        Button:
             text: "Open Assets Folder"
+            size_hint_y: None
+            height: '45dp'
+            background_normal: ''
+            background_down: ''   # ✅ pressed highlight
+            background_color: app.COLOR_CYAN if self.state == 'normal' else app.COLOR_CYAN_DARK
+            color: app.COLOR_WHITE
+            bold: True
             on_release:
                 root.dismiss()
                 app.open_assets_folder()
 
-        SuccessButton:
+        Button:
             text: "Add Topic (Admin)"
             disabled: not app.is_admin_mode()
             opacity: 1 if app.is_admin_mode() else 0.5
+            size_hint_y: None
+            height: '45dp'
+            background_normal: ''
+            background_down: ''   # ✅ pressed highlight
+            background_color: app.COLOR_GREEN if self.state == 'normal' else app.COLOR_GREEN_DARK_UI
+            color: app.COLOR_WHITE
+            bold: True
             on_release:
                 root.dismiss()
                 app.open_new_topic()
 
-        UpdateButton:
+        Button:
             text: app.update_text
+            size_hint_y: None
+            height: '45dp'
+            background_normal: ''
+            background_down: ''
+            background_color: app.update_bg if self.state == 'normal' else app.COLOR_ORANGE_LIGHT_UI
+            color: app.update_fg
+            bold: True
             on_release:
                 app.update_app_from_git()
 
@@ -320,11 +159,17 @@
                     rectangle: self.x + 1, self.y + 1, self.width - 2, self.height - 2
                     width: 2
 
-        OrangeButton:
+        Button:
             id: sync_btn
             disabled: not app.is_admin_mode()
             opacity: 1 if app.is_admin_mode() else 0.5
             text: app.sync_text
+            size_hint_y: None
+            height: '45dp'
+            background_normal: ''
+            background_down: ''
+            background_color: app.sync_bg if self.state == 'normal' else app.COLOR_ORANGE_DARK_UI
+            color: app.sync_fg
             bold: True
             on_release:
                 app.run_sync_script()
@@ -336,12 +181,65 @@
                     rounded_rectangle: self.x + 1, self.y + 1, self.width - 2, self.height - 2, 0
                     width: 2
 
-        DangerButton:
+        Button:
             text: "Quit Application"
+            size_hint_y: None
+            height: '45dp'
+            background_normal: ''
+            background_down: ''   # ✅ pressed highlight
+            background_color: app.COLOR_RED if self.state == 'normal' else app.COLOR_RED_DARK
+            color: app.COLOR_WHITE
+            bold: True
             on_release:
                 root.dismiss()
                 app.stop()
         Widget:
+
+<StyledPanel@BoxLayout>:
+    size_hint_y: None
+    height: '65dp'
+    padding: ['12dp', '8dp']
+    canvas.before:
+        Color:
+            rgba: app.COLOR_PANEL
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+<JumpToTopButton@ButtonBehavior+Image>:
+    source: app.get_icon_path("top.png")
+    size_hint: None, None
+    size: '52dp', '52dp'
+    opacity: 0.9
+    pos_hint: {'right': 0.98, 'y': 0.08}
+    canvas.before:
+        Color:
+            rgba: app.COLOR_WHITE_SOFT
+        Ellipse:
+            pos: [self.pos[0] + dp(3), self.pos[1] + dp(3)]
+            size: [self.size[0] - dp(6), self.size[1] - dp(6)]
+
+# scroll down button
+<ScrollDownButton@ButtonBehavior+Image>:
+    source: app.get_icon_path("top.png")   # ✅ reuse same icon
+    size_hint: None, None
+    size: '52dp', '52dp'
+    opacity: 0.9
+
+    canvas.before:
+        PushMatrix
+        Rotate:
+            angle: 180            # ✅ flip vertically
+            origin: self.center
+        Color:
+            rgba: app.COLOR_WHITE_SOFT
+        Ellipse:
+            pos: self.pos
+            size: self.size
+
+    canvas.after:
+        PopMatrix
+
 
 <CategoryCard>:
     orientation: 'vertical'
@@ -413,9 +311,14 @@
         width: "90dp"
         spacing: "5dp"
 
-        IconButton:
+        Button:
             disabled: not app.is_admin_mode()
             opacity: 1 if app.is_admin_mode() else 0.3
+            background_normal: ''
+            background_down: ''
+            background_color: app.COLOR_TRANSPARENT
+            size_hint: None, None
+            size: "40dp", "40dp"
             on_release: app.edit_topic(root.data)
 
             Image:
@@ -424,9 +327,14 @@
                 center_y: self.parent.center_y
                 size: "28dp", "28dp"
 
-        IconButton:
+        Button:
             disabled: not app.is_admin_mode()
             opacity: 1 if app.is_admin_mode() else 0.3
+            background_normal: ''
+            background_down: ''
+            background_color: app.COLOR_TRANSPARENT
+            size_hint: None, None
+            size: "40dp", "40dp"
             on_release: app.delete_topic(root.data)
 
             Image:
@@ -435,17 +343,48 @@
                 center_y: self.parent.center_y
                 size: "28dp", "28dp"
 
-#----------- Screens --------------
 <MenuScreen>:
     FloatLayout:
         BoxLayout:
             orientation: 'vertical'
+            StyledPanel:
+                # --- Top Panel Layout ---
+                BoxLayout:
+                    orientation: 'horizontal'
+                    size_hint_x: None
+                    width: self.minimum_width
+                    padding: [dp(10), 0] # Internal padding for the panel
 
-            TopBar:
-                title: "LINUX HOW-TO"
-                right_icon: "search.png"
-                right_action: lambda: setattr(root.manager, "current", "search")
+                    Image:
+                        source: app.get_icon_path("howtolinux-icon.png")
+                        size_hint: (None, None)
+                        size: (dp(35), dp(35))
+                        pos_hint: {'center_y': .5}
 
+                    # --- SPACER WIDGET ---
+                    Widget:
+                        size_hint_x: None
+                        width: dp(15) # Adjust this value to increase/decrease the gap
+
+                    Label:
+                        text: "LINUX HOW-TO"
+                        color: app.COLOR_BLUE
+                        bold: True
+                        font_size: '22sp'
+                        size_hint_x: None
+                        width: self.texture_size[0]
+
+                Widget: # This pushes the search button to the far right
+
+                Button:
+                    background_color: app.COLOR_TRANSPARENT
+                    size_hint_x: None
+                    width: '50dp'
+                    on_release: root.manager.current = 'search'
+                    Image:
+                        source: app.get_icon_path("search.png")
+                        center: self.parent.center
+                        size: '32dp', '32dp'
             ScrollView:
                 id: scroll_view
                 canvas.before:
@@ -463,10 +402,42 @@
                     size_hint_y: None
                     height: self.minimum_height
 
+            StyledPanel:
+                height: '65dp'
 
-            BottomBar:
-                id: bottom_menu
+                Button:
+                    background_normal: ''
+                    background_color: app.COLOR_TRANSPARENT
+                    size_hint_x: None
+                    width: '40dp'
+                    on_release: app.open_app_menu()
+                    Image:
+                        source: app.get_icon_path("menu.png")
+                        center_x: self.parent.center_x
+                        center_y: self.parent.center_y
+                        size: '28dp', '28dp'
+                Widget:
 
+                Label:
+                    id: version_label_menu
+                    text: "v0.0.0"
+                    font_size: '12sp'
+                    color: [0.3, 0.5, 0.8, 1]
+                    size_hint_x: None
+                    width: dp(60)
+                Widget:
+
+                Button:
+                    background_normal: ''
+                    background_color: app.COLOR_TRANSPARENT
+                    size_hint_x: None
+                    width: '40dp'
+                    on_release: app.toggle_orientation()
+                    Image:
+                        source: app.get_icon_path("screenformate.png")
+                        center_x: self.parent.center_x
+                        center_y: self.parent.center_y
+                        size: '28dp', '28dp'
         JumpToTopButton:
             on_release: scroll_view.scroll_y = 1
 
@@ -476,38 +447,27 @@
 
         # --- Top Search Bar ---
         StyledPanel:
-            height: '65dp'
-
-            BoxLayout:
-                orientation: "horizontal"
-                spacing: dp(10)
-                padding: [dp(10), 0]
-
-                Button:
-                    background_normal: ''
-                    background_color: app.COLOR_TRANSPARENT
-                    size_hint: None, None
-                    size: dp(50), dp(50)
-                    pos_hint: {"center_y": 0.5}
-                    on_release: root.go_back()
-
-                    Image:
-                        source: app.get_icon_path("arrow_back.png")
-                        size: dp(32), dp(32)
-                        center_x: self.parent.center_x   # ✅ CRITICAL
-                        center_y: self.parent.center_y   # ✅ CRITICAL
-
-                TextInput:
-                    id: search_input
-                    hint_text: "Search articles..."
-                    size_hint_x: 1              # ✅ CRITICAL FIX
-                    multiline: False
-                    size_hint_y: None
-                    height: dp(40)
-                    pos_hint: {"center_y": 0.5}
-                    on_text: root.filter_results(self.text)
-                    background_color: app.COLOR_WHITE_SOFT
-
+            height: '75dp'
+            spacing: '10dp'
+            Button:
+                background_normal: ''
+                background_color: app.COLOR_TRANSPARENT
+                size_hint_x: None
+                width: '50dp'
+                on_release: root.go_back()
+                Image:
+                    source: app.get_icon_path("arrow_back.png")
+                    center_x: self.parent.center_x
+                    center_y: self.parent.center_y
+                    size: '32dp', '32dp'
+            TextInput:
+                id: search_input
+                hint_text: "Search articles..."
+                multiline: False
+                size_hint_y: None
+                height: '40dp'
+                pos_hint: {'center_y': 0.5}
+                on_text: root.filter_results(self.text)
 
         # --- Middle Results Area ---
         ScrollView:
@@ -526,16 +486,51 @@
                 spacing: '10dp'
 
         # --- NEW Bottom Panel ---
+        StyledPanel:
+            height: '65dp'
+            Button:
+                background_normal: ''
+                background_color: app.COLOR_TRANSPARENT
+                size_hint_x: None
+                width: '40dp'
+                on_release: app.open_app_menu()
+                Image:
+                    source: app.get_icon_path("menu.png")
+                    center_x: self.parent.center_x
+                    center_y: self.parent.center_y
+                    size: '28dp', '28dp'
 
-        BottomBar:
-            id: bottom_search
+            Widget: # Spacer
+
+            Label:
+                id: version_label_search
+                text: "v0.0.0"
+                font_size: '12sp'
+                color: [0.3, 0.5, 0.8, 1]
+                size_hint_x: None
+                width: dp(60)
+
+            Widget: # Spacer
+
+            Button:
+                background_normal: ''
+                background_color: app.COLOR_TRANSPARENT
+                size_hint_x: None
+                width: '40dp'
+                on_release: app.toggle_orientation()
+                Image:
+                    source: app.get_icon_path("screenformate.png")
+                    center_x: self.parent.center_x
+                    center_y: self.parent.center_y
+                    size: '28dp', '28dp'
+
 
 <DetailScreen>:
     FloatLayout:
         BoxLayout:
             orientation: 'vertical'
             StyledPanel:
-                height: '65dp'
+                height: '85dp'
                 spacing: '10dp'
 
                 Button:
@@ -556,7 +551,7 @@
                     hint_text: "Search..."
                     multiline: False
                     size_hint_y: None
-                    height: '40dp'
+                    height: '45dp'
                     pos_hint: {'center_y': 0.5}
                     background_normal: ''
                     background_color: app.COLOR_WHITE_SOFT
@@ -580,8 +575,42 @@
                     padding: '15dp'
                     spacing: '12dp'
 
-            BottomBar:
-                id: bottom_details
+            StyledPanel:
+                height: '65dp'
+
+                Button:
+                    background_normal: ''
+                    background_color: app.COLOR_TRANSPARENT
+                    size_hint_x: None
+                    width: '40dp'
+                    on_release: app.open_app_menu()
+                    Image:
+                        source: app.get_icon_path("menu.png")
+                        center_x: self.parent.center_x
+                        center_y: self.parent.center_y
+                        size: '28dp', '28dp'
+                Widget:
+
+                Label:
+                    id: version_label_details
+                    text: "v0.0.0"
+                    font_size: '12sp'
+                    color: [0.3, 0.5, 0.8, 1]
+                    size_hint_x: None
+                    width: dp(60)
+                Widget:
+
+                Button:
+                    background_normal: ''
+                    background_color: app.COLOR_TRANSPARENT
+                    size_hint_x: None
+                    width: '40dp'
+                    on_release: app.toggle_orientation()
+                    Image:
+                        source: app.get_icon_path("screenformate.png")
+                        center_x: self.parent.center_x
+                        center_y: self.parent.center_y
+                        size: '28dp', '28dp'
 
         JumpToTopButton:
             on_release: scroll_view.scroll_y = 1
@@ -590,12 +619,43 @@
     FloatLayout:
         BoxLayout:
             orientation: 'vertical'
+            StyledPanel:
+                height: '75dp'
+                spacing: '10dp'
+                padding: [dp(10), 0] # Added padding to keep icons off the screen edge
 
-            TopBar:
-                title: "Documentation"
-                left_action: root.go_back
-                right_icon: "howtolinux-icon.png"
+                Button:
+                    background_normal: ''
+                    background_color: app.COLOR_TRANSPARENT
+                    size_hint_x: None
+                    width: '50dp'
+                    on_release: root.go_back()
+                    Image:
+                        source: app.get_icon_path("arrow_back.png")
+                        center_x: self.parent.center_x
+                        center_y: self.parent.center_y
+                        size: '32dp', '32dp'
 
+                Label:
+                    text: "Documentation"
+                    color: app.COLOR_BLUE
+                    bold: True
+                    font_size: '20sp'
+                    halign: 'left'
+                    size_hint_x: None # Don't let the label take all space
+                    width: self.texture_size[0]
+                    valign: 'middle'
+
+                # --- THE MAGIC SPACER ---
+                # This empty widget expands to push everything after it to the right
+                Widget:
+
+                # --- THE ICON ON THE RIGHT ---
+                Image:
+                    source: app.get_icon_path("howtolinux-icon.png")
+                    size_hint: (None, None)
+                    size: (dp(35), dp(35))
+                    pos_hint: {'center_y': .5}
 
             ScrollView:
                 id: scroll_view
@@ -615,8 +675,43 @@
 
             # Bottom panel (Menu and Orientation)
 
-            BottomBar:
+            StyledPanel:
                 id: bottom_bar
+                height: '65dp'  # Property first!
+
+                Button:         # Child widgets second
+                    background_normal: ''
+                    background_color: app.COLOR_TRANSPARENT
+                    size_hint_x: None
+                    width: '40dp'
+                    on_release: app.open_app_menu()
+                    Image:
+                        source: app.get_icon_path("menu.png")
+                        center_x: self.parent.center_x
+                        center_y: self.parent.center_y
+                        size: '28dp', '28dp'
+                Widget:
+
+                Label:
+                    id: version_label_article
+                    text: "v0.0.0"
+                    font_size: '12sp'
+                    color: [0.3, 0.5, 0.8, 1]
+                    size_hint_x: None
+                    width: dp(60)
+                Widget:
+
+                Button:
+                    background_normal: ''
+                    background_color: app.COLOR_TRANSPARENT
+                    size_hint_x: None
+                    width: '40dp'
+                    on_release: app.toggle_orientation()
+                    Image:
+                        source: app.get_icon_path("screenformate.png")
+                        center_x: self.parent.center_x
+                        center_y: self.parent.center_y
+                        size: '28dp', '28dp'
 
         JumpToTopButton:
             on_release: scroll_view.scroll_y = 1
@@ -829,10 +924,14 @@
                             height: "35dp"
                             write_tab: False
 
-                        PrimaryButton:
+                        Button:
                             text: "Browse"
+                            background_normal: ''
+                            background_down: ''
+                            background_color: app.COLOR_BLUE
+                            color: app.COLOR_WHITE
+                            bold: True
                             on_release: root.pick_icon()
-
 
                     # ---- steps section ----
                     Label:
@@ -941,22 +1040,34 @@
                 BoxLayout:
                     spacing: "6dp"
 
-                    PrimaryButton:
+                    Button:
                         text: "Add Step"
+                        background_normal: ''
+                        background_color: app.COLOR_BLUE_MEDIUM
                         color: app.COLOR_WHITE
                         bold: True
                         on_release: root.add_step_local()
 
-                    SecondaryBlueButton:
+                    Button:
                         text: "Remove Last"
+                        background_normal: ''
+                        background_color: app.COLOR_BLUE_MEDIUM
+                        color: app.COLOR_WHITE
+                        bold: True
                         on_release: root.remove_last_step()
 
-                    SecondaryBlueButton:
+                    Button:
                         text: "Clear"
+                        background_normal: ''
+                        background_color: app.COLOR_BLUE_MEDIUM
+                        color: app.COLOR_WHITE
+                        bold: True
                         on_release: root.clear_step_form()
 
-                    SuccessButton:
+                    Button:
                         text: "Save"
+                        background_normal: ''
+                        background_color: app.COLOR_GREEN
                         color: app.COLOR_WHITE
                         bold: True
                         on_release: root.save_topic()
@@ -1117,9 +1228,14 @@
                         size_hint_y: None
                         height: self.minimum_height
 
-                SuccessButton:
+                Button:
                     text: "Save App Info"
+                    size_hint_y: None
+                    height: "50dp"
+                    background_normal: ''
+                    background_color: [0.2,0.6,0.2,1]
                     on_release: root.save_metadata()
+
 
 <RotatableArrow>:
     canvas.before:
@@ -1129,3 +1245,4 @@
             origin: self.center
     canvas.after:
         PopMatrix
+

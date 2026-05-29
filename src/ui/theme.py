@@ -54,7 +54,7 @@ COLOR_ORANGE_LIGHT_UI = [1, 0.7, 0.3, 1]
 COLOR_CYAN = [0, 0.7, 1, 1]
 COLOR_CYAN_DARK = [0, 0.5, 0.7, 1]
 
-
+[0.1, 0.25, 0.45, 1]
 
 
 #:set color_blue [59/255, 101/255, 184/255, 1]
