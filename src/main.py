@@ -12,9 +12,9 @@ from pathlib import Path
 
 # --- Project imports ---
 from src.utils.first_run import initialize_first_run
-from src.utils.config import load_firebase_config
 from src.utils.runtime_paths import is_dev_mode, get_runtime_paths
-from src.services.update_content import update_assets, update_excel
+from src.utils.icon_utils import get_icon_path
+from src.services.update_content import update_assets, update_cache
 from src.services.editor_service import is_admin_enabled
 from src.screens.add_topic_screen import AddTopicScreen
 from src.screens.menu_screen import MenuScreen
@@ -22,10 +22,16 @@ from src.screens.search_screen import SearchScreen
 from src.screens.detail_screen import DetailScreen
 from src.screens.article_screen import ArticleScreen
 from src.screens.add_step_screen import AddStepScreen
+from src.screens.json_viewer_screen import JsonViewerScreen
 from src.screens.app_info_screen import AppInfoScreen
-from src.utils.icon_utils import get_icon_path
 from src.ui.about_popup import show_about_popup
-from src.services.data_service import fetch_database, load_app_metadata, APP_DATA
+from src.services.data_service import (
+    fetch_database,
+    load_app_metadata,
+    APP_DATA,
+    add_local_topic_and_steps,
+    delete_local_topic
+)
 from src.ui.theme import (
     COLOR_TRANSPARENT,
     COLOR_WHITE_SOFT,
@@ -91,10 +97,6 @@ Window.size = (500, 850)
 # ✅ ensure runtime dirs & config exist
 initialize_first_run()
 #Clock.schedule_once(lambda dt: initialize_first_run(), 1)
-
-# ✅ now it is safe to load firebase.json
-firebase_cfg = load_firebase_config()
-DB_URL = (firebase_cfg.get("database_url") or firebase_cfg.get("databaseURL")) + "/.json"
 
 # --- UI DEFINITIONS (KV) ---
 # The KV layout was moved from the inlined KV string to an external file.
@@ -171,6 +173,7 @@ class LinuxHowToApp(App):
     COLOR_BLUE_DARK = COLOR_BLUE_DARK
 
     version_string = StringProperty("v0.0.0")
+    connection_status = StringProperty("Checking...")
 
     project_root = StringProperty("")
 
@@ -190,6 +193,16 @@ class LinuxHowToApp(App):
     admin_enabled = BooleanProperty(False)   # ✅ for disabeling admin buttons
     admin_override = BooleanProperty(False)
 
+    #----------helpers-----------
+
+    def check_connection(self):
+        import requests
+        try:
+            requests.get("https://www.google.com", timeout=1)
+            self.connection_status = "ONLINE"
+        except:
+            self.connection_status = "OFFLINE"
+
     def open_app_info(self):
         self.sm.current = "app_info"
 
@@ -200,6 +213,17 @@ class LinuxHowToApp(App):
     def get_icon_path(self, filename):
         return get_icon_path(filename)
 
+    def fetch_database(self):
+        fetch_database(self)
+
+    def save_local_topic(self, topic: dict, steps: list[dict]):
+        add_local_topic_and_steps(topic, steps)
+        self.fetch_database()
+
+
+    def delete_local_topic(self, topic_id: str):
+        delete_local_topic(topic_id)
+        self.fetch_database()
 
     def update_version_labels(self):
         """
@@ -228,9 +252,13 @@ class LinuxHowToApp(App):
             except Exception as e:
                 print(f"DEBUG: Could not update {screen_name}: {e}")
 
+
+    def on_screen_change(self, *args):
+        self.check_connection()
+        self.refresh_ui_data()
+
     def on_start(self):
         pass
-
 
     def toggle_orientation(self):
         w, h = Window.size
@@ -240,12 +268,16 @@ class LinuxHowToApp(App):
         self._menu_popup = AppMenu()
         self._menu_popup.open()
 
-
     def open_database(self):
         paths = get_runtime_paths()
-        target_file = str(paths["data"] / "main.xlsx")
+        target_file = str(paths["data"] / "cache.json")
 
         if not os.path.exists(target_file):
+            return
+
+        # ✅ Android fallback → open inside app
+        if platform.system() == "Linux" and "ANDROID_ARGUMENT" in os.environ:
+            self.sm.current = "json_viewer"
             return
 
         try:
@@ -290,6 +322,7 @@ class LinuxHowToApp(App):
         self.version_string = f"v{version} | {last_update}"
 
 
+
         # Also trigger the standard menu population
         try:
             menu_screen = self.sm.get_screen('menu')
@@ -325,7 +358,6 @@ class LinuxHowToApp(App):
             except Exception as e:
                 print("DEBUG: article screen refresh failed:", e)
 
-
         except Exception as e:
             print(f"[ERROR] Failed to open file: {e}")
             pass
@@ -337,6 +369,7 @@ class LinuxHowToApp(App):
 
         self.icon = get_icon_path("howtolinux-icon.png")
         self.sm = ScreenManager(transition=FadeTransition())
+        self.sm.bind(current=self.on_screen_change)
         self.sm.add_widget(MenuScreen(name='menu'))
         self.sm.add_widget(SearchScreen(name='search'))
         self.sm.add_widget(DetailScreen(name='details'))
@@ -344,6 +377,7 @@ class LinuxHowToApp(App):
         self.sm.add_widget(AddTopicScreen(name="add_topic"))
         self.sm.add_widget(AddStepScreen(name="add_step"))
         self.sm.add_widget(AppInfoScreen(name="app_info"))
+        self.sm.add_widget(JsonViewerScreen(name="json_viewer"))
 
         fetch_database(self)
         return self.sm
@@ -371,16 +405,6 @@ class LinuxHowToApp(App):
     def run_sync_script(self, *args):
 
         # --- UI: syncing state (IMMEDIATE) ---
-
-        """Runs the sync.py script in the background."""
-        try:
-            import pandas  # noqa
-        except ImportError:
-            self.sync_text = "Developer Sync unavailable (pandas missing)"
-            self.sync_fg = [1, 0, 0, 1]
-            self.sync_border = [1, 0, 0, 1]
-            return
-
 
         from pathlib import Path
         sync_script = str(Path(__file__).parent / "services" /"sync.py")
@@ -443,8 +467,49 @@ class LinuxHowToApp(App):
 
 
     def delete_topic(self, data):
-        from src.services.editor_service import delete_topic_from_firebase
+        if data.get("source") == "user":
+            topic_id = str(data.get("Topic_ID") or "")
+            if not topic_id:
+                return
 
+            title = data.get("Title", "this topic")
+
+            # ✅ Popup UI (same structure as Firebase)
+            content = BoxLayout(orientation="vertical", spacing=10, padding=10)
+            content.add_widget(Label(text=f"Delete local topic:\n{title}?"))
+
+            btn_box = BoxLayout(size_hint_y=None, height="40dp", spacing=10)
+
+            btn_yes = Button(text="DELETE", background_color=[1, 0.3, 0.3, 1])
+            btn_no = Button(text="Cancel")
+
+            btn_box.add_widget(btn_yes)
+            btn_box.add_widget(btn_no)
+            content.add_widget(btn_box)
+
+            popup = Popup(
+                title="Delete Local Topic",
+                content=content,
+                size_hint=(0.5, 0.4),
+                background="",
+                background_color=(0, 0, 0, 0)
+            )
+
+            def confirm_delete(instance):
+                popup.dismiss()
+                try:
+                    self.delete_local_topic(topic_id)
+                except Exception as e:
+                    print(f"❌ Local delete failed: {e}")
+
+            btn_yes.bind(on_release=confirm_delete)
+            btn_no.bind(on_release=lambda x: popup.dismiss())
+
+            popup.open()
+
+            return
+
+        from src.services.editor_service import delete_topic_from_firebase
 
         node_key = str(data.get("_key") or "")
         topic_id = str(data.get("Topic_ID") or "")
@@ -541,7 +606,7 @@ class LinuxHowToApp(App):
                 else:
                     print("🌍 PROD MODE: Updating via HTTP")
                     update_assets()
-                    update_excel()
+                    update_cache()
 
                 Clock.schedule_once(self.update_success, 0)
 
@@ -580,7 +645,6 @@ class LinuxHowToApp(App):
         self.update_bg = self.COLOR_ORANGE_LIGHT_UI
         self.update_fg = self.COLOR_BLUE_DARK
         self.update_border = self.COLOR_TRANSPARENT           # ✅ reset
-
 
     #---- syncronize button behaviour -----
 

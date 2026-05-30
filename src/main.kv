@@ -102,12 +102,35 @@
 
     Widget:
 
-    Label:
-        text: app.version_string   # ✅ KEY CHANGE
-        font_size: '12sp'
-        color: [0.3, 0.5, 0.8, 1]
+    BoxLayout:
+        orientation: "horizontal"
         size_hint_x: None
-        width: dp(120)
+        width: dp(200)
+        spacing: dp(6)
+
+        Label:
+            text: app.version_string
+            font_size: '11sp'
+            color: app.COLOR_BLUE
+            halign: "right"
+            valign: "middle"
+            text_size: self.size
+
+        Label:
+            text: "|"
+            font_size: '11sp'
+            color: app.COLOR_TEXT_SOFT
+
+        Label:
+            text: app.connection_status
+            font_size: '11sp'
+            bold: True
+            halign: "left"
+            valign: "middle"
+            text_size: self.size
+
+            # ✅ USE YOUR THEME COLORS (good contrast on blue!)
+            color: app.COLOR_GREEN_DARK_UI if app.connection_status == "ONLINE" else app.COLOR_ORANGE_DARK_UI
 
     Widget:
 
@@ -289,7 +312,7 @@
                 app.open_about_popup()     # Opens the new About popup
 
         PrimaryButton:
-            text: "Open Database (Excel)"
+            text: "Open Database"
             on_release:
                 root.dismiss()
                 app.open_database()
@@ -301,9 +324,9 @@
                 app.open_assets_folder()
 
         SuccessButton:
-            text: "Add Topic (Admin)"
-            disabled: not app.is_admin_mode()
-            opacity: 1 if app.is_admin_mode() else 0.5
+            text: "Add Topic"
+            disabled: False
+            opacity: 1
             on_release:
                 root.dismiss()
                 app.open_new_topic()
@@ -393,13 +416,29 @@
 
     BoxLayout:
         orientation: 'vertical'
-        Label:
-            text: root.title
-            color: app.COLOR_BLUE
-            bold: True
-            font_size: '18sp'
-            halign: 'left'
-            text_size: (self.width, None)
+
+        # ✅ TITLE ROW (WITH LOCAL MARK)
+        BoxLayout:
+            orientation: "horizontal"
+            size_hint_y: None
+            height: dp(24)
+            spacing: dp(6)
+
+            Image:
+                source: app.get_icon_path("local.png")
+                size_hint: None, None
+                size: dp(24), dp(24)
+                opacity: 1 if root.data.get("source") == "user" else 0
+
+            Label:
+                text: root.title
+                color: app.COLOR_BLUE
+                bold: True
+                font_size: '18sp'
+                halign: 'left'
+                text_size: (self.width, None)
+
+        # ✅ DESCRIPTION
         Label:
             text: root.desc
             color: app.COLOR_TEXT_DARK
@@ -414,8 +453,8 @@
         spacing: "5dp"
 
         IconButton:
-            disabled: not app.is_admin_mode()
-            opacity: 1 if app.is_admin_mode() else 0.3
+            disabled: not (app.is_admin_mode() or root.data.get("source") == "user")
+            opacity: 1 if (app.is_admin_mode() or root.data.get("source") == "user") else 0.3
             on_release: app.edit_topic(root.data)
 
             Image:
@@ -425,8 +464,8 @@
                 size: "28dp", "28dp"
 
         IconButton:
-            disabled: not app.is_admin_mode()
-            opacity: 1 if app.is_admin_mode() else 0.3
+            disabled: not (app.is_admin_mode() or root.data.get("source") == "user")
+            opacity: 1 if (app.is_admin_mode() or root.data.get("source") == "user") else 0.3
             on_release: app.delete_topic(root.data)
 
             Image:
@@ -977,6 +1016,22 @@
             on_release:
                 form_scroll.scroll_y -= 0.2
 
+<JsonViewerScreen>:
+    BoxLayout:
+        orientation: "vertical"
+
+        TopBar:
+            title: "JSON Data"
+            left_action: lambda: setattr(root.manager, "current", "menu")
+
+        ScrollView:
+            TextInput:
+                id: json_text
+                readonly: True
+                font_size: "12sp"
+                size_hint_y: None
+                height: self.minimum_height
+                text_size: self.width, None
 
 <AppInfoScreen>:
     BoxLayout:

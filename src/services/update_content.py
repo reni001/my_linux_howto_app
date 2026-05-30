@@ -6,10 +6,6 @@ from pathlib import Path
 import shutil
 from src.utils.runtime_paths import get_runtime_paths
 
-# 🔧 Adjust these URLs to your real GitHub raw links
-#ASSETS_ZIP_URL = "https://raw.githubusercontent.com/reni001/my_linux_howto_app/main/assets.zip"
-#EXCEL_URL = "https://raw.githubusercontent.com/reni001/my_linux_howto_app/main/data/main.xlsx"
-
 # ✅ Always-existing GitHub repo ZIP
 REPO_ZIP_URL = "https://github.com/reni001/my_linux_howto_app/archive/refs/heads/main.zip"
 
@@ -38,16 +34,31 @@ def update_assets():
         assets_src = extracted_root / "assets"
 
         # ✅ Copy assets
-        if assets_dst.exists():
-            shutil.rmtree(assets_dst)
+        # ✅ SAFE MERGE (DO NOT DELETE EXISTING)
 
-        shutil.copytree(assets_src, assets_dst)
+        for src_file in assets_src.rglob("*"):
+            if not src_file.is_file():
+                continue
+
+            rel_path = src_file.relative_to(assets_src)
+            dst_file = assets_dst / rel_path
+
+            # ✅ If destination exists → DO NOTHING (protects user + existing files)
+            if dst_file.exists():
+                continue
+
+            # ✅ create folder if needed
+            dst_file.parent.mkdir(parents=True, exist_ok=True)
+
+            # ✅ copy new file
+            shutil.copy2(src_file, dst_file)
+
+            # ❗ If it exists, DO NOTHING (preserve local file)
 
     print("✅ Assets updated")
 
 
-def update_excel():
-    print("🔄 Updating Excel from Firebase...")
 
-    # You can keep your existing logic or call sync logic
-    print("✅ Excel update handled via Firebase sync at app start")
+def update_cache():
+    print("✅ JSON cache is updated via Firebase sync (Excel removed)")
+

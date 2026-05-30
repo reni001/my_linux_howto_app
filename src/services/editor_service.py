@@ -5,7 +5,7 @@ from __future__ import annotations
 from src.services.auth_service import is_admin_enabled
 
 # Non-Firebase admin tools
-from src.services.admin_tools import copy_icon_to_assets, export_backup_excel
+from src.services.admin_tools import copy_icon_to_assets
 
 # Firebase CRUD
 from src.services.firebase_service import (

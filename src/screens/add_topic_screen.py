@@ -23,7 +23,6 @@ from src.services.editor_service import (
     copy_icon_to_assets,
     add_topic_to_firebase,
     add_step_to_firebase,
-    export_backup_excel
 )
 from src.logic.taxonomy import build_taxonomy
 from src.ui.components import HoverRow, EntryListItem, ExpandableSection
@@ -38,11 +37,12 @@ class AddTopicScreen(Screen):
     selected_step_index = NumericProperty(-1)   # -1 means "no step selected"
 
     def on_pre_enter(self):
-        if not is_admin_enabled():
-            self.ids.status_label.text = "Editor disabled (admin key missing)."
+        app = App.get_running_app()
+
+        if not app.is_admin_mode():
+            self.ids.status_label.text = "User mode: saving locally"
         else:
             self.ids.status_label.text = ""
-
 
         if self.edit_mode:
             # keep Topic_ID locked
@@ -62,7 +62,6 @@ class AddTopicScreen(Screen):
             self.ids.topic_id.readonly = False
 
         if "header_icon" in self.ids:
-            from kivy.app import App
             self.ids.header_icon.source = App.get_running_app().get_icon_path("howtolinux-icon.png")
 
         self.refresh_steps_preview()
@@ -225,7 +224,6 @@ class AddTopicScreen(Screen):
                 self.ids.icon_path.text = selected
 
                 # ✅ update header icon immediately
-                from kivy.app import App
                 try:
                     filename = Path(selected).name
                     # ✅ preview direct file (correct)
@@ -252,7 +250,6 @@ class AddTopicScreen(Screen):
         if "header_icon" not in self.ids:
             return
 
-        from kivy.app import App
         icon_path = App.get_running_app().get_icon_path(value)
 
         if value and os.path.exists(icon_path):
@@ -514,22 +511,21 @@ class AddTopicScreen(Screen):
     # SAVE TOPIC + ALL STEPS TO FIREBASE
     # -----------------------------
     def save_topic(self):
-        if not is_admin_enabled():
-            self.ids.status_label.text = "Editor disabled (admin key missing)."
-            return
+        app = App.get_running_app()
 
         # Copy icon if a file path is provided
         icon_filename = self.ids.topic_icon.text.strip()
         icon_path = self.ids.icon_path.text.strip()
         if icon_path:
             try:
-                icon_filename = copy_icon_to_assets(icon_path)
+                # ✅ official in admin mode, private in user mode
+                icon_filename = copy_icon_to_assets(icon_path, official=app.is_admin_mode())
+
                 # ✅ sync UI with saved filename
                 self.ids.topic_icon.text = icon_filename
 
                 # ✅ update header icon after saving
                 if "header_icon" in self.ids:
-                    from kivy.app import App
                     try:
                         self.ids.header_icon.source = App.get_running_app().get_icon_path(icon_filename)
                     except Exception as e:
@@ -562,6 +558,22 @@ class AddTopicScreen(Screen):
             self.ids.status_label.text = "Category and Title are required."
             return
 
+        # ✅ USER MODE → save locally
+        if not app.is_admin_mode():
+            try:
+                topic_payload = topic
+                step_payloads = list(self.pending_steps)
+
+                app.save_local_topic(topic_payload, step_payloads)
+
+                self.ids.status_label.text = "✅ Topic saved locally"
+                app.sm.current = "menu"
+                return
+
+            except Exception as e:
+                self.ids.status_label.text = f"❌ Local save failed: {e}"
+                return
+
         try:
             if self.edit_mode:
                 # ✅ keep Firebase key (VERY IMPORTANT)
@@ -583,7 +595,6 @@ class AddTopicScreen(Screen):
 
             # ✅ update header icon after save
             if "header_icon" in self.ids:
-                from kivy.app import App
 
                 icon_file = self.ids.topic_icon.text.strip()
 
@@ -629,10 +640,7 @@ class AddTopicScreen(Screen):
 
             # ✅ FIXED EXPORT (no crash anymore)
 
-
             app = App.get_running_app()
-            export_backup_excel(app.APP_DATA.copy())
-
 
             # Reset UI
             #self.pending_steps = []
@@ -743,20 +751,17 @@ class AddTopicScreen(Screen):
         if "header_icon" in self.ids:
             if icon_file:
                 try:
-                    from kivy.app import App
                     app = App.get_running_app()
                     self.ids.header_icon.source = app.get_icon_path(icon_file)
                 except Exception as e:
                     print("DEBUG: icon load failed:", e)
             else:
-                from kivy.app import App
                 app = App.get_running_app()
                 self.ids.header_icon.source = app.get_icon_path("howtolinux-icon.png")
 
         # load steps
         self.pending_steps = []
 
-        from kivy.app import App
         app = App.get_running_app()
 
         for step in app.APP_DATA.get("steps", []):

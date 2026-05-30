@@ -102,7 +102,8 @@ if ! ping -c 1 github.com &> /dev/null; then
 fi
 
 pip install --upgrade pip setuptools wheel
-pip install kivy pandas requests firebase-admin openpyxl cython
+echo "[INFO] Installing dependencies from requirements.txt..."
+pip install -r requirements.txt
 
 
 # ----------------------------------------

@@ -122,9 +122,6 @@ class AddStepScreen(Screen):
             app = App.get_running_app()
             app.fetch_database()
 
-            # Backup export (optional, but matches your 'Excel is backup' goal)
-            ##export_backup_excel(globals().get("APP_DATA", {}))
-
             # Clear fields except topic + step order
             self.ids.step_headline.text = ""
             self.ids.step_header2.text = ""
