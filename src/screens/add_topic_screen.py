@@ -10,8 +10,9 @@ from kivy.uix.button import Button
 from kivy.uix.image import Image
 from kivy.uix.popup import Popup
 from kivy.uix.filechooser import FileChooserListView
+from kivy.uix.scrollview import ScrollView
+from kivy.uix.spinner import Spinner
 from kivy.metrics import dp
-
 # --- Python ---
 import os
 import re
@@ -20,7 +21,7 @@ from pathlib import Path
 # --- Your project ---
 from src.services.editor_service import (
     is_admin_enabled,
-    copy_icon_to_assets,
+    #copy_icon_to_assets,
     add_topic_to_firebase,
     add_step_to_firebase,
 )
@@ -33,6 +34,7 @@ class AddTopicScreen(Screen):
     edit_topic_key = StringProperty("")
     edit_mode = BooleanProperty(False)     # ✅ THIS FIXES YOUR CRASH
     edit_topic_id = StringProperty("")     # ✅ needed for edit tracking
+    edit_is_local = BooleanProperty(False)   # ✅ NEW
     pending_steps = ListProperty([])  # list of step dicts to save together with the topic
     selected_step_index = NumericProperty(-1)   # -1 means "no step selected"
 
@@ -185,6 +187,7 @@ class AddTopicScreen(Screen):
 
     def cancel_edit(self):
         self.edit_mode = False
+        self.edit_is_local = False
 
         # reset fields
         self.ids.category.text = "Click to choose category"
@@ -206,6 +209,52 @@ class AddTopicScreen(Screen):
     # -----------------------------
     # ICON PICKER
     # -----------------------------
+    # Helper
+
+    def _import_icon(self, src_path: str) -> str:
+        """
+        Import icon into user_icons safely:
+        - reuse if already exists
+        - reuse official if already exists
+        - only copy if truly new
+        """
+
+        from src.utils.runtime_paths import get_runtime_paths
+        import shutil
+        from pathlib import Path
+
+        if not src_path:
+            return ""
+
+        paths = get_runtime_paths()
+        user_dir = paths["assets"] / "user_icons"
+        official_dir = paths["assets"] / "icons"
+
+        user_dir.mkdir(parents=True, exist_ok=True)
+
+        filename = Path(src_path).name
+
+        user_target = user_dir / filename
+        official_target = official_dir / filename
+
+        # ✅ 1. already in user_icons → reuse
+        if user_target.exists():
+            print(f"ℹ️ Reusing existing user icon: {filename}")
+            return filename
+
+        # ✅ 2. already in official → reuse (no copy!)
+        if official_target.exists():
+            print(f"ℹ️ Using existing official icon: {filename}")
+            return filename
+
+        # ✅ 3. new file → copy
+        shutil.copy2(src_path, user_target)
+        print(f"✅ Imported new icon: {user_target}")
+
+        return filename
+
+    #--------
+
     def pick_icon(self):
         # You already use a file picker pattern elsewhere; simplest: keep text path entry.
         # If you want a FileChooser popup later, we can add it – for now this won't crash.
@@ -229,7 +278,11 @@ class AddTopicScreen(Screen):
                     # ✅ preview direct file (correct)
                     self.ids.header_icon.source = selected
                     # ✅ keep UI consistent
-                    self.ids.topic_icon.text = Path(selected).name
+                    filename = self._import_icon(selected)
+
+                    self.ids.topic_icon.text = filename
+                    self.ids.header_icon.source = selected
+                    self.ids.icon_path.text = ""   # ✅ clear raw path after import
 
                 except Exception as e:
                     print("DEBUG: preview icon failed:", e)
@@ -284,7 +337,7 @@ class AddTopicScreen(Screen):
         }
 
         # ✅ If a step is selected → overwrite that slot
-        if self.selected_step_index != -1 and 0 <= self.selected_step_index < len(self.pending_steps):
+        if self.selected_step_index != -1 and 0 <=self.selected_step_index < len(self.pending_steps):
             self.pending_steps[self.selected_step_index] = step
             self.selected_step_index = -1
             if "add_step_btn" in self.ids:
@@ -352,6 +405,348 @@ class AddTopicScreen(Screen):
         if not title:
             return "(no headline)"
         return re.sub(r'^\s*\d+[\.\)\:\-]\s*', '', str(title).strip())
+
+    def _norm(self, value):
+        return str(value or "").strip().lower()
+
+    def _find_duplicate_topic(self, candidate: dict):
+        """
+        Find any duplicate in APP_DATA by Category + Subcategory + Title,
+        excluding the topic currently being edited.
+        """
+        app = App.get_running_app()
+
+        wanted_cat = self._norm(candidate.get("Category"))
+        wanted_sub = self._norm(candidate.get("Subcategory"))
+        wanted_title = self._norm(candidate.get("Title"))
+
+        current_id = str(self.edit_topic_id or "")
+
+        for topic in app.APP_DATA.get("topics", []):
+            other_id = str(topic.get("Topic_ID") or "")
+
+            # ✅ ignore self when editing
+            if current_id and other_id == current_id:
+                continue
+
+            if (
+                self._norm(topic.get("Category")) == wanted_cat and
+                self._norm(topic.get("Subcategory")) == wanted_sub and
+                self._norm(topic.get("Title")) == wanted_title
+            ):
+                return topic
+
+        return None
+
+    def _merge_urls(self, existing_urls: str, new_urls: str) -> str:
+        items = []
+        for raw in [existing_urls, new_urls]:
+            for part in str(raw or "").split(","):
+                value = part.strip()
+                if value and value not in items:
+                    items.append(value)
+        return ", ".join(items)
+
+    def _step_signature(self, step: dict):
+        return (
+            str(step.get("Headline", "")).strip().lower(),
+            str(step.get("Header_2", "")).strip().lower(),
+            str(step.get("Instruction", "")).strip().lower(),
+            str(step.get("Code_Snippet", "")).strip().lower(),
+            str(step.get("Notes", "")).strip().lower(),
+        )
+
+    def _merge_steps(self, existing_steps: list[dict], new_steps: list[dict]) -> list[dict]:
+        merged = [dict(s) for s in existing_steps]
+        seen = {self._step_signature(s) for s in merged}
+
+        for step in new_steps:
+            sig = self._step_signature(step)
+            if sig not in seen:
+                merged.append(dict(step))
+                seen.add(sig)
+
+        # Renumber cleanly
+        for i, step in enumerate(merged, start=1):
+            step["Step_Order"] = i
+
+        return merged
+
+    def _apply_description_strategy(self, old_desc: str, new_desc: str, strategy: str) -> str:
+        old_desc = str(old_desc or "").strip()
+        new_desc = str(new_desc or "").strip()
+        strategy = str(strategy or "Add").strip()
+
+        if strategy == "Skip":
+            return old_desc
+
+        if strategy == "Replace":
+            return new_desc if new_desc else old_desc
+
+        # default = Add
+        if not new_desc:
+            return old_desc
+        if not old_desc:
+            return new_desc
+        if old_desc == new_desc:
+            return old_desc
+        if new_desc in old_desc:
+            return old_desc
+        if old_desc in new_desc:
+            return new_desc
+
+        return f"{old_desc}\n\n--- merged addition ---\n{new_desc}"
+
+    def _apply_urls_strategy(self, old_urls: str, new_urls: str, strategy: str) -> str:
+        strategy = str(strategy or "Add").strip()
+
+        old_urls = str(old_urls or "").strip()
+        new_urls = str(new_urls or "").strip()
+
+        if strategy == "Skip":
+            return old_urls
+
+        if strategy == "Replace":
+            return new_urls if new_urls else old_urls
+
+        # default = Add
+        return self._merge_urls(old_urls, new_urls)
+
+    def _apply_steps_strategy(self, existing_steps: list[dict], new_steps: list[dict], strategy: str) -> list[dict]:
+        strategy = str(strategy or "Add").strip()
+
+        if strategy == "Skip":
+            return [dict(s) for s in existing_steps]
+
+        if strategy == "Replace":
+            replaced = [dict(s) for s in new_steps]
+            for i, step in enumerate(replaced, start=1):
+                step["Step_Order"] = i
+            return replaced
+
+        # default = Add
+        return self._merge_steps(existing_steps, new_steps)
+
+    def _show_merge_popup(self, new_topic, duplicate_topic):
+        content = BoxLayout(orientation="vertical", spacing=10, padding=10)
+
+        preview_lines = []
+        preview_lines.append(f"Merging into existing topic:\n{duplicate_topic.get('Title')}\n")
+
+        old_desc = str(duplicate_topic.get("Description", "")).strip()
+        new_desc = str(new_topic.get("Description", "")).strip()
+        if new_desc and new_desc != old_desc:
+            preview_lines.append("Description differs.")
+
+        old_urls = set(u.strip() for u in duplicate_topic.get("URLs", "").split(",") if u.strip())
+        new_urls = set(u.strip() for u in new_topic.get("URLs", "").split(",") if u.strip())
+        if new_urls - old_urls:
+            preview_lines.append("URLs differ.")
+
+        if self.pending_steps:
+            preview_lines.append("New steps are present.")
+
+        preview_text = "\n".join(preview_lines) or "Duplicate detected."
+
+        scroll = ScrollView(size_hint=(1, 1))
+        msg = Label(
+            text=preview_text,
+            halign="left",
+            valign="top",
+            size_hint_y=None
+        )
+
+        def _update_height(*_):
+            msg.text_size = (msg.width, None)
+            msg.texture_update()
+            msg.height = max(msg.texture_size[1], dp(100))
+
+        msg.bind(width=lambda *_: _update_height())
+        _update_height()
+
+        scroll.add_widget(msg)
+        content.add_widget(scroll)
+
+        # ✅ strategy selectors
+        strategy_box = BoxLayout(orientation="vertical", spacing=8, size_hint_y=None)
+        strategy_box.bind(minimum_height=strategy_box.setter("height"))
+
+        # Description
+        row_desc = BoxLayout(size_hint_y=None, height=dp(36), spacing=8)
+        row_desc.add_widget(Label(text="Description", size_hint_x=0.45, halign="left"))
+        desc_spinner = Spinner(
+            text="Add",
+            values=("Add", "Replace", "Skip"),
+            size_hint_x=0.55
+        )
+        row_desc.add_widget(desc_spinner)
+        strategy_box.add_widget(row_desc)
+
+        # URLs
+        row_urls = BoxLayout(size_hint_y=None, height=dp(36), spacing=8)
+        row_urls.add_widget(Label(text="URLs", size_hint_x=0.45, halign="left"))
+        urls_spinner = Spinner(
+            text="Add",
+            values=("Add", "Replace", "Skip"),
+            size_hint_x=0.55
+        )
+        row_urls.add_widget(urls_spinner)
+        strategy_box.add_widget(row_urls)
+
+        # Steps
+        row_steps = BoxLayout(size_hint_y=None, height=dp(36), spacing=8)
+        row_steps.add_widget(Label(text="Steps", size_hint_x=0.45, halign="left"))
+        steps_spinner = Spinner(
+            text="Add",
+            values=("Add", "Replace", "Skip"),
+            size_hint_x=0.55
+        )
+        row_steps.add_widget(steps_spinner)
+        strategy_box.add_widget(row_steps)
+
+        content.add_widget(strategy_box)
+
+        btn_box = BoxLayout(size_hint_y=None, height="40dp", spacing=10)
+        btn_merge = Button(text="MERGE", background_color=[0.2, 0.7, 0.3, 1])
+        btn_cancel = Button(text="Cancel")
+
+        btn_box.add_widget(btn_merge)
+        btn_box.add_widget(btn_cancel)
+        content.add_widget(btn_box)
+
+        popup = Popup(
+            title="Preview Merge",
+            content=content,
+            size_hint=(0.82, 0.78),
+            background="",
+            background_color=(0, 0, 0, 0)
+        )
+
+        def do_merge(instance):
+            popup.dismiss()
+            Clock.schedule_once(
+                lambda dt: self._perform_merge(
+                    new_topic,
+                    duplicate_topic,
+                    desc_spinner.text,
+                    urls_spinner.text,
+                    steps_spinner.text
+                ),
+                0
+            )
+
+        btn_merge.bind(on_release=do_merge)
+        btn_cancel.bind(on_release=lambda x: popup.dismiss())
+
+        popup.open()
+
+
+    def _perform_merge(
+        self,
+        new_topic: dict,
+        duplicate_topic: dict,
+        desc_strategy: str = "Add",
+        urls_strategy: str = "Add",
+        steps_strategy: str = "Add",
+    ):
+        app = App.get_running_app()
+
+        try:
+            existing_topic_id = str(duplicate_topic.get("Topic_ID") or "")
+
+            existing_steps = [
+                dict(step) for step in app.APP_DATA.get("steps", [])
+                if str(step.get("Topic_ID")) == existing_topic_id
+            ]
+
+            new_steps = [dict(step) for step in self.pending_steps]
+
+            merged_steps = self._apply_steps_strategy(
+                existing_steps,
+                new_steps,
+                steps_strategy
+            )
+
+            merged_topic = dict(duplicate_topic)
+
+            # ✅ URLs strategy
+            merged_topic["URLs"] = self._apply_urls_strategy(
+                duplicate_topic.get("URLs", ""),
+                new_topic.get("URLs", ""),
+                urls_strategy
+            )
+
+            # ✅ Description strategy
+            merged_topic["Description"] = self._apply_description_strategy(
+                duplicate_topic.get("Description", ""),
+                new_topic.get("Description", ""),
+                desc_strategy
+            )
+
+            # ✅ keep existing icon unless empty
+            if not str(merged_topic.get("Topic_Icon", "")).strip():
+                merged_topic["Topic_Icon"] = new_topic.get("Topic_Icon", "")
+
+            # ✅ LOCAL duplicate → update local JSON
+            if str(duplicate_topic.get("source") or "") == "user":
+                merged_topic["Topic_ID"] = existing_topic_id
+                merged_topic["_key"] = existing_topic_id
+                merged_topic["source"] = "user"
+                merged_topic["local_only"] = True
+
+                app.update_local_topic(existing_topic_id, merged_topic, merged_steps)
+                self.ids.status_label.text = "✅ Local topics merged"
+
+            # ✅ OFFICIAL duplicate → update Firebase
+            else:
+                from src.services.editor_service import delete_steps_for_topic
+
+                merged_topic["_key"] = duplicate_topic.get("_key")
+                merged_topic["Topic_ID"] = existing_topic_id
+
+                add_topic_to_firebase(merged_topic, overwrite=True)
+
+                delete_steps_for_topic(existing_topic_id)
+
+                for step in merged_steps:
+                    payload = dict(step)
+                    payload["Topic_ID"] = existing_topic_id
+                    add_step_to_firebase(payload)
+
+                self.ids.status_label.text = "✅ Official topics merged"
+
+            # ✅ cleanup local duplicate if editing another local topic
+            try:
+                if self.edit_mode and self.edit_is_local:
+                    current_id = str(self.edit_topic_id or "")
+                    existing_id = str(duplicate_topic.get("Topic_ID") or "")
+
+                    if current_id and current_id != existing_id:
+                        app.delete_local_topic(current_id)
+                        print(f"✅ Removed duplicate local topic: {current_id}")
+
+            except Exception as e:
+                print("DEBUG: cleanup failed:", e)
+
+            # ✅ remember target category
+            target_category = merged_topic.get("Category", "")
+
+            # ✅ go to menu first
+            app.sm.current = "menu"
+
+            # ✅ then reopen category after UI refresh
+            def _restore_category(_dt):
+                try:
+                    menu = app.root.get_screen("menu")
+                    menu.open_category(target_category)
+                except Exception as e:
+                    print("DEBUG: restore category failed:", e)
+
+            Clock.schedule_once(_restore_category, 0.4)
+
+        except Exception as e:
+            self.ids.status_label.text = f"❌ Merge failed: {e}"
+
 
     def refresh_steps_list(self):
         if "steps_container" not in self.ids:
@@ -513,28 +908,9 @@ class AddTopicScreen(Screen):
     def save_topic(self):
         app = App.get_running_app()
 
-        # Copy icon if a file path is provided
+        # ✅ Do NOT copy icon yet
         icon_filename = self.ids.topic_icon.text.strip()
         icon_path = self.ids.icon_path.text.strip()
-        if icon_path:
-            try:
-                # ✅ official in admin mode, private in user mode
-                icon_filename = copy_icon_to_assets(icon_path, official=app.is_admin_mode())
-
-                # ✅ sync UI with saved filename
-                self.ids.topic_icon.text = icon_filename
-
-                # ✅ update header icon after saving
-                if "header_icon" in self.ids:
-                    try:
-                        self.ids.header_icon.source = App.get_running_app().get_icon_path(icon_filename)
-                    except Exception as e:
-                        print("DEBUG: header icon update failed:", e)
-
-            except Exception as e:
-                self.ids.status_label.text = f"Icon copy failed: {e}"
-                return
-
 
         # ✅ 1. Build topic dict FIRST
         topic = {
@@ -548,54 +924,83 @@ class AddTopicScreen(Screen):
             "Topic_Icon": icon_filename,
         }
 
-        # ✅ 2. Optional user-provided Topic_ID
+        # ✅ 2. Optional Topic_ID while editing
         if "topic_id" in self.ids:
             user_id = self.ids.topic_id.text.strip()
             if self.edit_mode and user_id:
                 topic["Topic_ID"] = user_id
 
+        # ✅ 3. Required fields
         if not topic["Category"] or not topic["Title"]:
             self.ids.status_label.text = "Category and Title are required."
             return
 
-        # ✅ USER MODE → save locally
-        if not app.is_admin_mode():
+        # ✅ 4. Duplicate check BEFORE any icon copy or save
+        duplicate = self._find_duplicate_topic(topic)
+        if duplicate:
+            self._show_merge_popup(topic, duplicate)
+            return
+
+
+
+        # ✅ 6. LOCAL SAVE PATH
+        # Rule:
+        # - if editing a local topic -> always stay local
+        # - if user mode and creating a new topic -> save local
+        if self.edit_is_local or not app.is_admin_mode():
             try:
-                topic_payload = topic
+                topic_payload = dict(topic)
                 step_payloads = list(self.pending_steps)
 
-                app.save_local_topic(topic_payload, step_payloads)
+                # update existing local topic
+                if self.edit_mode and self.edit_topic_id:
+                    topic_payload["Topic_ID"] = self.edit_topic_id
+                    topic_payload["_key"] = self.edit_topic_id
+                    topic_payload["source"] = "user"
+                    topic_payload["local_only"] = True
 
-                self.ids.status_label.text = "✅ Topic saved locally"
+                    app.update_local_topic(self.edit_topic_id, topic_payload, step_payloads)
+                    self.ids.status_label.text = "✅ Local topic updated"
+
+                # create new local topic
+                else:
+                    app.save_local_topic(topic_payload, step_payloads)
+                    self.ids.status_label.text = "✅ Topic saved locally"
+
+                target_category = topic.get("Category", "")
+
                 app.sm.current = "menu"
+
+                def _restore_category(_dt):
+                    try:
+                        menu = app.root.get_screen("menu")
+                        menu.open_category(target_category)
+                    except Exception as e:
+                        print("DEBUG: restore category failed:", e)
+
+                Clock.schedule_once(_restore_category, 0.4)
+
                 return
 
             except Exception as e:
                 self.ids.status_label.text = f"❌ Local save failed: {e}"
                 return
 
+        # ✅ 7. OFFICIAL / FIREBASE SAVE PATH
         try:
             if self.edit_mode:
-                # ✅ keep Firebase key (VERY IMPORTANT)
                 topic["_key"] = self.edit_topic_key
-
-                # ✅ keep Topic_ID or updated one
                 topic["Topic_ID"] = self.edit_topic_id
-
                 topic_key, topic_id = add_topic_to_firebase(topic, overwrite=True)
-
             else:
                 topic_key, topic_id = add_topic_to_firebase(topic)
 
-            # ✅ FORCE STRING ID (important)
             topic_id = str(topic_id)
 
             if "topic_id" in self.ids:
                 self.ids.topic_id.text = topic_id
 
-            # ✅ update header icon after save
             if "header_icon" in self.ids:
-
                 icon_file = self.ids.topic_icon.text.strip()
 
                 if icon_file:
@@ -606,63 +1011,38 @@ class AddTopicScreen(Screen):
                 else:
                     self.ids.header_icon.source = App.get_running_app().get_icon_path("howtolinux-icon.png")
 
-            # ✅ Delete old steps (FIXED TYPE)
             from src.services.editor_service import delete_steps_for_topic
             delete_steps_for_topic(topic_id)
 
-            # ✅ Save steps
             for s in self.pending_steps:
                 payload = dict(s)
                 payload["Topic_ID"] = topic_id
                 add_step_to_firebase(payload)
 
-            # ✅ refresh + export backup (FIXED)
-
-            #if not self.edit_mode:
-            #    self.reset_form_only()
-
-            # ✅ Keep topic fields so user can continue editing after save
-            # Only clear the step entry inputs (not the topic data)
             self.clear_step_form()
 
-            app = App.get_running_app()
-
-            # reload data from Firebase
             app.fetch_database()
-            # fetch_database is async -> repopulate menu shortly after
             Clock.schedule_once(lambda dt: app.root.get_screen("menu").populate_menu(), 0.5)
 
-            # ✅ refresh visible UI (IMPORTANT)
             try:
                 app.root.get_screen("menu").populate_categories()
             except Exception as e:
                 print("UI refresh error:", e)
 
-            # ✅ FIXED EXPORT (no crash anymore)
-
-            app = App.get_running_app()
-
-            # Reset UI
-            #self.pending_steps = []
             self.refresh_steps_preview()
             self.clear_step_form()
 
-
-            # THEN set ID again
             if "topic_id" in self.ids:
                 self.ids.topic_id.text = topic_id
-
 
             self.ids.status_label.text = f"✅ Saved topic + steps (Topic_ID: {str(topic_id)[:8]}…)"
 
-            # ✅ ensure Topic_ID stays visible
             if "topic_id" in self.ids:
                 self.ids.topic_id.text = topic_id
 
-            # ✅ mark screen as edit mode after first save
             self.edit_mode = True
             self.edit_topic_id = topic_id
-            self.edit_topic_key = topic_key  # returned from add_topic_to_firebase
+            self.edit_topic_key = topic_key
 
         except Exception as e:
             self.ids.status_label.text = f"❌ Save failed: {e}"
@@ -680,6 +1060,7 @@ class AddTopicScreen(Screen):
         pass
     def reset_form_only(self):
         self.edit_mode = False
+        self.edit_is_local = False
         self.edit_topic_id = ""
         self.selected_step_index = -1
         self.pending_steps = []
@@ -729,6 +1110,7 @@ class AddTopicScreen(Screen):
         self.edit_mode = True
         self.edit_topic_id = str(data.get("Topic_ID") or "")
         self.edit_topic_key = str(data.get("_key") or "")
+        self.edit_is_local = (str(data.get("source") or "") == "user")
 
         # store category (needed for dropdown restore)
         self._edit_category = str(data.get("Category") or "").strip()

@@ -38,6 +38,24 @@ def init_firebase():
 
         initialize_app(cred, {"databaseURL": db_url})
 
+# ✅ Promote user icons to official icons (for Git sync)
+
+user_icons = paths["assets"] / "user_icons"
+icons = paths["assets"] / "icons"
+
+if user_icons.exists():
+    for f in user_icons.glob("*"):
+        if not f.is_file():
+            continue
+
+        dest = icons / f.name
+
+        # ✅ only copy if not already present
+        if not dest.exists():
+            shutil.copy2(f, dest)
+
+    print("✅ User icons copied to icons/ for sync")
+
 
 # ---------------------------
 # Git helpers

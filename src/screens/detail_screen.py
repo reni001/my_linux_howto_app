@@ -17,6 +17,26 @@ from src.ui.theme import COLOR_BLUE
 class DetailScreen(Screen):
     header_title = StringProperty("")
 
+    def show_category(self, category_name):
+            app = App.get_running_app()
+
+            self.ids.list_container.clear_widgets()
+
+            topics = [
+                t for t in app.APP_DATA.get("topics", [])
+                if str(t.get("Category", "")).strip() == str(category_name).strip()
+            ]
+
+            for topic in topics:
+                item = EntryListItem()
+                item.data = topic
+                item.title = topic.get("Title", "")
+                item.desc = topic.get("Description", "")
+                item.icon_source = app.get_icon_path(topic.get("Topic_Icon", ""))
+
+                # open article/topic when clicked
+                item.bind(on_release=lambda instance, topic=topic: self.open_topic(topic))
+                self.ids.list_container.add_widget(item)
 
     def on_pre_enter(self):
         self.header_title = getattr(self.manager, "selected_category", "")

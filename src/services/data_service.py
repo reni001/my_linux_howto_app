@@ -186,6 +186,91 @@ def add_local_topic_and_steps(topic: dict, steps: list[dict]) -> None:
 
     save_user_data(data)
 
+def update_local_topic_and_steps(topic_id: str, topic: dict, steps: list[dict]) -> None:
+    data = load_user_data()
+
+    # ✅ preserve local flags
+    topic = dict(topic)
+    topic["Topic_ID"] = str(topic_id)
+    topic["_key"] = str(topic_id)
+    topic["source"] = "user"
+    topic["local_only"] = True
+
+    # ✅ replace topic
+    updated = False
+    new_topics = []
+
+    for t in data.get("topics", []):
+        if str(t.get("Topic_ID")) == str(topic_id):
+            new_topics.append(topic)
+            updated = True
+        else:
+            new_topics.append(t)
+
+    # if not found, add it (safe fallback)
+    if not updated:
+        new_topics.append(topic)
+
+    data["topics"] = new_topics
+
+    # ✅ replace all steps for this topic
+    data["steps"] = [
+        s for s in data.get("steps", [])
+        if str(s.get("Topic_ID")) != str(topic_id)
+    ]
+
+    for i, step in enumerate(steps or [], start=1):
+        step = dict(step)
+        step["Topic_ID"] = str(topic_id)
+        step["_key"] = f"{topic_id}_step_{i}"
+        step["source"] = "user"
+        step["local_only"] = True
+        data["steps"].append(step)
+
+    save_user_data(data)
+
+def update_local_topic_and_steps(topic_id: str, topic: dict, steps: list[dict]) -> None:
+    data = load_user_data()
+
+    # ✅ preserve local flags
+    topic = dict(topic)
+    topic["Topic_ID"] = str(topic_id)
+    topic["_key"] = str(topic_id)
+    topic["source"] = "user"
+    topic["local_only"] = True
+
+    # ✅ replace existing topic
+    updated = False
+    new_topics = []
+
+    for t in data.get("topics", []):
+        if str(t.get("Topic_ID")) == str(topic_id):
+            new_topics.append(topic)
+            updated = True
+        else:
+            new_topics.append(t)
+
+    # safe fallback
+    if not updated:
+        new_topics.append(topic)
+
+    data["topics"] = new_topics
+
+    # ✅ replace all steps for this topic
+    data["steps"] = [
+        s for s in data.get("steps", [])
+        if str(s.get("Topic_ID")) != str(topic_id)
+    ]
+
+    for i, step in enumerate(steps or [], start=1):
+        step = dict(step)
+        step["Topic_ID"] = str(topic_id)
+        step["_key"] = f"{topic_id}_step_{i}"
+        step["source"] = "user"
+        step["local_only"] = True
+        data["steps"].append(step)
+
+    save_user_data(data)
 
 def delete_local_topic(topic_id: str) -> None:
     data = load_user_data()

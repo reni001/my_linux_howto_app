@@ -11,6 +11,12 @@ from src.utils.icon_utils import get_icon_path
 
 class MenuScreen(Screen):
 
+    def open_category(self, category_name):
+        app = App.get_running_app()
+        detail_screen = app.root.get_screen("details")
+        detail_screen.show_category(category_name)
+        app.root.current = "details"
+
     def on_enter(self):
         self.check_data()
 

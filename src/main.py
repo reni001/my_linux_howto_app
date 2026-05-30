@@ -7,6 +7,7 @@ import webbrowser
 import subprocess
 import sys
 import traceback
+import shutil
 from threading import Thread
 from pathlib import Path
 
@@ -25,11 +26,14 @@ from src.screens.add_step_screen import AddStepScreen
 from src.screens.json_viewer_screen import JsonViewerScreen
 from src.screens.app_info_screen import AppInfoScreen
 from src.ui.about_popup import show_about_popup
+
+
 from src.services.data_service import (
     fetch_database,
     load_app_metadata,
     APP_DATA,
     add_local_topic_and_steps,
+    update_local_topic_and_steps,
     delete_local_topic
 )
 from src.ui.theme import (
@@ -194,6 +198,36 @@ class LinuxHowToApp(App):
     admin_override = BooleanProperty(False)
 
     #----------helpers-----------
+    def _delete_user_icon_if_unused(self, icon_filename: str, removed_topic_id: str):
+        """
+        Delete icon from user_icons ONLY if no other topic uses it.
+        """
+        if not icon_filename:
+            return
+
+        still_used = False
+
+        for topic in self.APP_DATA.get("topics", []):
+            if str(topic.get("Topic_ID") or "") == str(removed_topic_id):
+                continue
+
+            if str(topic.get("Topic_Icon") or "") == str(icon_filename):
+                still_used = True
+                break
+
+        if still_used:
+            print(f"ℹ️ User icon still used elsewhere: {icon_filename}")
+            return
+
+        paths = get_runtime_paths()
+        icon_path = paths["assets"] / "user_icons" / icon_filename
+
+        try:
+            if icon_path.exists():
+                icon_path.unlink()
+                print(f"✅ Deleted unused user icon: {icon_path}")
+        except Exception as e:
+            print(f"⚠️ Could not delete user icon {icon_path}: {e}")
 
     def check_connection(self):
         import requests
@@ -220,6 +254,9 @@ class LinuxHowToApp(App):
         add_local_topic_and_steps(topic, steps)
         self.fetch_database()
 
+    def update_local_topic(self, topic_id: str, topic: dict, steps: list[dict]):
+        update_local_topic_and_steps(topic_id, topic, steps)
+        self.fetch_database()
 
     def delete_local_topic(self, topic_id: str):
         delete_local_topic(topic_id)
@@ -251,7 +288,6 @@ class LinuxHowToApp(App):
                     screen.ids[label_id].text = version_str
             except Exception as e:
                 print(f"DEBUG: Could not update {screen_name}: {e}")
-
 
     def on_screen_change(self, *args):
         self.check_connection()
@@ -387,12 +423,53 @@ class LinuxHowToApp(App):
             return not self.admin_enabled   # ✅ flips mode
         return self.admin_enabled          # ✅ normal behaviour
 
+    def refresh_current_screen(self):
+        """
+        Force full UI refresh after mode switch.
+        """
+        if not hasattr(self, "sm"):
+            return
+
+        try:
+            current = self.sm.current
+            screen = self.sm.get_screen(current)
+
+            # ✅ refresh main data
+            self.refresh_ui_data()
+
+            # ✅ refresh specific screens
+            if current == "details":
+                q = ""
+                if "local_search" in screen.ids:
+                    q = screen.ids.local_search.text
+                screen.load_content_from_cache(q)
+
+            elif current == "search":
+                q = ""
+                if "search_input" in screen.ids:
+                    q = screen.ids.search_input.text
+                screen.filter_results(q)
+
+            elif current == "menu":
+                screen.ids.menu_container.clear_widgets()
+                screen.populate_menu()
+
+        except Exception as e:
+            print(f"DEBUG: refresh_current_screen failed: {e}")
+
     def toggle_admin_mode(self):
         self.admin_override = not self.admin_override
         print(f"DEBUG: override = {self.admin_override}")
 
-        # ✅ close and reopen menu so UI refreshes
-        self._reopen_app_menu()
+        # ✅ close popup
+        if hasattr(self, "_menu_popup") and self._menu_popup:
+            self._menu_popup.dismiss()
+
+        # ✅ refresh UI AFTER popup closes
+        Clock.schedule_once(lambda dt: self.refresh_current_screen(), 0.1)
+
+        # ✅ reopen menu with updated state
+        Clock.schedule_once(lambda dt: self.open_app_menu(), 0.2)
 
     def _reopen_app_menu(self):
         # close current popup - helper -
@@ -449,7 +526,6 @@ class LinuxHowToApp(App):
 
     #--------- editin and deleting --------
 
-
     def edit_topic(self, data):
 
         # ✅ AUTO-RECOVER missing _key
@@ -498,7 +574,13 @@ class LinuxHowToApp(App):
             def confirm_delete(instance):
                 popup.dismiss()
                 try:
+                    icon_name = str(data.get("Topic_Icon") or "")
+
                     self.delete_local_topic(topic_id)
+
+                    # ✅ new: clean icon
+                    self._delete_user_icon_if_unused(icon_name, topic_id)
+
                 except Exception as e:
                     print(f"❌ Local delete failed: {e}")
 
@@ -534,7 +616,6 @@ class LinuxHowToApp(App):
                 print(f"❌ Delete failed: {e}")
         print("DEBUG deleting Topic_ID:", topic_id)
 
-
         # ✅ Popup UI
         content = BoxLayout(orientation="vertical", spacing=10, padding=10)
         content.add_widget(Label(text="Are you sure you want to delete this topic?"))
@@ -563,6 +644,307 @@ class LinuxHowToApp(App):
 
         popup.open()
 
+    # -------- duplicate helper -------
+    def _norm(self, value):
+        return str(value or "").strip().lower()
+
+    def _find_official_duplicate(self, data):
+        """
+        Check duplicates only against OFFICIAL topics
+        (not local user topics).
+        """
+        wanted_cat = self._norm(data.get("Category"))
+        wanted_sub = self._norm(data.get("Subcategory"))
+        wanted_title = self._norm(data.get("Title"))
+
+        for topic in self.APP_DATA.get("topics", []):
+            if topic.get("source") == "user":
+                continue
+
+            if (
+                self._norm(topic.get("Category")) == wanted_cat and
+                self._norm(topic.get("Subcategory")) == wanted_sub and
+                self._norm(topic.get("Title")) == wanted_title
+            ):
+                return topic
+
+        return None
+
+    def _copy_user_icon_to_official(self, icon_filename: str) -> str:
+        """
+        Copy icon from user_icons → icons ONLY if it does not already exist.
+        If already present, reuse existing one.
+        """
+
+        if not icon_filename:
+            return ""
+
+        paths = get_runtime_paths()
+        user_icon = paths["assets"] / "user_icons" / icon_filename
+        official_dir = paths["assets"] / "icons"
+        official_dir.mkdir(parents=True, exist_ok=True)
+
+        official_target = official_dir / icon_filename
+
+        # ✅ CASE 1: already exists → reuse
+        if official_target.exists():
+            print(f"ℹ️ Icon already exists → reusing: {official_target.name}")
+            return official_target.name
+
+        # ✅ CASE 2: user icon exists → copy
+        if user_icon.exists():
+            shutil.copy2(user_icon, official_target)
+            print(f"✅ Icon promoted → {official_target.name}")
+            return official_target.name
+
+        # ✅ fallback (should not normally happen)
+        return icon_filename
+
+    # -------- promote topic (make it public) --------
+
+    def _do_promote_topic(self, data):
+        from src.services.firebase_service import add_topic_to_firebase, add_step_to_firebase
+
+        print(f"🚀 Promoting topic: {data.get('Title')}")
+
+        try:
+            local_topic_id = str(data.get("Topic_ID") or "")
+
+            # ✅ 1. Copy icon from user_icons → official icons
+            icon_filename = data.get("Topic_Icon", "")
+            icon_filename = self._copy_user_icon_to_official(icon_filename)
+
+            # ✅ 2. Prepare official topic payload
+            topic = dict(data)
+            topic["Topic_Icon"] = icon_filename
+
+            # remove local-only fields
+            for key in ["source", "_key", "local_only"]:
+                topic.pop(key, None)
+
+            # IMPORTANT:
+            # Let Firebase assign a fresh official Topic_ID instead of reusing local user_topic_X
+            topic.pop("Topic_ID", None)
+
+            # ✅ 3. Upload topic
+            topic_key, new_topic_id = add_topic_to_firebase(topic)
+
+            # ✅ 4. Upload steps
+            for step in self.APP_DATA.get("steps", []):
+                if str(step.get("Topic_ID")) == local_topic_id:
+                    payload = dict(step)
+                    for key in ["source", "_key", "local_only"]:
+                        payload.pop(key, None)
+                    payload["Topic_ID"] = str(new_topic_id)
+                    add_step_to_firebase(payload)
+
+            # ✅ 5. Remove local version after successful publish
+            self.delete_local_topic(local_topic_id)
+
+            # ✅ 6. remove user icon after successful promote
+            original_user_icon_name = str(data.get("Topic_Icon") or "")
+            if original_user_icon_name:
+                paths = get_runtime_paths()
+                user_icon_path = paths["assets"] / "user_icons" / original_user_icon_name
+
+                try:
+                    if user_icon_path.exists():
+                        user_icon_path.unlink()
+                        print(f"✅ Removed user icon after promote: {user_icon_path}")
+                    else:
+                        print(f"ℹ️ No user icon to remove after promote: {user_icon_path}")
+                except Exception as e:
+                    print(f"⚠️ Could not delete user icon after promote: {e}")
+
+            print(f"✅ Promotion complete → official Topic_ID: {new_topic_id}")
+            self.fetch_database()
+
+        except Exception as e:
+            print(f"❌ Promotion failed: {e}")
+
+
+    def promote_topic(self, data):
+        title = data.get("Title", "this topic")
+        duplicate = self._find_official_duplicate(data)
+
+        content = BoxLayout(orientation="vertical", spacing=10, padding=10)
+
+        if duplicate:
+            dup_title = duplicate.get("Title", "")
+            dup_cat = duplicate.get("Category", "")
+            dup_sub = duplicate.get("Subcategory", "")
+            dup_id = duplicate.get("Topic_ID", "")
+
+            message = (
+                f"Possible duplicate detected.\n\n"
+                f"Local topic:\n{title}\n\n"
+                f"Existing official topic:\n"
+                f"{dup_title}\n"
+                f"Category: {dup_cat}\n"
+                f"Subcategory: {dup_sub}\n"
+                f"Topic_ID: {dup_id}\n\n"
+                f"Do you want to promote it anyway?"
+            )
+            popup_title = "Possible Duplicate"
+            confirm_text = "PROMOTE ANYWAY"
+        else:
+            message = f"Promote this topic to official content?\n\n{title}"
+            popup_title = "Promote Topic"
+            confirm_text = "PROMOTE"
+
+        content.add_widget(Label(text=message))
+
+        btn_box = BoxLayout(size_hint_y=None, height="40dp", spacing=10)
+        btn_yes = Button(text=confirm_text, background_color=[0.3, 0.7, 1, 1])
+        btn_no = Button(text="Cancel")
+
+        btn_box.add_widget(btn_yes)
+        btn_box.add_widget(btn_no)
+        content.add_widget(btn_box)
+
+        popup = Popup(
+            title=popup_title,
+            content=content,
+            size_hint=(0.7, 0.5),
+            background="",
+            background_color=(0, 0, 0, 0)
+        )
+
+        def confirm_promote(instance):
+            popup.dismiss()
+            self._do_promote_topic(data)
+
+        btn_yes.bind(on_release=confirm_promote)
+        btn_no.bind(on_release=lambda x: popup.dismiss())
+
+        popup.open()
+
+    #---- demote topic (make it private) -------
+
+    def demote_topic(self, data):
+        from src.services.editor_service import delete_topic_from_firebase
+        from src.utils.runtime_paths import get_runtime_paths
+
+        if str(data.get("source") or "") == "user":
+            return
+
+        topic_id = str(data.get("Topic_ID") or "")
+        topic_key = str(data.get("_key") or "")
+        category = data.get("Category", "")
+
+        if not topic_id or not topic_key:
+            print("❌ Missing Topic_ID or _key")
+            return
+
+        try:
+            # ✅ 1. collect steps
+            steps = [
+                dict(s) for s in self.APP_DATA.get("steps", [])
+                if str(s.get("Topic_ID") or "") == topic_id
+            ]
+
+            # ✅ 2. copy icon to user_icons
+            icon_name = str(data.get("Topic_Icon") or "")
+            new_icon_name = self._copy_official_icon_to_user_icons(icon_name)
+
+            # ✅ 3. create local topic
+            local_topic = dict(data)
+            local_topic["Topic_Icon"] = new_icon_name
+            local_topic["source"] = "user"
+            local_topic["local_only"] = True
+            local_topic["_key"] = topic_id
+            local_topic["Topic_ID"] = topic_id
+
+            self.update_local_topic(topic_id, local_topic, steps)
+
+            # ✅ 4. delete from Firebase
+            delete_topic_from_firebase(topic_key, topic_id)
+
+            # ✅ 5. delete icon if unused
+            self._delete_official_icon_if_unused(icon_name, topic_id)
+
+            # ✅ 6. refresh + restore category
+            self.fetch_database()
+
+            self.sm.current = "menu"
+
+            def _restore(_dt):
+                try:
+                    detail = self.root.get_screen("details")
+                    detail.header_title = category
+                    detail.show_category(category)
+                    self.root.current = "details"
+                except Exception as e:
+                    print("DEBUG restore failed:", e)
+
+            Clock.schedule_once(_restore, 0.4)
+
+            print(f"✅ Topic demoted: {topic_id}")
+
+        except Exception as e:
+            print("❌ Demotion failed:", e)
+
+    def _copy_official_icon_to_user_icons(self, icon_filename: str) -> str:
+        """
+        Copy icon from assets/icons -> assets/user_icons ONLY if needed.
+        Reuse existing user icon if already present.
+        """
+        if not icon_filename:
+            return ""
+
+        paths = get_runtime_paths()
+        official_dir = paths["assets"] / "icons"
+        user_dir = paths["assets"] / "user_icons"
+        user_dir.mkdir(parents=True, exist_ok=True)
+
+        src = official_dir / icon_filename
+        dest = user_dir / icon_filename
+
+        # ✅ if already present locally, reuse it
+        if dest.exists():
+            print(f"ℹ️ User icon already exists -> reusing: {dest.name}")
+            return dest.name
+
+        # ✅ copy only if missing
+        if src.exists():
+            shutil.copy2(src, dest)
+            print(f"✅ Copied official icon -> user_icons: {dest.name}")
+            return dest.name
+
+        # fallback
+        return icon_filename
+
+    def _delete_official_icon_if_unused(self, icon_filename: str, removed_topic_id: str):
+        """
+        Delete icon from assets/icons only if no other official topic still uses it.
+        """
+        if not icon_filename:
+            return
+
+        # Check all current official topics except the one being demoted
+        still_used = False
+        for topic in self.APP_DATA.get("topics", []):
+            if str(topic.get("Topic_ID") or "") == str(removed_topic_id):
+                continue
+            if str(topic.get("source") or "") == "user":
+                continue
+            if str(topic.get("Topic_Icon") or "") == str(icon_filename):
+                still_used = True
+                break
+
+        if still_used:
+            print(f"ℹ️ Official icon still used elsewhere: {icon_filename}")
+            return
+
+        paths = get_runtime_paths()
+        icon_path = paths["assets"] / "icons" / icon_filename
+
+        try:
+            if icon_path.exists():
+                icon_path.unlink()
+                print(f"✅ Deleted unused official icon: {icon_path}")
+        except Exception as e:
+            print(f"⚠️ Could not delete official icon {icon_path}: {e}")
 
     #---- update button behaviour -----
 
@@ -617,7 +999,6 @@ class LinuxHowToApp(App):
 
         Thread(target=run_update, daemon=True).start()
 
-
     def update_success(self, *args):
         self.update_text = "Update successful ✓"
         self.update_bg = self.COLOR_WHITE_SOFT   # soft highlight
@@ -628,7 +1009,6 @@ class LinuxHowToApp(App):
 
         Clock.schedule_once(self.restore_update_button, 2)
 
-
     def update_failed(self, *args):
         self.update_text = "Update failed ✗"
         self.update_bg = self.COLOR_WHITE_SOFT
@@ -638,7 +1018,6 @@ class LinuxHowToApp(App):
         self.refresh_ui_data()
 
         Clock.schedule_once(self.restore_update_button, 3)
-
 
     def restore_update_button(self, *args):
         self.update_text = "Update App & Icons"
@@ -656,16 +1035,13 @@ class LinuxHowToApp(App):
         self.metadata = load_app_metadata()
         self.refresh_ui_data()
 
-
         Clock.schedule_once(self.restore_sync_button, 3)
-
 
     def sync_failed(self, *args):
         self.sync_text = "Sync failed ✗"
         self.sync_bg = self.COLOR_WHITE_SOFT
         self.sync_fg = self.COLOR_RED
         self.sync_border = self.COLOR_RED
-
 
         Clock.schedule_once(self.restore_sync_button, 3)
 
@@ -674,7 +1050,6 @@ class LinuxHowToApp(App):
         self.sync_bg = self.COLOR_ORANGE
         self.sync_fg = self.COLOR_BLUE_DARK
         self.sync_border = self.COLOR_TRANSPARENT
-
 
     def open_new_topic(self):
         screen = self.sm.get_screen("add_topic")
@@ -696,10 +1071,8 @@ class LinuxHowToApp(App):
 
         self.sm.current = "add_topic"
 
-
     def open_about_popup(self, *args):
         show_about_popup(self)
-
 
 class ClickableHeader(ButtonBehavior, BoxLayout):
     def __init__(self, **kwargs):
@@ -709,7 +1082,6 @@ class ClickableHeader(ButtonBehavior, BoxLayout):
         self.height = dp(50)
         self.padding = [dp(10), dp(5)]
         self.spacing = dp(10)
-
 
 if __name__ == '__main__':
     LinuxHowToApp().run()

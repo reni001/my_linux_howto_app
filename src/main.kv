@@ -447,11 +447,37 @@
             text_size: (self.width, None)
             shorten: True
 
+
     BoxLayout:
+        orientation: "horizontal"
         size_hint_x: None
-        width: "90dp"
+        width: "130dp"   # adjust if needed
         spacing: "5dp"
 
+        # ✅ ONE combined promote/demote button
+        Button:
+            size_hint: None, None
+            size: "36dp", "36dp"
+            background_normal: ""
+            background_color: app.COLOR_WHITE_SOFT
+
+            # ✅ only visible in admin mode
+            opacity: 1 if app.is_admin_mode() else 0
+            disabled: not app.is_admin_mode()
+
+            # ✅ ACTION SWITCH
+            on_release:
+                app.promote_topic(root.data) if root.data.get("source") == "user" else app.demote_topic(root.data)
+
+            Image:
+                size: "28dp", "28dp"
+                center_x: self.parent.center_x
+                center_y: self.parent.center_y
+
+                # ✅ ICON SWITCH
+                source: app.get_icon_path("upload.png") if root.data.get("source") == "user" else app.get_icon_path("download.png")
+
+        # ✅ EDIT
         IconButton:
             disabled: not (app.is_admin_mode() or root.data.get("source") == "user")
             opacity: 1 if (app.is_admin_mode() or root.data.get("source") == "user") else 0.3
@@ -463,6 +489,7 @@
                 center_y: self.parent.center_y
                 size: "28dp", "28dp"
 
+        # ✅ DELETE
         IconButton:
             disabled: not (app.is_admin_mode() or root.data.get("source") == "user")
             opacity: 1 if (app.is_admin_mode() or root.data.get("source") == "user") else 0.3
