@@ -1,6 +1,10 @@
 from kivy.uix.screenmanager import Screen
 from kivy.clock import Clock
 from kivy.app import App
+from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.label import Label
+from kivy.uix.image import Image
+from kivy.metrics import dp
 
 from src.services.editor_service import save_metadata_to_firebase
 from src.services.data_service import fetch_database
@@ -30,6 +34,8 @@ class AppInfoScreen(Screen):
         self.ids.developer.text = meta.get("developer", "")
         self.ids.description.text = meta.get("description", "")
         self.ids.changelog.text = meta.get("changelog", "")
+        self.render_changelog()
+
 
     def save_metadata(self):
         from src.services.editor_service import save_metadata_to_firebase
@@ -55,3 +61,116 @@ class AppInfoScreen(Screen):
 
         except Exception as e:
             self.ids.status_label.text = f"❌ Save failed: {e}"
+
+    def render_changelog(self):
+        container = self.ids.changelog_display
+        container.clear_widgets()
+
+        icon_map = {
+            "features": "feature.png",
+            "improvements": "improvement.png",
+            "fixes": "fix.png",
+        }
+
+        text = self.ids.changelog.text.split("\n")
+
+        for line in text:
+            line = line.strip()
+            if not line:
+                continue
+
+            is_version = line.lower().startswith("version")
+
+            matched = None
+            for key in icon_map:
+                if key in line.lower():
+                    matched = key
+                    break
+
+            # ✅ VERSION HEADER
+            if is_version:
+                row = BoxLayout(size_hint_y=None, height=dp(34), spacing=dp(8))
+
+                row.add_widget(Image(
+                    source=App.get_running_app().get_icon_path("version.png"),
+                    size_hint=(None, None),
+                    size=(dp(20), dp(20)),
+                    pos_hint={"center_y": 0.5}
+                ))
+
+                lbl = Label(
+                    text=f"[b]{line}[/b]",
+                    markup=True,
+                    font_size="16sp",
+                    size_hint_x=1,
+                    size_hint_y=None,
+                    halign="left",
+                    valign="middle",
+                    color=[0.05, 0.2, 0.4, 1],
+                )
+
+                lbl.bind(
+                    size=lambda s, w: setattr(s, 'text_size', (w[0], None)),
+                    texture_size=lambda i, v: setattr(i, "height", v[1])
+                )
+
+                row.add_widget(lbl)
+                container.add_widget(row)
+
+            # ✅ SECTION HEADERS
+            elif matched:
+                row = BoxLayout(size_hint_y=None, height=dp(28), spacing=dp(8))
+
+                row.add_widget(Image(
+                    source=App.get_running_app().get_icon_path(icon_map[matched]),
+                    size_hint=(None, None),
+                    size=(dp(18), dp(18)),
+                    pos_hint={"center_y": 0.5}
+                ))
+
+                lbl = Label(
+                    text=f"[b]{line}[/b]",
+                    markup=True,
+                    font_size="14sp",
+                    size_hint_x=1,
+                    size_hint_y=None,
+                    halign="left",
+                    valign="middle",
+                    color=[0.1, 0.25, 0.45, 1],
+                )
+
+                lbl.bind(
+                    size=lambda s, w: setattr(s, 'text_size', (w[0], None)),
+                    texture_size=lambda i, v: setattr(i, "height", v[1])
+                )
+
+                row.add_widget(lbl)
+                container.add_widget(row)
+
+            # ✅ NORMAL TEXT
+            else:
+                lbl = Label(
+                    text=line,
+                    size_hint_y=None,
+                    halign="left",
+                    valign="top",
+                    color=[0.1, 0.25, 0.45, 1],
+                )
+
+                lbl.padding = (dp(26), 0)   # ✅ indent
+
+                lbl.bind(
+                    size=lambda s, w: setattr(s, 'text_size', (w[0], None)),
+                    texture_size=lambda i, v: setattr(i, "height", v[1])
+                )
+
+                container.add_widget(lbl)
+
+
+
+    def on_enter(self):
+        if not hasattr(self, "_changelog_bound"):
+            self.ids.changelog.bind(text=lambda *a: self.render_changelog())
+            self._changelog_bound = True
+
+        self.render_changelog()

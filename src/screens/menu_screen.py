@@ -31,7 +31,14 @@ class MenuScreen(Screen):
 
     def populate_menu(self):
         app = App.get_running_app()
-        topics = app.APP_DATA.get("topics", [])
+        topics = sorted(
+            app.APP_DATA.get("topics", []),
+            key=lambda t: (
+                (t.get("Category") or "").lower(),
+                (t.get("Subcategory") or "").lower(),
+                (t.get("Title") or "").lower()
+            )
+        )
 
         unique_cats = {}
 

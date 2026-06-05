@@ -39,11 +39,13 @@ class AddStepScreen(Screen):
             self.ids.title.text = ""
             self.ids.description.text = ""
             self.ids.urls.text = ""
-
             self.ids.cat_icon.text = ""
             self.ids.sub_icon.text = ""
             self.ids.topic_icon.text = ""
             self.ids.icon_path.text = ""
+
+            self.ids.date_created.text = ""
+            self.ids.date_updated.text = ""
 
             self.pending_steps = []
             self.selected_step_index = -1

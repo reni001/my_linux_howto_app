@@ -2,6 +2,7 @@
 #:import App kivy.app.App
 #:import dp kivy.metrics.dp
 #:import ButtonBehavior kivy.uix.behaviors.ButtonBehavior
+#:import Clock kivy.clock.Clock
 
 
 <ClickableStatus@ButtonBehavior+BoxLayout>:
@@ -27,39 +28,46 @@
     height: '45dp'
     bold: True
 
-# ✅ PRIMARY (blue)
-<PrimaryButton@BaseButton>:
-    background_color: app.COLOR_BLUE if self.state == 'normal' else app.COLOR_BLUE_DARK_UI
-
-# ✅ SECONDARY (grey)
+# ✅ SECONDARY (grey -> neutral entry)
 <SecondaryButton@BaseButton>:
     background_color: app.COLOR_GREY_DARK if self.state == 'normal' else app.COLOR_GREY_LIGHT
 
-# ✅ second SECONDARY (light blue)
-<SecondaryBlueButton@BaseButton>:
-    background_color: app.COLOR_BLUE_MEDIUM if self.state == 'normal' else app.COLOR_GREY_LIGHT
+# ✅ PRIMARY (blue  navigation)
+<PrimaryButton@BaseButton>:
+    background_color: app.COLOR_BLUE if self.state == 'normal' else app.COLOR_BLUE_DARK_UI
 
-# ✅ SUCCESS (green)
-<SuccessButton@BaseButton>:
-    background_color: app.COLOR_GREEN if self.state == 'normal' else app.COLOR_GREEN_DARK_UI
-
-# ✅ DANGER (red)
-<DangerButton@BaseButton>:
-    background_color: app.COLOR_RED if self.state == 'normal' else app.COLOR_RED_DARK
-
-# ✅ ACCENT (cyan)
+# ✅ ACCENT (cyan → utility)
 <AccentButton@BaseButton>:
     background_color: app.COLOR_CYAN if self.state == 'normal' else app.COLOR_CYAN_DARK
 
-# ✅ ACCENT (light orange)
+# ✅ SUCCESS (green → creation)
+<SuccessButton@BaseButton>:
+    background_color: app.COLOR_GREEN if self.state == 'normal' else app.COLOR_GREEN_DARK_UI
+
+# ✅ ACCENT (light orange → update)
 <UpdateButton@BaseButton>:
     background_color: app.update_bg if self.state == 'normal' else app.COLOR_ORANGE_LIGHT_UI
     color: app.update_fg
 
-# ✅ ACCENT (dark orange)
+
+# ✅ ACCENT (dark orange → sync)
 <OrangeButton@BaseButton>:
     background_color: app.sync_bg if self.state == 'normal' else app.COLOR_ORANGE_DARK_UI
     color: app.sync_fg
+
+# ✅ TOOL (purple – for maintenance tools)
+<ToolButton@BaseButton>:
+    background_color: app.COLOR_PURPLE if self.state == 'normal' else app.COLOR_PURPLE_DARK
+
+# ✅ DANGER (red → destructive)
+<DangerButton@BaseButton>:
+    background_color: app.COLOR_RED if self.state == 'normal' else app.COLOR_RED_DARK
+
+
+
+# ✅ second SECONDARY (light blue)
+<SecondaryBlueButton@BaseButton>:
+    background_color: app.COLOR_BLUE_MEDIUM if self.state == 'normal' else app.COLOR_GREY_LIGHT
 
 # ✅ Disabled (transparent)
 <IconButton@Button>:
@@ -68,6 +76,8 @@
     background_color: app.COLOR_TRANSPARENT
     size_hint: None, None
     size: "40dp", "40dp"
+
+
 
 #----------- Panel Definitions ------------------------
 
@@ -239,13 +249,13 @@
         PopMatrix
 
 <AppMenu>:
-    size_hint: (0.7, 0.6)  # Increased height for new button
+    size_hint: (0.75, 0.8)  # Increased height for new button
     background_color: [0, 0, 0, 0]
 
     BoxLayout:
         orientation: 'vertical'
         padding: '20dp'
-        spacing: '15dp'
+        spacing: '12dp'
         canvas.before:
             Color:
                 rgba: app.COLOR_WHITE
@@ -311,17 +321,23 @@
                 root.dismiss()      # Closes the slide-out menu first
                 app.open_about_popup()     # Opens the new About popup
 
+        ToolButton:
+            text: "Clean Unused Icons"
+            on_release:
+                root.dismiss()
+                Clock.schedule_once(lambda dt: app.confirm_clean_icons(), 0)
+
         PrimaryButton:
             text: "Open Database"
             on_release:
                 root.dismiss()
-                app.open_database()
+                Clock.schedule_once(lambda dt: app.open_database(), 0)
 
         AccentButton:
             text: "Open Assets Folder"
             on_release:
                 root.dismiss()
-                app.open_assets_folder()
+                Clock.schedule_once(lambda dt: app.open_assets_folder(), 0)
 
         SuccessButton:
             text: "Add Topic"
@@ -329,12 +345,12 @@
             opacity: 1
             on_release:
                 root.dismiss()
-                app.open_new_topic()
+                Clock.schedule_once(lambda dt: app.open_new_topic(), 0)
 
         UpdateButton:
             text: app.update_text
             on_release:
-                app.update_app_from_git()
+                Clock.schedule_once(lambda dt: app.update_app_from_git(), 0)
 
             canvas.after:
                 Color:
@@ -350,7 +366,7 @@
             text: app.sync_text
             bold: True
             on_release:
-                app.run_sync_script()
+                Clock.schedule_once(lambda dt: app.run_sync_script(), 0)
 
             canvas.after:
                 Color:
@@ -363,7 +379,7 @@
             text: "Quit Application"
             on_release:
                 root.dismiss()
-                app.stop()
+                Clock.schedule_once(lambda dt: app.stop(), 0)
         Widget:
 
 <CategoryCard>:
@@ -856,6 +872,25 @@
                         write_tab: False
 
                     TextInput:
+                        id: date_created
+                        hint_text: "Date Created (auto)"
+                        multiline: False
+                        readonly: True
+                        size_hint_y: None
+                        height: "35dp"
+                        write_tab: False
+
+                    TextInput:
+                        id: date_updated
+                        hint_text: "Date Updated (auto)"
+                        multiline: False
+                        readonly: True
+                        size_hint_y: None
+                        height: "35dp"
+                        write_tab: False
+
+
+                    TextInput:
                         id: cat_icon
                         hint_text: "Category Icon filename (auto)"
                         multiline: False
@@ -941,7 +976,6 @@
                         height: "35dp"
                         write_tab: False
 
-
                     TextInput:
                         id: step_header2
                         hint_text: "Header 2 (optional)"
@@ -951,7 +985,6 @@
                         height: "35dp"
                         write_tab: False
 
-
                     TextInput:
                         id: step_instruction
                         hint_text: "Instruction (required)"
@@ -959,7 +992,6 @@
                         size_hint_y: None
                         height: "110dp"
                         write_tab: False
-
 
                     TextInput:
                         id: step_code
@@ -969,6 +1001,31 @@
                         height: "90dp"
                         write_tab: False
 
+                    # --- SCREENSHOT ---
+                    BoxLayout:
+                        size_hint_y: None
+                        height: "35dp"
+                        spacing: "10dp"
+
+                        TextInput:
+                            id: step_screenshot
+                            hint_text: "Screenshot filename (optional)"
+                            multiline: False
+                            size_hint_y: None
+                            height: "35dp"
+
+                        SecondaryBlueButton:
+                            text: "Browse"
+                            on_release: root.pick_step_screenshot()
+
+                    # --- STEP URLs ---
+                    TextInput:
+                        id: step_urls
+                        hint_text: "Step URLs (comma separated)"
+                        multiline: False
+                        size_hint_y: None
+                        height: "35dp"
+
 
                     TextInput:
                         id: step_notes
@@ -977,7 +1034,6 @@
                         size_hint_y: None
                         height: "80dp"
                         write_tab: False
-
 
                     Widget:
                         size_hint_y: None
@@ -1177,7 +1233,7 @@
                     id: description
                     hint_text: "Description"
                     multiline: True
-                    height: max(self.minimum_height, dp(120))
+                    height: max(self.minimum_height, dp(60))
                     size_hint_y: None
 
 
@@ -1188,9 +1244,37 @@
                     color: app.COLOR_BLUE
                     bold: True
 
+                # -------- Preview (with icons) --------
                 ScrollView:
                     size_hint_y: None
-                    height: "200dp"
+                    height: "180dp"
+                    bar_width: 8
+
+                    BoxLayout:
+                        id: changelog_display
+                        orientation: "vertical"
+                        size_hint_y: None
+                        height: self.minimum_height
+                        spacing: dp(8)
+
+                Widget:
+                    size_hint_y: None
+                    height: dp(8)
+
+                # -------- EDITOR label --------
+                Label:
+                    text: "Edit Changelog"
+                    #size_hint_y: None
+                    #height: dp(26)
+                    color: app.COLOR_BLUE_MEDIUM
+                    bold: True
+                    font_size: "14sp"
+
+                # -------- EDITOR (raw text) --------
+
+                ScrollView:
+                    size_hint_y: None
+                    height: dp(160)      # ✅ FIXED HEIGHT (no layout break)
                     bar_width: 8
 
                     TextInput:
@@ -1198,10 +1282,32 @@
                         multiline: True
                         size_hint_y: None
                         height: self.minimum_height
+                        text_size: self.width, None
+
+
+        # -------- FIXED SAVE BAR --------
+        StyledPanel:
+            size_hint_y: None
+            height: dp(65)
+            padding: [dp(10), dp(8)]
+
+            BoxLayout:
+                size_hint_x: 1
+                spacing: dp(10)
+
+                Widget:   # ✅ left spacer
 
                 SuccessButton:
                     text: "Save App Info"
+                    size_hint_x: None
+                    width: dp(220)      # ✅ smaller width
+                    height: dp(45)      # ✅ consistent height
+
                     on_release: root.save_metadata()
+
+                Widget:   # ✅ right spacer
+
+
 
 <RotatableArrow>:
     canvas.before:

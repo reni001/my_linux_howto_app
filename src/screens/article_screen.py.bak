@@ -1,26 +1,25 @@
 import webbrowser
 
+from kivy.uix.screenmanager import Screen
 from kivy.uix.label import Label
 from kivy.uix.image import Image
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.anchorlayout import AnchorLayout
 from kivy.uix.button import Button
+
+from kivy.metrics import dp
+from kivy.clock import Clock
+from kivy.core.clipboard import Clipboard
+from kivy.graphics import Color, RoundedRectangle
+from kivy.app import App
 from kivy.uix.screenmanager import Screen
 from kivy.uix.modalview import ModalView
 from kivy.uix.behaviors import ButtonBehavior
 from kivy.uix.floatlayout import FloatLayout
-from kivy.uix.widget import Widget
-from kivy.uix.scatter import Scatter
-from kivy.metrics import dp
-from kivy.clock import Clock
-from kivy.core.clipboard import Clipboard
-from kivy.graphics import Color, RoundedRectangle, Line
-from kivy.graphics.transformation import Matrix
-from kivy.app import App
+from kivy.graphics import Color, Line
+
 
 from pathlib import Path
-from datetime import datetime
-
 from src.utils.runtime_paths import get_runtime_paths
 from src.utils.icon_utils import get_icon_path
 from src.ui.theme import COLOR_BLUE, COLOR_ORANGE, NOTE_BG, COLOR_WHITE
@@ -28,41 +27,6 @@ from src.ui.theme import COLOR_BLUE, COLOR_ORANGE, NOTE_BG, COLOR_WHITE
 
 class ClickableImage(ButtonBehavior, Image):
     pass
-
-class ZoomScatter(Scatter):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.do_rotation = False
-        self.do_translation = True
-        self.do_scale = True
-        self.scale_min = 0.5
-        self.scale_max = 4.0
-        self.auto_bring_to_front = False
-
-    def on_touch_down(self, touch):
-        # ✅ mouse wheel zoom on desktop
-        if touch.is_mouse_scrolling:
-            old_scale = self.scale
-
-            if touch.button == 'scrolldown':
-                new_scale = min(old_scale * 1.1, self.scale_max)
-            elif touch.button == 'scrollup':
-                new_scale = max(old_scale * 0.9, self.scale_min)
-            else:
-                return super().on_touch_down(touch)
-
-            factor = new_scale / old_scale
-
-            # ✅ scale around mouse position
-            self.apply_transform(
-                Matrix().scale(factor, factor, 1),
-                post_multiply=True,
-                anchor=touch.pos
-            )
-            return True
-
-        return super().on_touch_down(touch)
-
 
 
 class ArticleScreen(Screen):
@@ -112,44 +76,9 @@ class ArticleScreen(Screen):
             size_hint_y=None,
             halign='center'
         )
-
         title_lbl.bind(size=lambda s, w: setattr(s, 'text_size', (w[0], None)),
                        texture_size=lambda inst, val: setattr(inst, 'height', val[1]))
         self.ids.content_box.add_widget(title_lbl)
-
-        # --- META (CREATED / UPDATED) ---
-        date_created = safe_str(data.get('Date_Created'))
-        date_updated = safe_str(data.get('Date_Updated'))
-
-        def format_date(d):
-            if not d:
-                return ""
-            try:
-                return datetime.fromisoformat(d).strftime("%d %b %Y")
-            except:
-                return d
-
-        meta_parts = []
-
-        if date_created:
-            meta_parts.append(f"Created: {format_date(date_created)}")
-
-        if date_updated:
-            meta_parts.append(f"Updated: {format_date(date_updated)}")
-
-        if meta_parts:
-            meta_lbl = Label(
-                text="   |   ".join(meta_parts),
-                color=[0.5, 0.5, 0.5, 1],
-                font_size='14sp',
-                size_hint_y=None,
-                halign='center'
-            )
-            meta_lbl.bind(
-                size=lambda s, w: setattr(s, 'text_size', (w[0], None)),
-                texture_size=lambda inst, val: setattr(inst, 'height', val[1])
-            )
-            self.ids.content_box.add_widget(meta_lbl)
 
         # --- 3. TOPIC DESCRIPTION ---
         desc_text = safe_str(data.get('Description'))
@@ -331,65 +260,41 @@ class ArticleScreen(Screen):
             background_color=(0, 0, 0, 0.95)
         )
 
-        root = FloatLayout()
+        layout = FloatLayout()
 
-        # scatter handles pan + zoom
-        scatter = ZoomScatter(
-            size_hint=(None, None),
-            pos=(0, 0)
-        )
-
-        # content inside scatter so border and image move together
-        content = FloatLayout(
-            size_hint=(None, None),
-            pos=(0, 0)
+        # container = real visible image box
+        container = AnchorLayout(
+            size_hint=(None, None)
         )
 
         img = Image(
             source=image_path,
-            size_hint=(1, 1),
-            pos=(0, 0),
-            fit_mode="contain",
+            size_hint=(1, 1),            # ✅ image fills container
+            fit_mode="contain",          # ✅ centers correctly inside the box
             allow_stretch=True,
             keep_ratio=True
         )
 
-        # border belongs to the same transformed content
-        with content.canvas.before:
+        container.add_widget(img)
+
+        # white border around container
+        with container.canvas.before:
             Color(*COLOR_WHITE)
-            content.border = Line(width=2.5, rectangle=(0, 0, 0, 0))
+            container.border = Line(width=2.5, rectangle=(0, 0, 0, 0))
 
-        content.add_widget(img)
-        scatter.add_widget(content)
-        root.add_widget(scatter)
-
-        close_btn = Button(
-            text="X",
-            size_hint=(None, None),
-            size=(dp(56), dp(56)),
-            pos_hint={"right": 0.98, "top": 0.98},
-            background_color=COLOR_ORANGE,
-            color=COLOR_WHITE,
-            font_size="24sp",
-            bold=True
-        )
-        close_btn.bind(on_release=lambda x: modal.dismiss())
-        root.add_widget(close_btn)
-
-        modal.add_widget(root)
-        modal.open()
-
-        def layout_content(*args):
+        def update_size(*args):
             if not img.texture:
-                return
-
-            tex_w = img.texture.width
-            tex_h = img.texture.height
-            if tex_w <= 0 or tex_h <= 0:
                 return
 
             max_w = modal.width * 0.9
             max_h = modal.height * 0.9
+
+            tex_w = img.texture.width
+            tex_h = img.texture.height
+
+            if tex_w <= 0 or tex_h <= 0:
+                return
+
             ratio = tex_w / tex_h
 
             if max_w / ratio <= max_h:
@@ -399,19 +304,38 @@ class ArticleScreen(Screen):
                 h = max_h
                 w = h * ratio
 
-            # size of image box before zooming
-            content.size = (w, h)
-            img.size = (w, h)
-            content.border.rectangle = (0, 0, w, h)
+            container.size = (w, h)
+            container.pos = (
+                (modal.width - w) / 2,
+                (modal.height - h) / 2
+            )
 
-            scatter.size = (w, h)
-            scatter.pos = ((modal.width - w) / 2, (modal.height - h) / 2)
+            container.border.rectangle = (
+                container.x,
+                container.y,
+                container.width,
+                container.height
+            )
 
-            # reset transform when viewer opens / window resizes
-            scatter.transform = Matrix().translate(scatter.x, scatter.y, 0)
-            scatter.scale = 1.0
+        close_btn = Button(
+            text="X",
+            size_hint=(None, None),
+            size=(dp(50), dp(50)),
+            pos_hint={"right": 0.98, "top": 0.98},
+            background_color=COLOR_ORANGE,
+            color=COLOR_WHITE,
+            font_size="24sp",
+            bold=True
+        )
+        close_btn.bind(on_release=lambda x: modal.dismiss())
 
-        img.bind(texture=lambda *a: Clock.schedule_once(lambda dt: layout_content(), 0))
-        modal.bind(size=lambda *a: Clock.schedule_once(lambda dt: layout_content(), 0))
-        Clock.schedule_once(lambda dt: layout_content(), 0.1)
+        layout.add_widget(container)
+        layout.add_widget(close_btn)
 
+        modal.add_widget(layout)
+        modal.open()
+
+        # trigger layout after modal shows
+        img.bind(texture=lambda *a: Clock.schedule_once(lambda dt: update_size(), 0))
+        modal.bind(size=lambda *a: Clock.schedule_once(lambda dt: update_size(), 0))
+        Clock.schedule_once(lambda dt: update_size(), 0.1)

@@ -97,7 +97,21 @@ class DetailScreen(Screen):
             subs.setdefault(sub, []).append(i)
 
         for sub_name in sorted(subs.keys()):
-            sub_items = subs[sub_name]
+
+            def normalize_title(title):
+                title = (title or "").strip().lower()
+
+                # remove common prefixes
+                for prefix in ("the ", "a ", "an "):
+                    if title.startswith(prefix):
+                        title = title[len(prefix):]
+
+                return title
+
+            sub_items = sorted(
+                subs[sub_name],
+                key=lambda t: normalize_title(t.get("Title"))
+            )
 
             section = ExpandableSection(
                 sub_name,

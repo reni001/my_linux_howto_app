@@ -1,0 +1,101 @@
+v0.4.3 – Data handling improvements
+- Improved topic and step loading from cache
+- Stabilised data access across screens
+- Fixed inconsistencies in topic display
+
+
+🔹 v0.4.4 – Navigation improvements
+- Improved navigation between category, detail, and article screens
+- Fixed issues with topic selection and screen transitions
+- Cleaned UI state handling when switching screens
+
+
+🔹 v0.5.0 – Core architecture stabilisation
+- Introduced central APP_DATA structure
+- Unified topic and step handling across the application
+- Refactored DetailScreen to rely on cached data
+- Improved consistency between local and remote topics
+
+
+🔹 v0.5.1 – Editing and local data support
+- Added support for local topic creation and editing
+- Improved handling of user-generated topics
+- Fixed persistence issues when saving local content
+
+
+🔹 v0.5.2 – Admin and editing workflow
+- Introduced admin mode for editing and advanced actions
+- Improved topic editing and deletion logic
+- Stabilised UI behaviour for edit interactions
+
+
+🔹 v0.6.0 – Icon system introduction
+- Introduced icon system for topics and categories
+- Added support for user-provided icons
+- Improved visual consistency in lists and menus
+
+
+🔹 v0.6.5 – UI and menu improvements
+- Improved application menu layout and structure
+- Introduced color-based button hierarchy
+- Enhanced visual clarity of navigation actions
+
+
+🔹 v0.6.6 – Icon cleanup system
+- Added automatic cleanup of unused icons
+- Improved detection of used icons in topics
+- Prevented deletion of essential UI and category icons
+
+
+🔹 v0.6.7 – Stability fixes
+- Fixed protected icon list issue (missing comma bug)
+- Prevented unintended deletion of UI icons
+- Improved reliability of cleanup process
+
+
+🔹 v0.6.8 – Interaction fixes
+- Fixed touch interaction issues in menu popup
+- Prevented accidental triggering of adjacent buttons
+- Improved responsiveness of button actions
+
+
+🔹 v0.6.9 – Button consistency fix
+- Corrected mismatches between button logic and visual states
+- Fixed update and sync buttons affecting wrong elements
+- Improved consistency of dynamic button feedback
+
+
+🔹 v0.7.0 – UI refinement
+- Improved visual consistency of menu layout
+- Reworked button color progression (rainbow structure)
+- Enhanced readability and usability of actions
+
+
+🔹 v0.7.1 – Layout fixes
+- Fixed layout issues caused by incorrect widget nesting
+- Resolved button alignment problems in menu
+- Improved rendering stability of popup components
+
+
+🔹 v0.7.2 – UI stability and data consistency
+- Restored stable button architecture after icon experiment
+- Preserved dynamic feedback for update and sync buttons
+- Added subtle press animation for improved responsiveness
+- Fixed alphabetical sorting of topics within subcategories
+- Improved reliability of DetailScreen grouping and rendering
+
+
+✅ ✅ Moving to your public version (v1.0)
+Since you said:
+
+“actually I am already in version 1 since I am public”
+
+👉 you can now define:
+
+✅ v1.0.0 – Public release
+- First public release of Linux How-To application
+- Stable data architecture with APP_DATA
+- Integrated topic and step management (local and remote)
+- Clean navigation across categories, topics, and articles
+- Icon system with safe cleanup mechanism
+- Improved UI consistency and responsive interaction

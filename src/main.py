@@ -66,7 +66,9 @@ from src.ui.theme import (
     COLOR_GREY_LIGHT,
     COLOR_CYAN_DARK,
     COLOR_RED_DARK,
-    COLOR_ORANGE_LIGHT_UI
+    COLOR_ORANGE_LIGHT_UI,
+    COLOR_PURPLE,
+    COLOR_PURPLE_DARK
 )
 
 # --- Kivy ---
@@ -153,6 +155,11 @@ class LinuxHowToApp(App):
     COLOR_CYAN = COLOR_CYAN
     COLOR_CYAN_DARK = COLOR_CYAN_DARK
 
+
+    COLOR_PURPLE = COLOR_PURPLE
+    COLOR_PURPLE_DARK = COLOR_PURPLE_DARK
+
+
     # --- Status colours ---
     COLOR_GREEN = COLOR_GREEN
     COLOR_GREEN_DARK_UI = COLOR_GREEN_DARK_UI
@@ -198,12 +205,165 @@ class LinuxHowToApp(App):
     admin_override = BooleanProperty(False)
 
     #----------helpers-----------
+    def _get_protected_icons(self):
+        """
+        Icons that must NEVER be deleted (UI / fallback / system icons)
+        """
+        return {
+            "howtolinux-icon.png",   # ✅ default fallback
+            "howtolinux-256_256.png",
+            "arrow_back.png",
+            "cancel.png",
+            "default.png",
+            "delete.png",
+            "down.png",
+            "down_arrow.png",
+            "download.png",
+            "edit.png",
+            "feature.png",
+            "fix.png",
+            "improvement.png",
+            "link2.png",
+            "local.png",
+            "menu.png",
+            "note.png",
+            "screenformate.png",
+            "status_green.png",
+            "status_grey.png",
+            "search.png",
+            "top.png",
+            "up.png",
+            "upload.png",
+            "version.png"
+
+            # ✅ add more if needed later
+        }
+
+    def clean_unused_icons(self):
+        """
+        Scan both icon folders and remove unused icons safely.
+        Respects protected icon list.
+        """
+
+        print("🧹 Starting icon cleanup...")
+
+        paths = get_runtime_paths()
+        icons_dir = paths["assets"] / "icons"
+        user_dir = paths["assets"] / "user_icons"
+
+        protected = self._get_protected_icons()
+
+        # ✅ 1. Collect all used icons from topics
+        used_icons = set()
+
+        for topic in self.APP_DATA.get("topics", []):
+            for key in ["Topic_Icon", "Cat_Icon", "Sub_Icon"]:
+                name = str(topic.get(key) or "").strip()
+                if name:
+                    used_icons.add(name)
+
+        print(f"DEBUG: used icons = {used_icons}")
+
+        deleted = []
+
+        # ✅ helper to process a folder
+        def process_folder(folder):
+            if not folder.exists():
+                return
+
+            for file in folder.iterdir():
+                if not file.is_file():
+                    continue
+
+                name = file.name
+
+                # ✅ skip protected
+                if name in protected:
+                    continue
+
+                # ✅ skip used
+                if name in used_icons:
+                    continue
+
+                try:
+                    file.unlink()
+                    deleted.append(name)
+                    print(f"✅ Deleted unused icon: {file}")
+                except Exception as e:
+                    print(f"⚠️ Failed deleting {file}: {e}")
+
+        # ✅ scan both folders
+        process_folder(icons_dir)
+        process_folder(user_dir)
+
+        print(f"🧹 Cleanup complete. Removed {len(deleted)} icons.")
+
+        # ✅ optional UI feedback
+        self.sync_text = f"Cleanup: {len(deleted)} removed"
+
+    def build_step_index(self):
+        self.STEPS_BY_TOPIC = {}
+
+        for step in self.APP_DATA.get("steps", []):
+            tid = step.get("Topic_ID")
+            if not tid:
+                continue
+            self.STEPS_BY_TOPIC.setdefault(tid, []).append(step)
+
+        for steps in self.STEPS_BY_TOPIC.values():
+            steps.sort(key=lambda x: int(x.get("Step_Order", 999)))
+
+
+    def fetch_database(self):
+        fetch_database(self)          # ✅ real fetch from data_service
+        self.build_step_index()       # ✅ rebuild cached step index
+
+
+    def refresh_data_only(self):
+        fetch_database(self)          # ✅ refresh data only
+        self.build_step_index()
+
+    def confirm_clean_icons(self):
+        content = BoxLayout(orientation="vertical", spacing=10, padding=10)
+        content.add_widget(Label(text="Clean all unused icons?"))
+
+        btn_box = BoxLayout(size_hint_y=None, height="40dp", spacing=10)
+        btn_yes = Button(text="CLEAN", background_color=[0.3, 0.7, 1, 1])
+        btn_no = Button(text="Cancel")
+
+        btn_box.add_widget(btn_yes)
+        btn_box.add_widget(btn_no)
+        content.add_widget(btn_box)
+
+        popup = Popup(
+            title="Confirm Cleanup",
+            content=content,
+            size_hint=(0.5, 0.4),
+            background="",
+            background_color=(0, 0, 0, 0)
+        )
+
+        def run_cleanup(instance):
+            popup.dismiss()
+            self.clean_unused_icons()
+
+        btn_yes.bind(on_release=run_cleanup)
+        btn_no.bind(on_release=lambda x: popup.dismiss())
+
+        popup.open()
+
     def _delete_user_icon_if_unused(self, icon_filename: str, removed_topic_id: str):
         """
         Delete icon from user_icons ONLY if no other topic uses it.
         """
+
         if not icon_filename:
             return
+
+        if icon_filename in self._get_protected_icons():
+            print(f"🛡️ Protected icon skipped: {icon_filename}")
+            return
+
 
         still_used = False
 
@@ -248,19 +408,24 @@ class LinuxHowToApp(App):
         return get_icon_path(filename)
 
     def fetch_database(self):
-        fetch_database(self)
+        fetch_database(self)          # ✅ call imported service
+        self.build_step_index()       # ✅ rebuild index after data loads
+
+    def refresh_data_only(self):
+        fetch_database(self)          # ✅ lightweight data refresh
+        self.build_step_index()
 
     def save_local_topic(self, topic: dict, steps: list[dict]):
         add_local_topic_and_steps(topic, steps)
-        self.fetch_database()
+        self.refresh_data_only()
 
     def update_local_topic(self, topic_id: str, topic: dict, steps: list[dict]):
         update_local_topic_and_steps(topic_id, topic, steps)
-        self.fetch_database()
+        self.refresh_data_only()
 
     def delete_local_topic(self, topic_id: str):
         delete_local_topic(topic_id)
-        self.fetch_database()
+        self.refresh_data_only()
 
     def update_version_labels(self):
         """
@@ -291,7 +456,7 @@ class LinuxHowToApp(App):
 
     def on_screen_change(self, *args):
         self.check_connection()
-        self.refresh_ui_data()
+        #self.refresh_ui_data()
 
     def on_start(self):
         pass
@@ -362,8 +527,12 @@ class LinuxHowToApp(App):
         # Also trigger the standard menu population
         try:
             menu_screen = self.sm.get_screen('menu')
+
+            #if not getattr(menu_screen, "_is_populated", False):
             menu_screen.ids.menu_container.clear_widgets()
             menu_screen.populate_menu()
+            menu_screen._is_populated = True
+
 
             # ✅ NEW: If user is currently on DetailScreen, reload it after data refresh
             try:
@@ -376,6 +545,11 @@ class LinuxHowToApp(App):
                         q = detail_screen.ids.local_search.text
 
                     detail_screen.load_content_from_cache(q)
+
+                    if getattr(detail_screen, "_last_query", None) != q:
+                        detail_screen._last_query = q
+                        detail_screen.load_content_from_cache(q)
+
             except Exception as e:
                 print("DEBUG: detail screen refresh failed:", e)
 
@@ -391,6 +565,13 @@ class LinuxHowToApp(App):
                         )
                         if not exists:
                             self.sm.current = "details"
+
+
+                        if getattr(article_screen, "_last_topic", None) == current_id:
+                            return
+
+                        article_screen._last_topic = current_id
+
             except Exception as e:
                 print("DEBUG: article screen refresh failed:", e)
 
@@ -415,8 +596,10 @@ class LinuxHowToApp(App):
         self.sm.add_widget(AppInfoScreen(name="app_info"))
         self.sm.add_widget(JsonViewerScreen(name="json_viewer"))
 
-        fetch_database(self)
+        Clock.schedule_once(lambda dt: self.fetch_database(), 0)
+        Clock.schedule_once(lambda dt: self.refresh_ui_data(), 0.1)
         return self.sm
+
 
     def is_admin_mode(self):
         if self.admin_override:
@@ -524,7 +707,7 @@ class LinuxHowToApp(App):
         Thread(target=run_proc, daemon=True).start()
 
 
-    #--------- editin and deleting --------
+    #--------- editing and deleting --------
 
     def edit_topic(self, data):
 
@@ -609,8 +792,8 @@ class LinuxHowToApp(App):
                 # ✅ Step 1: trigger fresh fetch
 
                 # 👇 IMPORTANT: chain refresh AFTER fetch
-                fetch_database(self)
-                Clock.schedule_once(after_fetch, 0.5)
+                Clock.schedule_once(lambda dt: self.fetch_database(), 0)
+                Clock.schedule_once(lambda dt: self.refresh_ui_data(), 0.5)
 
             except Exception as e:
                 print(f"❌ Delete failed: {e}")
@@ -757,7 +940,7 @@ class LinuxHowToApp(App):
                     print(f"⚠️ Could not delete user icon after promote: {e}")
 
             print(f"✅ Promotion complete → official Topic_ID: {new_topic_id}")
-            self.fetch_database()
+            self.refresh_data_only()
 
         except Exception as e:
             print(f"❌ Promotion failed: {e}")
@@ -859,12 +1042,13 @@ class LinuxHowToApp(App):
 
             # ✅ 4. delete from Firebase
             delete_topic_from_firebase(topic_key, topic_id)
+            icon_name = str(data.get("Topic_Icon") or "")
 
             # ✅ 5. delete icon if unused
             self._delete_official_icon_if_unused(icon_name, topic_id)
 
             # ✅ 6. refresh + restore category
-            self.fetch_database()
+            self.refresh_data_only()
 
             self.sm.current = "menu"
 
@@ -920,6 +1104,11 @@ class LinuxHowToApp(App):
         """
         if not icon_filename:
             return
+
+        if icon_filename in self._get_protected_icons():
+            print(f"🛡️ Protected icon skipped: {icon_filename}")
+            return
+
 
         # Check all current official topics except the one being demoted
         still_used = False

@@ -11,6 +11,7 @@ linuxdeploy*
 # Python temporary files
 __pycache__/
 *.pyc
+*.bak
 
 # Local data & temp
 temp/

@@ -1,3 +1,10 @@
+# --- Python ---
+import os
+import re
+import shutil
+from pathlib import Path
+from datetime import datetime
+
 # --- Kivy ---
 from kivy.uix.screenmanager import Screen
 from kivy.properties import StringProperty, BooleanProperty, ListProperty, NumericProperty
@@ -13,10 +20,6 @@ from kivy.uix.filechooser import FileChooserListView
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.spinner import Spinner
 from kivy.metrics import dp
-# --- Python ---
-import os
-import re
-from pathlib import Path
 
 # --- Your project ---
 from src.services.editor_service import (
@@ -37,6 +40,84 @@ class AddTopicScreen(Screen):
     edit_is_local = BooleanProperty(False)   # ✅ NEW
     pending_steps = ListProperty([])  # list of step dicts to save together with the topic
     selected_step_index = NumericProperty(-1)   # -1 means "no step selected"
+    
+    def _now(self):
+        return datetime.now().isoformat(timespec="seconds")
+
+    def import_screenshot(self, filepath):
+        if not filepath:
+            return ""
+
+        from src.utils.runtime_paths import get_runtime_paths
+
+        paths = get_runtime_paths()
+        dest_dir = paths["assets"] / "screenshots"
+        dest_dir.mkdir(parents=True, exist_ok=True)
+
+        filename = Path(filepath).name
+        dest = dest_dir / filename
+
+        # reuse if already present
+        if dest.exists():
+            print(f"ℹ️ Reusing existing screenshot: {dest}")
+            return filename
+
+        shutil.copy2(filepath, dest)
+        print(f"✅ Imported screenshot: {dest}")
+        return filename
+
+    def pick_step_screenshot(self):
+        from src.utils.runtime_paths import get_runtime_paths
+
+        paths = get_runtime_paths()
+        screenshots_dir = paths["assets"] / "screenshots"
+        screenshots_dir.mkdir(parents=True, exist_ok=True)
+
+        layout = BoxLayout(orientation="vertical")
+
+        chooser = FileChooserListView(
+            path=str(screenshots_dir),   # open screenshots folder by default
+            filters=["*.png", "*.jpg", "*.jpeg", "*.webp"],
+            dirselect=False
+        )
+
+        def on_select(instance, selection):
+            if selection:
+                self.ids.status_label.text = f"Selected: {Path(selection[0]).name}"
+
+        def select_file(instance):
+            selected = chooser.selection
+
+            if not selected:
+                self.ids.status_label.text = "⚠️ No file selected"
+                return
+
+            selected_path = selected[0]
+
+            try:
+                fname = self.import_screenshot(selected_path)
+                self.ids.step_screenshot.text = fname
+                self.ids.status_label.text = f"✅ Screenshot selected: {fname}"
+            except Exception as e:
+                self.ids.status_label.text = f"❌ Screenshot import failed: {e}"
+
+            popup.dismiss()
+
+        chooser.bind(selection=on_select)
+
+        btn = Button(text="Select", size_hint_y=None, height=50)
+        btn.bind(on_release=select_file)
+
+        layout.add_widget(chooser)
+        layout.add_widget(btn)
+
+        popup = Popup(
+            title="Select Screenshot",
+            content=layout,
+            size_hint=(0.9, 0.9)
+        )
+        popup.open()
+
 
     def on_pre_enter(self):
         app = App.get_running_app()
@@ -69,6 +150,13 @@ class AddTopicScreen(Screen):
         self.refresh_steps_preview()
         self.refresh_steps_list()
         self._schedule_populate_dropdowns()
+
+        # ✅ set dates for new topic
+        if not self.edit_mode:
+            now = self._now()
+            self.ids.date_created.text = now
+            self.ids.date_updated.text = now
+
 
     def _schedule_populate_dropdowns(self):
 
@@ -325,7 +413,6 @@ class AddTopicScreen(Screen):
         if not instruction:
             self.ids.status_label.text = "Instruction is required."
             return
-
         # Build step dict
         step = {
             "Step_Order": step_order,
@@ -333,6 +420,11 @@ class AddTopicScreen(Screen):
             "Header_2": self.ids.step_header2.text.strip(),
             "Instruction": instruction,
             "Code_Snippet": self.ids.step_code.text.strip(),
+
+            # ✅ NEW FIELDS
+            "Screenshot": self.ids.step_screenshot.text.strip(),
+            "URLs": self.ids.step_urls.text.strip(),
+
             "Notes": self.ids.step_notes.text.strip(),
         }
 
@@ -373,6 +465,8 @@ class AddTopicScreen(Screen):
         self.ids.step_header2.text = ""
         self.ids.step_instruction.text = ""
         self.ids.step_code.text = ""
+        self.ids.step_screenshot.text = ""
+        self.ids.step_urls.text = ""
         self.ids.step_notes.text = ""
 
         # ✅ 🔥 RESET selection highlight
@@ -669,6 +763,9 @@ class AddTopicScreen(Screen):
 
             merged_topic = dict(duplicate_topic)
 
+            # ✅ update modification date
+            merged_topic["Date_Updated"] = self._now()
+
             # ✅ URLs strategy
             merged_topic["URLs"] = self._apply_urls_strategy(
                 duplicate_topic.get("URLs", ""),
@@ -866,6 +963,8 @@ class AddTopicScreen(Screen):
         self.ids.step_header2.text = s.get("Header_2", "") or ""
         self.ids.step_instruction.text = s.get("Instruction", "") or ""
         self.ids.step_code.text = s.get("Code_Snippet", "") or ""
+        self.ids.step_screenshot.text = s.get("Screenshot", "") or ""
+        self.ids.step_urls.text = s.get("URLs", "") or ""
         self.ids.step_notes.text = s.get("Notes", "") or ""
 
         # visual cue: turn Add Step button into Update
@@ -907,6 +1006,7 @@ class AddTopicScreen(Screen):
     # -----------------------------
     def save_topic(self):
         app = App.get_running_app()
+        now = self._now()
 
         # ✅ Do NOT copy icon yet
         icon_filename = self.ids.topic_icon.text.strip()
@@ -923,6 +1023,16 @@ class AddTopicScreen(Screen):
             "Sub_Icon": self.ids.sub_icon.text.strip(),
             "Topic_Icon": icon_filename,
         }
+
+
+        # ✅ DATE HANDLING
+        if self.edit_mode:
+            topic["Date_Created"] = self.ids.date_created.text.strip()
+        else:
+            topic["Date_Created"] = now
+
+        topic["Date_Updated"] = now
+
 
         # ✅ 2. Optional Topic_ID while editing
         if "topic_id" in self.ids:
@@ -951,6 +1061,10 @@ class AddTopicScreen(Screen):
             try:
                 topic_payload = dict(topic)
                 step_payloads = list(self.pending_steps)
+
+                # ✅ ensure dates exist (important for local topics)
+                topic_payload["Date_Created"] = topic.get("Date_Created", "")
+                topic_payload["Date_Updated"] = topic.get("Date_Updated", "")
 
                 # update existing local topic
                 if self.edit_mode and self.edit_topic_id:
@@ -1058,6 +1172,7 @@ class AddTopicScreen(Screen):
 
         # ✅ DO NOT disable scrolling anymore
         pass
+
     def reset_form_only(self):
         self.edit_mode = False
         self.edit_is_local = False
@@ -1128,6 +1243,11 @@ class AddTopicScreen(Screen):
         self.ids.topic_icon.text = data.get("Topic_Icon", "")
         self.ids.icon_path.text = ""
 
+        # ✅ load dates
+        self.ids.date_created.text = data.get("Date_Created") or self._now()
+        self.ids.date_updated.text = data.get("Date_Updated") or self._now()
+
+
         # set icon
         icon_file = data.get("Topic_Icon", "")
         if "header_icon" in self.ids:
@@ -1154,6 +1274,8 @@ class AddTopicScreen(Screen):
                     "Header_2": step.get("Header_2"),
                     "Instruction": step.get("Instruction"),
                     "Code_Snippet": step.get("Code_Snippet"),
+                    "Screenshot": step.get("Screenshot"),
+                    "URLs": step.get("URLs"),
                     "Notes": step.get("Notes"),
                 })
 

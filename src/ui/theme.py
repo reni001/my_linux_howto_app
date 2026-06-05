@@ -54,7 +54,12 @@ COLOR_ORANGE_LIGHT_UI = [1, 0.7, 0.3, 1]
 COLOR_CYAN = [0, 0.7, 1, 1]
 COLOR_CYAN_DARK = [0, 0.5, 0.7, 1]
 
-[0.1, 0.25, 0.45, 1]
+#COLOR_PURPLE = [0.65, 0.45, 0.9, 1]
+#COLOR_PURPLE_DARK = [0.5, 0.3, 0.75, 1]
+COLOR_PURPLE = [0.5, 0.3, 0.75, 1]
+COLOR_PURPLE_DARK = [0.15, 0.05, 0.25, 1]
+
+#[0.1, 0.25, 0.45, 1]
 
 
 #:set color_blue [59/255, 101/255, 184/255, 1]
