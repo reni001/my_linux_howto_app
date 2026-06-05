@@ -26,6 +26,7 @@ from src.screens.add_step_screen import AddStepScreen
 from src.screens.json_viewer_screen import JsonViewerScreen
 from src.screens.app_info_screen import AppInfoScreen
 from src.ui.about_popup import show_about_popup
+from src.ui.styled_popup import create_popup_container
 
 
 from src.services.data_service import (
@@ -324,23 +325,57 @@ class LinuxHowToApp(App):
         self.build_step_index()
 
     def confirm_clean_icons(self):
-        content = BoxLayout(orientation="vertical", spacing=10, padding=10)
-        content.add_widget(Label(text="Clean all unused icons?"))
+
+        root = create_popup_container()
+
+        inner = BoxLayout(
+            orientation="vertical",
+            padding=[20, 15, 20, 20],
+            spacing=15,
+            size_hint=(0.95, 0.95),
+            pos_hint={"center_x": 0.5, "center_y": 0.5}
+        )
+
+        # ✅ title (styled like About popup)
+        inner.add_widget(Label(
+            text="[b]Confirm Cleanup[/b]",
+            markup=True,
+            font_size="18sp"
+        ))
+
+        inner.add_widget(Label(
+            text="Clean all unused icons?"
+        ))
 
         btn_box = BoxLayout(size_hint_y=None, height="40dp", spacing=10)
-        btn_yes = Button(text="CLEAN", background_color=[0.3, 0.7, 1, 1])
-        btn_no = Button(text="Cancel")
+
+        btn_yes = Button(
+            text="CLEAN",
+            background_normal='',
+            background_color=self.COLOR_BLUE_MEDIUM,
+            color=self.COLOR_WHITE
+        )
+
+        btn_no = Button(
+            text="Cancel",
+            background_normal='',
+            background_color=self.COLOR_GREY_DARK,
+            color=self.COLOR_WHITE
+        )
 
         btn_box.add_widget(btn_yes)
         btn_box.add_widget(btn_no)
-        content.add_widget(btn_box)
+        inner.add_widget(btn_box)
+
+        root.add_widget(inner)
 
         popup = Popup(
-            title="Confirm Cleanup",
-            content=content,
-            size_hint=(0.5, 0.4),
+            title="",
+            content=root,
+            size_hint=(0.7, 0.4),
             background="",
-            background_color=(0, 0, 0, 0)
+            background_color=(0, 0, 0, 0),
+            separator_height=0
         )
 
         def run_cleanup(instance):
@@ -734,24 +769,55 @@ class LinuxHowToApp(App):
             title = data.get("Title", "this topic")
 
             # ✅ Popup UI (same structure as Firebase)
-            content = BoxLayout(orientation="vertical", spacing=10, padding=10)
-            content.add_widget(Label(text=f"Delete local topic:\n{title}?"))
+            root = create_popup_container()
+
+            inner = BoxLayout(
+                orientation="vertical",
+                padding=[20, 15, 20, 20],
+                spacing=15,
+                size_hint=(0.95, 0.95),
+                pos_hint={"center_x": 0.5, "center_y": 0.5}
+            )
+
+            inner.add_widget(Label(
+                text="[b]Delete Topic[/b]",
+                markup=True,
+                font_size="18sp"
+            ))
+
+            inner.add_widget(Label(
+                text="Are you sure you want to delete this topic?"
+            ))
 
             btn_box = BoxLayout(size_hint_y=None, height="40dp", spacing=10)
 
-            btn_yes = Button(text="DELETE", background_color=[1, 0.3, 0.3, 1])
-            btn_no = Button(text="Cancel")
+            btn_yes = Button(
+                text="DELETE",
+                background_normal='',
+                background_color=self.COLOR_RED,
+                color=self.COLOR_WHITE
+            )
+
+            btn_no = Button(
+                text="Cancel",
+                background_normal='',
+                background_color=self.COLOR_GREY_DARK,
+                color=self.COLOR_WHITE
+            )
 
             btn_box.add_widget(btn_yes)
             btn_box.add_widget(btn_no)
-            content.add_widget(btn_box)
+            inner.add_widget(btn_box)
+
+            root.add_widget(inner)
 
             popup = Popup(
-                title="Delete Local Topic",
-                content=content,
-                size_hint=(0.5, 0.4),
+                title="",
+                content=root,
+                size_hint=(0.7, 0.4),
                 background="",
-                background_color=(0, 0, 0, 0)
+                background_color=(0, 0, 0, 0),
+                separator_height=0
             )
 
             def confirm_delete(instance):
@@ -800,26 +866,56 @@ class LinuxHowToApp(App):
         print("DEBUG deleting Topic_ID:", topic_id)
 
         # ✅ Popup UI
-        content = BoxLayout(orientation="vertical", spacing=10, padding=10)
-        content.add_widget(Label(text="Are you sure you want to delete this topic?"))
+        root = create_popup_container()
+
+        inner = BoxLayout(
+            orientation="vertical",
+            padding=[20, 15, 20, 20],
+            spacing=15,
+            size_hint=(0.95, 0.95),
+            pos_hint={"center_x": 0.5, "center_y": 0.5}
+        )
+
+        inner.add_widget(Label(
+            text="[b]Delete Topic[/b]",
+            markup=True,
+            font_size="18sp",
+            color=self.COLOR_WHITE
+        ))
+
+        inner.add_widget(Label(
+            text="Are you sure you want to delete this topic?"
+        ))
 
         btn_box = BoxLayout(size_hint_y=None, height="40dp", spacing=10)
 
-        btn_yes = Button(text="DELETE", background_color=[1, 0.3, 0.3, 1])
-        btn_no = Button(text="Cancel")
+        btn_yes = Button(
+            text="DELETE",
+            background_normal='',
+            background_color=self.COLOR_RED,
+            color=self.COLOR_WHITE
+        )
+
+        btn_no = Button(
+            text="Cancel",
+            background_normal='',
+            background_color=self.COLOR_GREY_DARK,
+            color=self.COLOR_WHITE
+        )
 
         btn_box.add_widget(btn_yes)
         btn_box.add_widget(btn_no)
-        content.add_widget(btn_box)
+        inner.add_widget(btn_box)
+
+        root.add_widget(inner)
 
         popup = Popup(
-            #title="About Application",
-            title="Delete Topic",
-            content=content,
-            size_hint=(0.5, 0.4),
-
-            background="",                      # ✅ remove default background
-            background_color=(0, 0, 0, 0)       # ✅ fully transparent
+            title="",
+            content=root,
+            size_hint=(0.7, 0.4),
+            background="",
+            background_color=(0, 0, 0, 0),
+            separator_height=0
         )
 
         btn_yes.bind(on_release=confirm_delete)
@@ -947,10 +1043,9 @@ class LinuxHowToApp(App):
 
 
     def promote_topic(self, data):
+
         title = data.get("Title", "this topic")
         duplicate = self._find_official_duplicate(data)
-
-        content = BoxLayout(orientation="vertical", spacing=10, padding=10)
 
         if duplicate:
             dup_title = duplicate.get("Title", "")
@@ -975,22 +1070,61 @@ class LinuxHowToApp(App):
             popup_title = "Promote Topic"
             confirm_text = "PROMOTE"
 
-        content.add_widget(Label(text=message))
+        # ✅ SAME STYLE AS ABOUT POPUP
+        root = create_popup_container()
 
+        inner = BoxLayout(
+            orientation="vertical",
+            padding=[20, 15, 20, 20],
+            spacing=15,
+            size_hint=(0.95, 0.95),
+            pos_hint={"center_x": 0.5, "center_y": 0.5}
+        )
+
+        # ✅ Title
+        inner.add_widget(Label(
+            text=f"[b]{popup_title}[/b]",
+            markup=True,
+            font_size="18sp",
+            color=self.COLOR_WHITE
+        ))
+
+        # ✅ Message
+        inner.add_widget(Label(
+            text=message,
+            halign="center"
+        ))
+
+        # ✅ Buttons
         btn_box = BoxLayout(size_hint_y=None, height="40dp", spacing=10)
-        btn_yes = Button(text=confirm_text, background_color=[0.3, 0.7, 1, 1])
-        btn_no = Button(text="Cancel")
+
+        btn_yes = Button(
+            text=confirm_text,
+            background_normal='',
+            background_color=self.COLOR_BLUE_MEDIUM,
+            color=self.COLOR_WHITE
+        )
+
+        btn_no = Button(
+            text="Cancel",
+            background_normal='',
+            background_color=self.COLOR_GREY_DARK,
+            color=self.COLOR_WHITE
+        )
 
         btn_box.add_widget(btn_yes)
         btn_box.add_widget(btn_no)
-        content.add_widget(btn_box)
+        inner.add_widget(btn_box)
+
+        root.add_widget(inner)
 
         popup = Popup(
-            title=popup_title,
-            content=content,
+            title="",
+            content=root,
             size_hint=(0.7, 0.5),
             background="",
-            background_color=(0, 0, 0, 0)
+            background_color=(0, 0, 0, 0),
+            separator_height=0
         )
 
         def confirm_promote(instance):
