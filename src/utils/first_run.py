@@ -12,7 +12,7 @@ from src.utils.runtime_paths import ensure_runtime_dirs, get_runtime_paths
 # REPO PATHS
 # ----------------------------------------
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
+REPO_ROOT = Path(__file__).resolve().parents[2]
 
 DEFAULT_CONFIG = REPO_ROOT / "config"
 DEFAULT_DATA = REPO_ROOT / "data"

@@ -58,6 +58,12 @@ install_ubuntu() {
         libgl1-mesa-dev libgles2-mesa-dev \
         libgstreamer1.0-dev gstreamer1.0-plugins-base \
         libmtdev-dev libjpeg-dev libpng-dev pkg-config
+
+    if ! command -v python3.9 &> /dev/null; then
+        echo "[INFO] Installing Python 3.9..."
+        sudo apt install -y python3.9 python3.9-venv python3.9-dev
+    fi
+
 }
 
 install_fedora() {
@@ -83,6 +89,14 @@ case "$OS" in
     *debian*) install_ubuntu ;;
     *fedora*) install_fedora ;;
     *arch*) install_arch ;;
+    *suse*|*opensuse*)
+        echo "[INFO] Detected SUSE/openSUSE"
+        echo ""
+        echo "Please install dependencies manually:"
+        echo "  sudo zypper install python3-devel gcc SDL2 SDL2_image SDL2_ttf SDL2_mixer"
+        echo ""
+        echo "Ensure Python 3.9+ is installed"
+        ;;
     *)
         echo "[WARNING] Unsupported OS: $OS"
         ;;
@@ -96,18 +110,39 @@ echo "[INFO] Detecting Python..."
 
 if command -v python3.12 &> /dev/null; then
     PYTHON_BIN="python3.12"
+    echo "[INFO] ✅ Using Python 3.12"
 
 elif command -v python3.11 &> /dev/null; then
     PYTHON_BIN="python3.11"
+    echo "[INFO] ✅ Using Python 3.11"
 
 elif command -v python3.10 &> /dev/null; then
     PYTHON_BIN="python3.10"
+    echo "[INFO] ✅ Using Python 3.10"
+
+elif command -v python3.9 &> /dev/null; then
+    PYTHON_BIN="python3.9"
+    echo "[INFO] ✅ Using Python 3.9"
 
 elif command -v python3 &> /dev/null; then
-    if ! python3 -c "import sys; exit(0 if sys.version_info >= (3,8) else 1)"; then
-        echo "[ERROR] Python too old (<3.8)"
+    PY_VERSION=$(python3 -c 'import sys; print(".".join(map(str, sys.version_info[:2])))')
+
+    echo "[INFO] Using system Python $PY_VERSION"
+
+    if ! python3 -c "import sys; exit(0 if sys.version_info >= (3,9) else 1)"; then
+        echo ""
+        echo "[ERROR] Python 3.9+ required for this app"
+        echo ""
+        echo "Detected: Python $PY_VERSION"
+        echo ""
+        echo "➡️ Fix (Ubuntu 20.04):"
+        echo "   sudo apt install python3.9 python3.9-venv python3.9-dev"
+        echo ""
+        echo "➡️ Then re-run install.sh"
+        echo ""
         exit 1
     fi
+
     PYTHON_BIN="python3"
 
 else
@@ -142,7 +177,7 @@ if ! pip install -r requirements.txt; then
     pip install "kivy[base]" pillow requests firebase_admin
 fi
 
-pip list
+#pip list
 
 # ----------------------------------------
 # CREATE RUNTIME DIRECTORIES
@@ -156,8 +191,12 @@ mkdir -p "$DATA_DIR" "$ASSETS_DIR"
 
 cp "$APP_DIR/config/firebase.json" "$DATA_DIR/firebase.json"
 
-rsync -av --delete "$APP_DIR/assets/" "$ASSETS_DIR/" || cp -r "$APP_DIR/assets" "$ASSETS_DIR"
-
+if command -v rsync &> /dev/null; then
+    rsync -av --delete "$APP_DIR/assets/" "$ASSETS_DIR/"
+else
+    echo "[INFO] rsync not found → using cp fallback"
+    cp -r "$APP_DIR/assets" "$ASSETS_DIR"
+fi
 
 # ----------------------------------------
 # ENSURE PYTHON PACKAGE STRUCTURE
@@ -167,7 +206,6 @@ if [ ! -f "$APP_DIR/src/__init__.py" ]; then
     echo "[INFO] Creating src/__init__.py"
     touch "$APP_DIR/src/__init__.py"
 fi
-
 
 chmod +x "$APP_DIR/run.sh"
 chmod +x "$APP_DIR/run.fish"
@@ -193,6 +231,8 @@ fi
 
 echo ""
 echo "✅ INSTALL COMPLETE"
+echo ""
+echo "✔ Python version: $("$VENV_DIR/bin/python" --version)"
 echo ""
 echo "Run with:"
 echo "cd $APP_DIR && source venv/bin/activate && python -m src.main"

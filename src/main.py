@@ -120,7 +120,7 @@ def setup_window(*args):
 
 # ✅ Only apply on desktop
 if platform.system() != "Linux" or "ANDROID_ARGUMENT" not in os.environ:
-    Window.size = (700, 1200
+    Window.size = (650, 1200
                    )
     Window.minimum_width = 480
     Window.minimum_height = 850
@@ -266,6 +266,7 @@ class LinuxHowToApp(App):
             "status_green.png",
             "status_grey.png",
             "search.png",
+            "tips_category.png",
             "top.png",
             "up.png",
             "upload.png",
