@@ -30,6 +30,7 @@ from src.services.editor_service import (
 )
 from src.logic.taxonomy import build_taxonomy
 from src.ui.components import HoverRow, EntryListItem, ExpandableSection
+from src.ui.file_picker_popup import open_file_picker
 
 
 
@@ -66,6 +67,8 @@ class AddTopicScreen(Screen):
         print(f"✅ Imported screenshot: {dest}")
         return filename
 
+    from src.ui.file_picker_popup import open_file_picker
+
     def pick_step_screenshot(self):
         from src.utils.runtime_paths import get_runtime_paths
 
@@ -73,50 +76,21 @@ class AddTopicScreen(Screen):
         screenshots_dir = paths["assets"] / "screenshots"
         screenshots_dir.mkdir(parents=True, exist_ok=True)
 
-        layout = BoxLayout(orientation="vertical")
-
-        chooser = FileChooserListView(
-            path=str(screenshots_dir),   # open screenshots folder by default
-            filters=["*.png", "*.jpg", "*.jpeg", "*.webp"],
-            dirselect=False
-        )
-
-        def on_select(instance, selection):
-            if selection:
-                self.ids.status_label.text = f"Selected: {Path(selection[0]).name}"
-
-        def select_file(instance):
-            selected = chooser.selection
-
-            if not selected:
-                self.ids.status_label.text = "⚠️ No file selected"
-                return
-
-            selected_path = selected[0]
-
+        def on_selected(path):
             try:
-                fname = self.import_screenshot(selected_path)
+                fname = self.import_screenshot(str(path))
                 self.ids.step_screenshot.text = fname
                 self.ids.status_label.text = f"✅ Screenshot selected: {fname}"
             except Exception as e:
                 self.ids.status_label.text = f"❌ Screenshot import failed: {e}"
 
-            popup.dismiss()
-
-        chooser.bind(selection=on_select)
-
-        btn = Button(text="Select", size_hint_y=None, height=50)
-        btn.bind(on_release=select_file)
-
-        layout.add_widget(chooser)
-        layout.add_widget(btn)
-
-        popup = Popup(
+        open_file_picker(
             title="Select Screenshot",
-            content=layout,
-            size_hint=(0.9, 0.9)
+            callback=on_selected,
+            filters=("*.png", "*.jpg", "*.jpeg", "*.webp"),
+            start_path=str(screenshots_dir)
         )
-        popup.open()
+
 
 
     def on_pre_enter(self):
@@ -344,48 +318,23 @@ class AddTopicScreen(Screen):
     #--------
 
     def pick_icon(self):
-        # You already use a file picker pattern elsewhere; simplest: keep text path entry.
-        # If you want a FileChooser popup later, we can add it – for now this won't crash.
-        #self.ids.status_label.text = "Tip: paste an icon path into 'icon_path' then Save."
 
-        layout = BoxLayout(orientation="vertical")
+        def on_selected(path):
+            try:
+                filename = self._import_icon(str(path))
 
-        filechooser = FileChooserListView(
-            path=str(Path.home()),
-            filters=["*.png", "*.jpg", "*.jpeg"]
+                self.ids.topic_icon.text = filename
+                self.ids.header_icon.source = str(path)
+                self.ids.icon_path.text = ""
+
+            except Exception as e:
+                print("DEBUG: icon import failed:", e)
+
+        open_file_picker(
+            title="Select Icon",
+            callback=on_selected,
+            filters=("*.png", "*.jpg", "*.jpeg")
         )
-
-        def select_file(instance):
-            if filechooser.selection:
-                selected = filechooser.selection[0]
-                self.ids.icon_path.text = selected
-
-                # ✅ update header icon immediately
-                try:
-                    filename = Path(selected).name
-                    # ✅ preview direct file (correct)
-                    self.ids.header_icon.source = selected
-                    # ✅ keep UI consistent
-                    filename = self._import_icon(selected)
-
-                    self.ids.topic_icon.text = filename
-                    self.ids.header_icon.source = selected
-                    self.ids.icon_path.text = ""   # ✅ clear raw path after import
-
-                except Exception as e:
-                    print("DEBUG: preview icon failed:", e)
-
-            popup.dismiss()
-
-        btn = Button(text="Select", size_hint_y=None, height=50)
-        btn.bind(on_release=select_file)
-
-        layout.add_widget(filechooser)
-        layout.add_widget(btn)
-
-        popup = Popup(title="Select Icon", content=layout, size_hint=(0.9, 0.9))
-        popup.open()
-
 
     def on_topic_icon_change(self, value):
         if "header_icon" not in self.ids:

@@ -1234,35 +1234,41 @@
                     hint_text: "Version (e.g. 1.2.0)"
                     multiline: False
                     size_hint_y: None
-                    height: "40dp"
+                    height: app.FONT_TEXT * 2.2
+                    font_size: app.FONT_TEXT
+                    padding: [app.FONT_TEXT * 0.5, app.FONT_TEXT * 0.5]
+
 
                 TextInput:
                     id: last_update
                     hint_text: "Last Update"
                     multiline: False
                     size_hint_y: None
-                    height: "40dp"
+                    height: app.FONT_TEXT * 2.2
+                    font_size: app.FONT_TEXT
+                    padding: [app.FONT_TEXT * 0.5, app.FONT_TEXT * 0.5]
 
                 TextInput:
                     id: developer
                     hint_text: "Developer"
                     multiline: False
                     size_hint_y: None
-                    height: "40dp"
+                    height: app.FONT_TEXT * 2.2
+                    font_size: app.FONT_TEXT
+                    padding: [app.FONT_TEXT * 0.5, app.FONT_TEXT * 0.5]
 
                 TextInput:
                     id: description
                     hint_text: "Description"
                     multiline: True
-
                     font_size: app.FONT_TEXT * 1.05     # ✅ slightly bigger than normal
                     padding: [app.FONT_TEXT * 0.6, app.FONT_TEXT * 0.6]
-
                     size_hint_y: None
                     height: max(self.minimum_height, app.FONT_TEXT * 5)
 
                 Label:
                     text: "Changelog"
+                    font_size: app.FONT_SUBCATEGORY
                     size_hint_y: None
                     height: "28dp"
                     color: app.COLOR_BLUE
@@ -1271,7 +1277,7 @@
                 # -------- Preview (with icons) --------
                 ScrollView:
                     size_hint_y: None
-                    height: "180dp"
+                    height: "220dp"
                     bar_width: 8
 
                     BoxLayout:
@@ -1285,28 +1291,28 @@
                     size_hint_y: None
                     height: dp(8)
 
-                # -------- EDITOR label --------
-                Label:
-                    text: "Edit Changelog"
-                    #size_hint_y: None
-                    #height: dp(26)
-                    color: app.COLOR_BLUE_MEDIUM
-                    bold: True
-                    font_size: "14sp"
 
-                # -------- EDITOR (raw text) --------
-
-                ScrollView:
+                # -------- EDITOR --------
+                BoxLayout:
+                    orientation: "vertical"
                     size_hint_y: None
-                    height: dp(160)      # ✅ FIXED HEIGHT (no layout break)
-                    bar_width: 8
+                    height: self.minimum_height
+
+                    Label:
+                        text: "Edit Changelog"
+                        size_hint_y: None
+                        height: app.FONT_TEXT * 1.5
+                        color: app.COLOR_BLUE_MEDIUM
+                        bold: True
+                        font_size: app.FONT_TEXT
 
                     TextInput:
                         id: changelog
                         multiline: True
                         size_hint_y: None
-                        height: self.minimum_height
-                        text_size: self.width, None
+                        font_size: app.FONT_TEXT
+                        height: max(self.minimum_height, app.FONT_TEXT * 8)
+
 
         # -------- FIXED SAVE BAR --------
         StyledPanel:

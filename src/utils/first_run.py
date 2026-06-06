@@ -7,6 +7,7 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 
 from src.utils.runtime_paths import ensure_runtime_dirs, get_runtime_paths
+from src.ui.file_picker_popup import open_file_picker
 
 # ----------------------------------------
 # REPO PATHS
@@ -44,43 +45,15 @@ def copy_folder(src: Path, dst: Path):
 # ----------------------------------------
 
 def ask_for_service_account(target_path: Path):
-    layout = BoxLayout(orientation='vertical')
 
-    filechooser = FileChooserListView(filters=["*.json"])
-    layout.add_widget(filechooser)
+    def on_selected(path: Path):
+        copy_file(path, target_path)
 
-    btn_layout = BoxLayout(size_hint_y=0.2)
-
-    select_btn = Button(text="Select File")
-    skip_btn = Button(text="Skip")
-
-    btn_layout.add_widget(select_btn)
-    btn_layout.add_widget(skip_btn)
-    layout.add_widget(btn_layout)
-
-    popup = Popup(
+    open_file_picker(
         title="Select serviceAccountKey.json (optional)",
-        content=layout,
-        size_hint=(0.9, 0.9)
+        callback=on_selected,
+        filters=("*.json",)
     )
-
-    def select_file(instance):
-        if filechooser.selection:
-            src = Path(filechooser.selection[0])
-            if src.exists():
-                copy_file(src, target_path)
-            else:
-                print("[ERROR] Selected file does not exist")
-        popup.dismiss()
-
-    def skip(instance):
-        print("[SKIP] User skipped serviceAccountKey.json")
-        popup.dismiss()
-
-    select_btn.bind(on_release=select_file)
-    skip_btn.bind(on_release=skip)
-
-    popup.open()
 
 # ----------------------------------------
 # MAIN INITIALIZATION

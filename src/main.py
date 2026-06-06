@@ -114,17 +114,24 @@ def setup_window(*args):
 
     # ✅ center window
     Window.left = int((screen_w - WIDTH) / 2)
-    Window.top = int((screen_h - HEIGHT) / 2)
+
+    # ✅ stick to TOP
+    Window.top = screen_h - HEIGHT
+
+Clock.schedule_once(setup_window, 0.1)
+
 
 # ✅ IMPORTANT: run AFTER window is created
 
 # ✅ Only apply on desktop
 if platform.system() != "Linux" or "ANDROID_ARGUMENT" not in os.environ:
-    Window.size = (650, 1200
+    Window.size = (800, 1300
                    )
     Window.minimum_width = 480
     Window.minimum_height = 850
     Window.resizable = True
+
+    Clock.schedule_once(setup_window, 0)
 
 # ✅ ensure runtime dirs & config exist
 initialize_first_run()
@@ -134,7 +141,6 @@ initialize_first_run()
 # The KV layout was moved from the inlined KV string to an external file.
 # This is a lossless move: main.kv contains the exact same KV content as before.
 KV = None  # KV now lives in main.kv
-#KV_FILE = os.path.join(SRC_DIR, "main.kv")
 KV_FILE = str(Path(__file__).parent / "main.kv")
 if KV_FILE not in Builder.files:
     Builder.load_file(KV_FILE)
@@ -215,9 +221,9 @@ class LinuxHowToApp(App):
     project_root = StringProperty("")
 
     # --- Typography scale ---   _CATEGORY = NumericProperty(26)
-    FONT_SUBCATEGORY = NumericProperty(20)
-    FONT_TITLE = NumericProperty(22)
-    FONT_TEXT = NumericProperty(17)
+    FONT_SUBCATEGORY = NumericProperty(21)
+    FONT_TITLE = NumericProperty(24)
+    FONT_TEXT = NumericProperty(19)
     FONT_MENU_TITLE = NumericProperty(20)
     FONT_MENU_STATUS = NumericProperty(17)
     FONT_BUTTON = NumericProperty(20)
@@ -300,9 +306,9 @@ class LinuxHowToApp(App):
         scale = max(0.90, min(scale, 1.25))
 
         self.FONT_CATEGORY = 26 * scale
-        self.FONT_SUBCATEGORY = 20 * scale
-        self.FONT_TITLE = 22 * scale
-        self.FONT_TEXT = 17 * scale
+        self.FONT_SUBCATEGORY = 21 * scale
+        self.FONT_TITLE = 24 * scale
+        self.FONT_TEXT = 19 * scale
         self.FONT_MENU_TITLE = 20 * scale
         self.FONT_MENU_STATUS = 17 * scale #admin vs user
         self.FONT_BUTTON = 20 * scale
