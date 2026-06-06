@@ -63,11 +63,13 @@ class DetailScreen(Screen):
             text=self.header_title.upper(),
             color=COLOR_BLUE,
             bold=True,
-            font_size='24sp',
+            font_size=App.get_running_app().FONT_CATEGORY,
             size_hint_y=None,
+            size_hint_x=1,
             height=dp(50),
             halign='left',
-            text_size=(Window.width - dp(30), None)
+            valign='middle',
+            text_size=(None, None)
         )
 
         self.ids.list_container.add_widget(cat_label)

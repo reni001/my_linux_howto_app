@@ -1,5 +1,6 @@
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.image import Image
+from kivy.app import App
 from kivy.uix.behaviors import ButtonBehavior
 from kivy.uix.label import Label
 from kivy.properties import (
@@ -21,7 +22,8 @@ from src.ui.theme import COLOR_ORANGE
 class CategoryCard(ButtonBehavior, BoxLayout):
     name = StringProperty("")
     icon_source = StringProperty("")
-
+    card_height = NumericProperty(dp(180))
+    icon_size = NumericProperty(dp(100))
 
 
 class EntryListItem(ButtonBehavior, BoxLayout):
@@ -31,10 +33,8 @@ class EntryListItem(ButtonBehavior, BoxLayout):
     data = DictProperty({})
 
 
-
 class ClickableHeader(ButtonBehavior, BoxLayout):
     pass
-
 
 
 class RotatableArrow(Image):
@@ -57,7 +57,6 @@ class RotatableArrow(Image):
             PopMatrix()
 
 
-
 class ExpandableSection(BoxLayout):
     is_open = BooleanProperty(True)
     stored_widgets = ListProperty([])
@@ -65,12 +64,13 @@ class ExpandableSection(BoxLayout):
     def __init__(self, title, icon, **kwargs):
         super().__init__(orientation="vertical", size_hint_y=None, **kwargs)
         self.spacing = dp(8)
+        app = App.get_running_app()
 
         # ---------- HEADER ----------
         self.header = ClickableHeader(
             orientation="horizontal",
             size_hint_y=None,
-            height=dp(45),
+            height=app.FONT_SUBCATEGORY * 2.2,
             padding=[dp(10), dp(6)],
             spacing=dp(10)
         )
@@ -89,11 +89,14 @@ class ExpandableSection(BoxLayout):
             text=str(title).upper(),
             color=COLOR_ORANGE,
             bold=True,
-            font_size="16sp",
+            font_size=app.FONT_SUBCATEGORY,
             size_hint_x=None,
             halign="left",
             valign="middle"
         )
+
+        # ✅ dynamic update when scaling changes
+        app.bind(FONT_SUBCATEGORY=lambda instance, value: setattr(self.title_label, "font_size", value))
 
         # ✅ FIX: keep label compact like before
         self.title_label.bind(

@@ -157,7 +157,7 @@ class ArticleScreen(Screen):
             desc_lbl = Label(
                 text=desc_text,
                 color=[0.3, 0.3, 0.3, 1],
-                font_size='18sp',
+                font_size='20sp',
                 italic=True,
                 size_hint_y=None,
                 halign='left'
@@ -173,7 +173,7 @@ class ArticleScreen(Screen):
             for link in url_list:
                 url_box = BoxLayout(orientation='horizontal', size_hint_y=None, height=dp(30), spacing=dp(10))
                 url_box.add_widget(Image(source='assets/icons/link2.png', size_hint_x=None, width=dp(20)))
-                url_btn = Button(text=link, color=[0.1, 0.4, 0.8, 1], background_color=[0,0,0,0], font_size='15sp', underline=True, halign='left', shorten=True, shorten_from='right', size_hint_x=1)
+                url_btn = Button(text=link, color=[0.1, 0.4, 0.8, 1], background_color=[0,0,0,0], font_size='18sp', underline=True, halign='left', shorten=True, shorten_from='right', size_hint_x=1)
                 url_btn.bind(size=lambda s, w: setattr(s, 'text_size', (w[0], None)))
                 url_btn.bind(on_release=lambda x, u=link: self.open_url(u))
                 url_box.add_widget(url_btn)
@@ -197,7 +197,7 @@ class ArticleScreen(Screen):
             # --- STEP HEADLINE ---
             h1 = safe_str(step.get('Headline'))
             if h1:
-                lbl = Label(text=h1, color=COLOR_BLUE, bold=True, font_size='20sp', size_hint_y=None, halign='left')
+                lbl = Label(text=h1, color=COLOR_BLUE, bold=True, font_size='24sp', size_hint_y=None, halign='left')
                 lbl.bind(size=lambda s, w: setattr(s, 'text_size', (w[0], None)), texture_size=lambda inst, val: setattr(inst, 'height', val[1]))
                 card.add_widget(lbl)
 
@@ -205,36 +205,74 @@ class ArticleScreen(Screen):
             h2 = safe_str(step.get('Header_2'))
             if h2:
                 # Styled as Orange, Bold, slightly smaller than Headline
-                h2_lbl = Label(text=h2, color=COLOR_ORANGE, bold=True, font_size='17sp', size_hint_y=None, halign='left')
+                h2_lbl = Label(text=h2, color=COLOR_ORANGE, bold=True, font_size='19sp', size_hint_y=None, halign='left')
                 h2_lbl.bind(size=lambda s, w: setattr(s, 'text_size', (w[0], None)), texture_size=lambda inst, val: setattr(inst, 'height', val[1]))
                 card.add_widget(h2_lbl)
 
             # --- STEP INSTRUCTION ---
             ins = safe_str(step.get('Instruction'))
             if ins:
-                lbl = Label(text=ins, color=[0.2, 0.2, 0.2, 1], font_size='18sp', size_hint_y=None, halign='left')
+                lbl = Label(text=ins, color=[0.2, 0.2, 0.2, 1], font_size='20sp', size_hint_y=None, halign='left')
                 lbl.bind(size=lambda s, w: setattr(s, 'text_size', (w[0], None)), texture_size=lambda inst, val: setattr(inst, 'height', val[1]))
                 card.add_widget(lbl)
 
             # --- CODE SNIPPET (Stable Logic) ---
             code = safe_str(step.get('Code_Snippet'))
             if code:
+                app = App.get_running_app()   # ✅ ADD THIS
+
                 code_anchor = AnchorLayout(anchor_x='right', anchor_y='top', size_hint_y=None)
-                code_box = BoxLayout(orientation='vertical', size_hint_y=None, padding=[dp(12), dp(12), dp(80), dp(12)])
+
+                code_box = BoxLayout(
+                    orientation='vertical',
+                    size_hint_y=None,
+                    padding=[dp(12), dp(12), dp(80), dp(12)]
+                )
+
                 with code_box.canvas.before:
                     Color(rgba=[0.15, 0.15, 0.15, 1])
-                    code_box.bg_rect = RoundedRectangle(pos=code_box.pos, size=code_box.size, radius=[dp(6),])
+                    code_box.bg_rect = RoundedRectangle(
+                        pos=code_box.pos,
+                        size=code_box.size,
+                        radius=[dp(6),]
+                    )
+
                 code_box.bind(minimum_height=code_box.setter('height'))
                 code_box.bind(pos=self._update_graphics, size=self._update_graphics)
-                code_lbl = Label(text=code, font_family='Roboto', color=[1, 0.5, 0, 1], font_size='15sp', size_hint_y=None, halign='left')
-                code_lbl.bind(size=lambda s, w: setattr(s, 'text_size', (w[0], None)), texture_size=lambda inst, val: setattr(inst, 'height', val[1]))
+
+                code_lbl = Label(
+                    text=code,
+                    font_name='RobotoMono-Regular',
+                    color=[1, 0.5, 0, 1],
+                    font_size=app.FONT_CODE,   # ✅ HERE
+                    line_height = 1.3,
+                    size_hint_y=None,
+                    halign='left'
+                )
+
+                code_lbl.bind(
+                    size=lambda s, w: setattr(s, 'text_size', (w[0], None)),
+                    texture_size=lambda inst, val: setattr(inst, 'height', val[1])
+                )
+
                 code_box.add_widget(code_lbl)
                 code_anchor.add_widget(code_box)
+
                 code_box.bind(height=code_anchor.setter('height'))
-                copy_btn = Button(text="Copy", size_hint=(None, None), size=(dp(70), dp(40)), background_color=[0.3, 0.3, 0.3, 1])
+
+                copy_btn = Button(
+                    text="Copy",
+                    size_hint=(None, None),
+                    size=(dp(90), dp(45)),
+                    font_size=app.FONT_BUTTON,   # ✅ ADD THIS
+                    background_color=[0.3, 0.3, 0.3, 1]
+                )
+
                 copy_btn.bind(on_release=lambda x, c=code: self.copy_to_clipboard(x, c))
                 code_anchor.add_widget(copy_btn)
+
                 card.add_widget(code_anchor)
+
 
             # --- STEP SCREENSHOT ---
             screenshot = safe_str(step.get('Screenshot'))
@@ -277,7 +315,7 @@ class ArticleScreen(Screen):
                         text=link,
                         color=[0.1, 0.4, 0.8, 1],
                         background_color=[0, 0, 0, 0],
-                        font_size='15sp',
+                        font_size='17sp',
                         halign='left',
                         shorten=True,
                         shorten_from='right',
@@ -301,10 +339,10 @@ class ArticleScreen(Screen):
                 note_container.add_widget(
                     Image(source=get_icon_path("note.png"),
                         size_hint=(None, None),
-                        size=(dp(24), dp(24)), pos_hint={'top': 1})
+                        size=(dp(32), dp(32)), pos_hint={'top': 1})
                 )
                 markup_text = "[b][color=ff8b02]NOTE:[/color][/b]\n" + note
-                n_lbl = Label(text=markup_text, markup=True, color=[0.2, 0.2, 0.2, 1], font_size='16sp', italic=True, size_hint_y=None, halign='left', valign='top')
+                n_lbl = Label(text=markup_text, markup=True, color=[0.2, 0.2, 0.2, 1], font_size='20sp', italic=True, size_hint_y=None, halign='left', valign='top')
                 n_lbl.bind(size=lambda s, w: setattr(s, 'text_size', (w[0], None)), texture_size=lambda inst, val: setattr(inst, 'height', val[1]))
                 note_container.add_widget(n_lbl)
                 card.add_widget(note_container)

@@ -25,16 +25,35 @@ echo "[INFO] Activating virtual environment..."
 source "$VENV_DIR/bin/activate"
 
 # ----------------------------------------
-# VERIFY PYTHON
+# VERIFY ENV
 # ----------------------------------------
 echo "[INFO] Python in use:"
-python --version
+"$VENV_DIR/bin/python" --version
+
 echo "[INFO] Executable:"
 which python
+
+# verify kivy installed
+if ! "$VENV_DIR/bin/python" -c "import kivy" &> /dev/null; then
+    echo "[ERROR] Kivy not installed in venv."
+    echo "Run ./install.sh again."
+    exit 1
+fi
+
+# ----------------------------------------
+# ENSURE PYTHON PACKAGE STRUCTURE
+# ----------------------------------------
+
+if [ ! -f "$APP_DIR/src/__init__.py" ]; then
+    echo "[WARNING] src/__init__.py missing → creating it"
+    touch "$APP_DIR/src/__init__.py"
+fi
 
 # ----------------------------------------
 # RUN APP
 # ----------------------------------------
 echo "[INFO] Starting application..."
-python -m src.main
 
+cd "$APP_DIR"
+
+"$VENV_DIR/bin/python" -m src.main

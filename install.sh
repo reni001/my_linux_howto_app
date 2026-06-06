@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-
 set -e
 
 echo ""
@@ -37,156 +36,155 @@ else
 fi
 
 # ----------------------------------------
-# PYTHON AUTO DETECTION
+# INSTALL SYSTEM DEPENDENCIES
 # ----------------------------------------
 
-echo "[INFO] Detecting Python..."
+echo "[INFO] Detecting operating system..."
 
+if [ -f /etc/os-release ]; then
+    . /etc/os-release
+    OS=${ID_LIKE:-$ID}
+else
+    OS=$(uname -s)
+fi
+
+echo "[INFO] OS detected: $OS"
+
+install_ubuntu() {
+    echo "[INFO] Installing Ubuntu/Debian dependencies..."
+    sudo apt update
+    sudo apt install -y \
+        python3-venv python3-dev build-essential \
+        libgl1-mesa-dev libgles2-mesa-dev \
+        libgstreamer1.0-dev gstreamer1.0-plugins-base \
+        libmtdev-dev libjpeg-dev libpng-dev pkg-config
+}
+
+install_fedora() {
+    echo "[INFO] Installing Fedora dependencies..."
+    sudo dnf install -y \
+        python3-devel gcc gcc-c++ make \
+        SDL2 SDL2_image SDL2_ttf SDL2_mixer \
+        mesa-libGL mesa-libGLES \
+        gstreamer1 gstreamer1-plugins-base \
+        mtdev-devel libjpeg-devel libpng-devel pkgconfig
+}
+
+install_arch() {
+    echo "[INFO] Installing Arch dependencies..."
+    sudo pacman -Sy --needed --noconfirm \
+        python base-devel \
+        sdl2 sdl2_image sdl2_ttf sdl2_mixer \
+        mesa gst-plugins-base gst-libav \
+        mtdev libjpeg-turbo libpng pkgconf
+}
+
+case "$OS" in
+    *debian*) install_ubuntu ;;
+    *fedora*) install_fedora ;;
+    *arch*) install_arch ;;
+    *)
+        echo "[WARNING] Unsupported OS: $OS"
+        ;;
+esac
+
+# ----------------------------------------
+# PYTHON DETECTION
+# ----------------------------------------
 
 echo "[INFO] Detecting Python..."
 
 if command -v python3.12 &> /dev/null; then
     PYTHON_BIN="python3.12"
-    echo "[INFO] ✅ Using Python 3.12 (recommended)"
 
 elif command -v python3.11 &> /dev/null; then
     PYTHON_BIN="python3.11"
-    echo "[INFO] ✅ Using Python 3.11"
 
 elif command -v python3.10 &> /dev/null; then
     PYTHON_BIN="python3.10"
-    echo "[INFO] ✅ Using Python 3.10"
 
 elif command -v python3 &> /dev/null; then
-    PY_VERSION=$(python3 -c 'import sys; print(".".join(map(str, sys.version_info[:2])))')
-
-    echo "[WARNING] ⚠️ Using system Python $PY_VERSION"
-    echo "[WARNING] Some features (sync, Kivy, pandas) may behave differently"
-
+    if ! python3 -c "import sys; exit(0 if sys.version_info >= (3,8) else 1)"; then
+        echo "[ERROR] Python too old (<3.8)"
+        exit 1
+    fi
     PYTHON_BIN="python3"
 
 else
-    echo "[ERROR] ❌ Python not found. Please install Python 3.8+"
+    echo "[ERROR] Python not found"
     exit 1
 fi
-
 
 echo "[INFO] Using $PYTHON_BIN"
 
 # ----------------------------------------
-# CREATE VIRTUAL ENVIRONMENT
+# CREATE VENV
 # ----------------------------------------
 
 echo "[INFO] Creating virtual environment..."
 
-if [ -d "$VENV_DIR" ]; then
-    echo "[INFO] Reusing existing virtual environment"
-else
+if [ ! -d "$VENV_DIR" ]; then
     $PYTHON_BIN -m venv "$VENV_DIR"
 fi
+
 source "$VENV_DIR/bin/activate"
 
 # ----------------------------------------
-# INSTALL DEPENDENCIES
+# INSTALL PYTHON DEPENDENCIES
 # ----------------------------------------
 
-echo "[INFO] Installing dependencies..."
-echo "[INFO] If Kivy installation fails, install system deps:"
-echo " Arch: sudo pacman -S base-devel sdl2 sdl2_image sdl2_ttf sdl2_mixer mesa"
-echo " Ubuntu: sudo apt install build-essential libsdl2-dev"
-
-
-if ! ping -c 1 github.com &> /dev/null; then
-    echo "[ERROR] No internet connection detected"
-    exit 1
-fi
+echo "[INFO] Installing Python dependencies..."
 
 pip install --upgrade pip setuptools wheel
-echo "[INFO] Installing dependencies from requirements.txt..."
-pip install -r requirements.txt
 
+if ! pip install -r requirements.txt; then
+    echo "[WARNING] Fallback install..."
+    pip install "kivy[base]" pillow requests firebase_admin
+fi
+
+pip list
 
 # ----------------------------------------
 # CREATE RUNTIME DIRECTORIES
 # ----------------------------------------
 
-echo "[INFO] Creating runtime directories..."
-
-mkdir -p "$DATA_DIR"
-mkdir -p "$ASSETS_DIR"
+mkdir -p "$DATA_DIR" "$ASSETS_DIR"
 
 # ----------------------------------------
-# COPY firebase.json (CRITICAL PART)
+# COPY CONFIG + ASSETS
 # ----------------------------------------
 
-echo "[INFO] Installing firebase.json..."
+cp "$APP_DIR/config/firebase.json" "$DATA_DIR/firebase.json"
 
-if [ -f "$APP_DIR/config/firebase.json" ]; then
-    cp "$APP_DIR/config/firebase.json" "$DATA_DIR/firebase.json"
-    echo "[INFO] ✅ firebase.json copied to:"
-    echo "       $DATA_DIR/firebase.json"
-else
-    echo "[ERROR] ❌ firebase.json NOT found!"
-    echo ""
-    echo "Expected at:"
-    echo "   $APP_DIR/config/firebase.json"
-    echo ""
-    echo "Fix:"
-    echo "   Make sure the file exists after cloning the repo."
-    echo ""
-    exit 1
+rsync -av --delete "$APP_DIR/assets/" "$ASSETS_DIR/" || cp -r "$APP_DIR/assets" "$ASSETS_DIR"
+
+
+# ----------------------------------------
+# ENSURE PYTHON PACKAGE STRUCTURE
+# ----------------------------------------
+
+if [ ! -f "$APP_DIR/src/__init__.py" ]; then
+    echo "[INFO] Creating src/__init__.py"
+    touch "$APP_DIR/src/__init__.py"
 fi
 
-#-----------------------------------------
-# COPY assets
-#-----------------------------------------
 
-echo "[INFO] Copying assets to runtime directory..."
+chmod +x "$APP_DIR/run.sh"
+chmod +x "$APP_DIR/run.fish"
 
-ASSETS_SRC="$APP_DIR/assets"
-ASSETS_DST="$HOME/.local/share/linux-howto/assets"
-
-mkdir -p "$ASSETS_DST"
-
-if [ -d "$ASSETS_SRC" ]; then
-
-    if command -v rsync &> /dev/null; then
-        rsync -av --delete "$ASSETS_SRC/" "$ASSETS_DST/"
-    else
-        echo "[WARNING] rsync not found → using cp fallback"
-        rm -rf "$ASSETS_DST"
-        cp -r "$ASSETS_SRC" "$ASSETS_DST"
-    fi
-
-    echo "[INFO] ✅ Assets (icons + screenshots) copied successfully"
-else
-    echo "[ERROR] ❌ Assets folder not found at: $ASSETS_SRC"
-    exit 1
-fi
 
 # ----------------------------------------
-# VERIFY INSTALLATION (VERY IMPORTANT)
-# ----------------------------------------
-
-echo "[INFO] Verifying installation..."
-
-if [ -f "$DATA_DIR/firebase.json" ]; then
-    echo "[INFO] ✅ firebase.json is correctly installed"
-else
-    echo "[ERROR] ❌ firebase.json missing after copy!"
-    exit 1
-fi
-
-# ----------------------------------------
-# OPTIONAL FIRST RUN TEST
+# TEST RUN
 # ----------------------------------------
 
 echo "[INFO] Running first test..."
 
-if $PYTHON_BIN -m src.main; then
+cd "$APP_DIR"
+
+if "$VENV_DIR/bin/python" -m src.main; then
     echo "[INFO] ✅ App started successfully"
 else
-    echo "[WARNING] App exited with warnings (can be normal on first run)"
+    echo "[WARNING] First run produced warnings"
 fi
 
 # ----------------------------------------
@@ -194,25 +192,8 @@ fi
 # ----------------------------------------
 
 echo ""
-echo "=========================================="
-echo " ✅ INSTALLATION COMPLETE"
-echo "=========================================="
+echo "✅ INSTALL COMPLETE"
 echo ""
-echo "To run the app:"
-echo ""
-echo "cd $APP_DIR"
-echo "source venv/bin/activate"
-echo "python -m src.main"
-echo ""
-echo "Or use:"
-echo "   ./run.sh"
-echo ""
-
-echo "[INFO] Verifying assets..."
-
-if [ -d "$ASSETS_DST/icons" ] && [ "$(ls -A "$ASSETS_DST/icons")" ]; then
-    echo "[INFO] ✅ Icons installed"
-else
-    echo "[WARNING] ⚠️ Icons missing"
-fi
-
+echo "Run with:"
+echo "cd $APP_DIR && source venv/bin/activate && python -m src.main"
+echo "or: ./run.sh"

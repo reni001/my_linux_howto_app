@@ -77,7 +77,7 @@ from kivy.app import App
 from kivy.lang import Builder
 from kivy.clock import Clock
 from kivy.core.window import Window
-from kivy.properties import StringProperty, BooleanProperty, ListProperty
+from kivy.properties import StringProperty, BooleanProperty, ListProperty, NumericProperty
 from kivy.metrics import dp
 from kivy.uix.screenmanager import ScreenManager, FadeTransition
 from kivy.uix.boxlayout import BoxLayout
@@ -99,7 +99,32 @@ if sys.version_info >= (3, 14):
     print("💡 Recommended: Use Python 3.12 if you encounter problems\n")
 
 # --- CONFIGURATION ---
-Window.size = (500, 850)
+def setup_window(*args):
+
+    # ✅ get real screen size AFTER window is ready
+    screen_w, screen_h = Window.system_size
+
+    # ✅ use most of height
+    HEIGHT = int(screen_h * 0.9)
+
+    # ✅ phone ratio (9:16)
+    WIDTH = int(HEIGHT * 9 / 16)
+
+    Window.size = (WIDTH, HEIGHT)
+
+    # ✅ center window
+    Window.left = int((screen_w - WIDTH) / 2)
+    Window.top = int((screen_h - HEIGHT) / 2)
+
+# ✅ IMPORTANT: run AFTER window is created
+
+# ✅ Only apply on desktop
+if platform.system() != "Linux" or "ANDROID_ARGUMENT" not in os.environ:
+    Window.size = (700, 1200
+                   )
+    Window.minimum_width = 480
+    Window.minimum_height = 850
+    Window.resizable = True
 
 # ✅ ensure runtime dirs & config exist
 initialize_first_run()
@@ -189,6 +214,15 @@ class LinuxHowToApp(App):
 
     project_root = StringProperty("")
 
+    # --- Typography scale ---   _CATEGORY = NumericProperty(26)
+    FONT_SUBCATEGORY = NumericProperty(20)
+    FONT_TITLE = NumericProperty(22)
+    FONT_TEXT = NumericProperty(17)
+    FONT_MENU_TITLE = NumericProperty(20)
+    FONT_MENU_STATUS = NumericProperty(17)
+    FONT_BUTTON = NumericProperty(20)
+    FONT_CODE = NumericProperty(18)
+
     # --- Update button visuals ---
     update_text = StringProperty("Update Content")
     update_bg = ListProperty([1, 0.7, 0.3, 1])          # orange
@@ -240,6 +274,40 @@ class LinuxHowToApp(App):
             # ✅ add more if needed later
         }
 
+    def _get_protected_screenshots(self):
+        """
+        Screenshots that must NEVER be deleted
+        """
+        return {
+            "start.png",
+            "menu.png",
+            "detailscreen.png",
+            "articlescreen.png"
+            # ✅ add more if needed
+        }
+
+    def update_typography_scale(self, *args):
+        """
+        Scale fonts based on current window width.
+        Baseline: desktop layout around 900 px wide = 1.0 scale
+        Clamped so phone remains readable and desktop doesn't grow too much.
+        """
+        base_width = 900.0
+        scale = Window.width / base_width
+
+        # clamp so fonts don't get too tiny or too huge
+        scale = max(0.90, min(scale, 1.25))
+
+        self.FONT_CATEGORY = 26 * scale
+        self.FONT_SUBCATEGORY = 20 * scale
+        self.FONT_TITLE = 22 * scale
+        self.FONT_TEXT = 17 * scale
+        self.FONT_MENU_TITLE = 20 * scale
+        self.FONT_MENU_STATUS = 17 * scale #admin vs user
+        self.FONT_BUTTON = 20 * scale
+        self.FONT_CODE = 18 * scale
+
+
     def clean_unused_icons(self):
         """
         Scan both icon folders and remove unused icons safely.
@@ -251,11 +319,13 @@ class LinuxHowToApp(App):
         paths = get_runtime_paths()
         icons_dir = paths["assets"] / "icons"
         user_dir = paths["assets"] / "user_icons"
+        screens_dir = paths["assets"] / "screenshots"
 
         protected = self._get_protected_icons()
 
         # ✅ 1. Collect all used icons from topics
         used_icons = set()
+        used_screenshots = set()
 
         for topic in self.APP_DATA.get("topics", []):
             for key in ["Topic_Icon", "Cat_Icon", "Sub_Icon"]:
@@ -265,10 +335,21 @@ class LinuxHowToApp(App):
 
         print(f"DEBUG: used icons = {used_icons}")
 
-        deleted = []
+        # ✅ collect screenshots used in steps
+        for step in self.APP_DATA.get("steps", []):
+            shot = str(step.get("Screenshot") or "").strip()
+            if shot:
+                used_screenshots.add(shot)
+
+        print(f"DEBUG: used screenshots = {used_screenshots}")
+
+        deleted_icons = []
+        deleted_screenshots = []
+
 
         # ✅ helper to process a folder
-        def process_folder(folder):
+        def process_folder(folder, used_set, protected_set, deleted_list):
+
             if not folder.exists():
                 return
 
@@ -278,29 +359,41 @@ class LinuxHowToApp(App):
 
                 name = file.name
 
-                # ✅ skip protected
-                if name in protected:
+                if name in protected_set:
                     continue
 
-                # ✅ skip used
-                if name in used_icons:
+                if name in used_set:
                     continue
 
                 try:
                     file.unlink()
-                    deleted.append(name)
-                    print(f"✅ Deleted unused icon: {file}")
+                    deleted_list.append(name)
+                    print(f"✅ Deleted unused file: {file}")
                 except Exception as e:
                     print(f"⚠️ Failed deleting {file}: {e}")
 
         # ✅ scan both folders
-        process_folder(icons_dir)
-        process_folder(user_dir)
+        protected_icons = self._get_protected_icons()
+        protected_screens = self._get_protected_screenshots()
 
-        print(f"🧹 Cleanup complete. Removed {len(deleted)} icons.")
+        # ✅ icons
+        process_folder(icons_dir, used_icons, protected_icons, deleted_icons)
+        process_folder(user_dir, used_icons, protected_icons, deleted_icons)
 
-        # ✅ optional UI feedback
-        self.sync_text = f"Cleanup: {len(deleted)} removed"
+        # ✅ screenshots
+        process_folder(screens_dir, used_screenshots, protected_screens, deleted_screenshots)
+
+        print("🧹 Cleanup complete.")
+        print(f"Icons removed: {len(deleted_icons)}")
+        print(f"Screenshots removed: {len(deleted_screenshots)}")
+
+        self.sync_text = f"Cleanup: {len(deleted_icons + deleted_screenshots)} removed"
+
+        return {
+            "icons": len(deleted_icons),
+            "screenshots": len(deleted_screenshots)
+        }
+
 
     def build_step_index(self):
         self.STEPS_BY_TOPIC = {}
@@ -336,16 +429,18 @@ class LinuxHowToApp(App):
             pos_hint={"center_x": 0.5, "center_y": 0.5}
         )
 
-        # ✅ title (styled like About popup)
-        inner.add_widget(Label(
-            text="[b]Confirm Cleanup[/b]",
+        # ✅ title
+        title_label = Label(
+            text="[b]Cleanup Unused Icons[/b]",
             markup=True,
-            font_size="18sp"
-        ))
+            font_size="18sp",
+            color=self.COLOR_WHITE
+        )
 
-        inner.add_widget(Label(
-            text="Clean all unused icons?"
-        ))
+        message_label = Label(
+            text="Clean all unused icons?",
+            halign="center"
+        )
 
         btn_box = BoxLayout(size_hint_y=None, height="40dp", spacing=10)
 
@@ -356,7 +451,7 @@ class LinuxHowToApp(App):
             color=self.COLOR_WHITE
         )
 
-        btn_no = Button(
+        btn_cancel = Button(
             text="Cancel",
             background_normal='',
             background_color=self.COLOR_GREY_DARK,
@@ -364,7 +459,10 @@ class LinuxHowToApp(App):
         )
 
         btn_box.add_widget(btn_yes)
-        btn_box.add_widget(btn_no)
+        btn_box.add_widget(btn_cancel)
+
+        inner.add_widget(title_label)
+        inner.add_widget(message_label)
         inner.add_widget(btn_box)
 
         root.add_widget(inner)
@@ -379,11 +477,54 @@ class LinuxHowToApp(App):
         )
 
         def run_cleanup(instance):
-            popup.dismiss()
-            self.clean_unused_icons()
+
+            # ✅ step 1 → show "cleaning..."
+            message_label.text = "Cleaning…"
+            btn_yes.disabled = True
+            btn_cancel.disabled = True
+
+            def do_cleanup():
+                try:
+                    result = self.clean_unused_icons()
+
+                    # ✅ step 2 → update UI AFTER cleaning
+                    def update_ui(dt):
+
+                        icons = result.get("icons", 0)
+                        screenshots = result.get("screenshots", 0)
+
+                        message_label.text = (
+                            f"- Cleaning complete -\n\n"
+                            f"{icons} icons deleted\n"
+                            f"{screenshots} screenshots deleted"
+                        )
+
+                        # ✅ replace buttons with CLOSE
+                        btn_box.clear_widgets()
+
+                        btn_close = Button(
+                            text="CLOSE",
+                            background_normal='',
+                            background_color=self.COLOR_BLUE_MEDIUM,
+                            color=self.COLOR_WHITE
+                        )
+
+                        btn_close.bind(on_release=lambda x: popup.dismiss())
+                        btn_box.add_widget(btn_close)
+
+                    Clock.schedule_once(update_ui)
+
+                except Exception as e:
+                    def show_error(dt, err=e):   # ✅ capture error here
+                        message_label.text = f"!!! Cleanup failed\n{err}"
+                    Clock.schedule_once(show_error)
+
+            # ✅ run in background thread (so UI does not freeze)
+            Thread(target=do_cleanup, daemon=True).start()
 
         btn_yes.bind(on_release=run_cleanup)
-        btn_no.bind(on_release=lambda x: popup.dismiss())
+        btn_cancel.bind(on_release=lambda x: popup.dismiss())
+
 
         popup.open()
 
@@ -633,6 +774,10 @@ class LinuxHowToApp(App):
 
         Clock.schedule_once(lambda dt: self.fetch_database(), 0)
         Clock.schedule_once(lambda dt: self.refresh_ui_data(), 0.1)
+
+        Window.bind(size=self.update_typography_scale)
+        Clock.schedule_once(self.update_typography_scale, 0)
+
         return self.sm
 
 
@@ -961,6 +1106,7 @@ class LinuxHowToApp(App):
         paths = get_runtime_paths()
         user_icon = paths["assets"] / "user_icons" / icon_filename
         official_dir = paths["assets"] / "icons"
+        screens_dir = paths["assets"] / "screenshots"
         official_dir.mkdir(parents=True, exist_ok=True)
 
         official_target = official_dir / icon_filename
