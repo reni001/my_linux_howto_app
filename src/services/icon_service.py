@@ -1,6 +1,7 @@
-from pathlib import Path
 import shutil
+from pathlib import Path
 from src.utils.runtime_paths import get_runtime_paths
+
 
 
 def get_icon_path(filename: str) -> str:
@@ -27,6 +28,27 @@ def get_icon_path(filename: str) -> str:
 
     fallback = paths["assets"] / "icons_core" / "howtolinux-icon.png"
     return str(fallback)
+
+
+def copy_icon_to_core(src_path: str) -> str:
+    """
+    Copy a chosen icon into assets/icons_core and return the filename.
+    Reuse existing file if already present.
+    """
+    if not src_path:
+        return ""
+
+    paths = get_runtime_paths()
+    core_dir = paths["assets"] / "icons_core"
+    core_dir.mkdir(parents=True, exist_ok=True)
+
+    filename = Path(src_path).name
+    target = core_dir / filename
+
+    if not target.exists():
+        shutil.copy2(src_path, target)
+
+    return filename
 
 
 def copy_user_icon_to_official(icon_filename: str) -> str:

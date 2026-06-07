@@ -17,66 +17,85 @@
 <StyledButton@Button>:
     background_normal: ''
     background_down: ''
+    background_color: 0, 0, 0, 0
     color: app.COLOR_WHITE
 
 
 # ------ Button Definitions -------
 
-# ✅ BASE BUTTON (inherits your StyledButton)
+<StyledButton@Button>:
+    background_normal: ''
+    background_down: ''
+    background_color: 0, 0, 0, 0
+    color: app.COLOR_WHITE
+
+# ----------------------------
+# GENERIC APP BUTTONS
+# ----------------------------
 <BaseButton@StyledButton>:
     size_hint_y: None
     height: '55dp'
     font_size: app.FONT_BUTTON
     bold: True
 
-# ✅ SECONDARY (grey -> neutral entry)
 <SecondaryButton@BaseButton>:
     background_color: app.COLOR_GREY_DARK if self.state == 'normal' else app.COLOR_GREY_LIGHT
 
-# ✅ PRIMARY (blue  navigation)
 <PrimaryButton@BaseButton>:
     background_color: app.COLOR_BLUE if self.state == 'normal' else app.COLOR_BLUE_DARK_UI
 
-# ✅ ACCENT (cyan → utility)
-<AccentButton@BaseButton>:
-    background_color: app.COLOR_CYAN if self.state == 'normal' else app.COLOR_CYAN_DARK
-
-# ✅ SUCCESS (green → creation)
 <SuccessButton@BaseButton>:
     background_color: app.COLOR_GREEN if self.state == 'normal' else app.COLOR_GREEN_DARK_UI
 
-# ✅ ACCENT (light orange → update)
+<SecondaryBlueButton@BaseButton>:
+    background_color: app.COLOR_BLUE_MEDIUM if self.state == 'normal' else app.COLOR_GREY_LIGHT
+
+<DangerButton@BaseButton>:
+    background_color: app.COLOR_RED if self.state == 'normal' else app.COLOR_RED_DARK
+
+# ----------------------------
+# MENU BUTTONS ONLY
+# ----------------------------
+<MenuButton@BaseButton>:
+    size_hint_y: None
+    height: '55dp'
+    font_size: app.FONT_BUTTON
+    padding: [10, 5]
+
+<MenuNeutralButton@MenuButton>:
+    background_color: app.COLOR_GREY_DARK if self.state == 'normal' else app.COLOR_GREY_LIGHT
+
+<MenuNavButton@MenuButton>:
+    background_color: app.COLOR_BLUE if self.state == 'normal' else app.COLOR_BLUE_DARK_UI
+
+<MenuCreateButton@MenuButton>:
+    background_color: app.COLOR_GREEN if self.state == 'normal' else app.COLOR_GREEN_DARK_UI
+
+<MenuToolButton@MenuButton>:
+    background_color: app.COLOR_PURPLE if self.state == 'normal' else app.COLOR_PURPLE_DARK
+
+<MenuDangerButton@MenuButton>:
+    background_color: app.COLOR_RED if self.state == 'normal' else app.COLOR_RED_DARK
+
+# ----------------------------
+# SPECIAL STATE BUTTONS
+# ----------------------------
 <UpdateButton@BaseButton>:
     background_color: app.update_bg if self.state == 'normal' else app.COLOR_ORANGE_LIGHT_UI
     color: app.update_fg
 
-
-# ✅ ACCENT (dark orange → sync)
-<OrangeButton@BaseButton>:
+<SyncButton@BaseButton>:
     background_color: app.sync_bg if self.state == 'normal' else app.COLOR_ORANGE_DARK_UI
     color: app.sync_fg
 
-# ✅ TOOL (purple – for maintenance tools)
-<ToolButton@BaseButton>:
-    background_color: app.COLOR_PURPLE if self.state == 'normal' else app.COLOR_PURPLE_DARK
-
-# ✅ DANGER (red → destructive)
-<DangerButton@BaseButton>:
-    background_color: app.COLOR_RED if self.state == 'normal' else app.COLOR_RED_DARK
-
-
-# ✅ second SECONDARY (light blue)
-<SecondaryBlueButton@BaseButton>:
-    background_color: app.COLOR_BLUE_MEDIUM if self.state == 'normal' else app.COLOR_GREY_LIGHT
-
-# ✅ Disabled (transparent)
+# ----------------------------
+# ICON BUTTON - Disabled (transparent)
+# ----------------------------
 <IconButton@Button>:
-    background_normal: ''
-    background_down: ''
-    background_color: app.COLOR_TRANSPARENT
     size_hint: None, None
-    size: "40dp", "40dp"
-
+    size: dp(40), dp(40)
+    pos_hint: {"center_y": 0.5}
+    fit_mode: "contain"
 
 
 #----------- Panel Definitions ------------------------
@@ -99,15 +118,9 @@
 
     # LEFT ICON
     IconButton:
-        size_hint_x: None
-        width: dp(48)
-        pos_hint: {"center_y": 0.5}
-        on_release: app.open_app_menu()
-
-        Image:
-            source: app.get_icon_path("menu.png")
-            center: self.parent.center
-            size: app.FONT_TEXT * 1.4, app.FONT_TEXT * 1.4
+        source: app.get_icon_path("menu.png")
+        on_release:
+            app.open_app_menu()
 
     # LEFT SPACER
     Widget:
@@ -151,15 +164,10 @@
 
     # RIGHT ICON
     IconButton:
-        size_hint_x: None
-        width: dp(48)
-        pos_hint: {"center_y": 0.5}
-        on_release: app.toggle_orientation()
-
-        Image:
-            source: app.get_icon_path("screenformate.png")
-            center: self.parent.center
-            size: app.FONT_TEXT * 1.4, app.FONT_TEXT * 1.4
+        source: app.get_icon_path("screenformate.png")
+        size: app.FONT_TEXT * 1.8, app.FONT_TEXT * 1.8
+        on_release:
+            app.toggle_orientation()
 
 <TopBar@StyledPanel>:
     size_hint_y: None
@@ -175,19 +183,9 @@
 
     # ---- LEFT BUTTON ----
     IconButton:
-        size_hint: None, None
-        size: app.FONT_TITLE * 2, app.FONT_TITLE * 2
-        pos_hint: {"center_y": 0.5}
-        opacity: 1 if root.left_action is not None else 0
-        disabled: root.left_action is None
-
+        source: app.get_icon_path("arrow_back.png")
         on_release:
             root.left_action() if root.left_action else None
-
-        Image:
-            source: app.get_icon_path("arrow_back.png")
-            center: self.parent.center
-            size: app.FONT_TITLE * 1.6, app.FONT_TITLE * 1.6
 
     # ---- TITLE ----
     Label:
@@ -202,20 +200,9 @@
 
     # ---- RIGHT ICON ----
     IconButton:
-        size_hint: None, None
-        size: app.FONT_TITLE * 2, app.FONT_TITLE * 2
-        pos_hint: {"center_y": 0.5}
-        opacity: 1 if root.right_icon else 0
-        disabled: not root.right_icon
-
+        source: app.get_icon_path(root.right_icon) if root.right_icon else ""
         on_release:
             root.right_action() if root.right_action else None
-
-        Image:
-            source: app.get_icon_path(root.right_icon) if root.right_icon else ""
-            center: self.parent.center
-            size: app.FONT_TITLE * 1.6, app.FONT_TITLE * 1.6
-
 # -----------------
 
 <JumpToTopButton@ButtonBehavior+Image>:
@@ -318,34 +305,44 @@
                     valign: "middle"
                     text_size: self.size
 
-        SecondaryButton:
+        MenuNeutralButton:
             text: "About App"
             on_release:
-                root.dismiss()      # Closes the slide-out menu first
-                app.open_about_popup()     # Opens the new About popup
+                root.dismiss()
+                app.open_about_popup()
 
-        ToolButton:
+        MenuToolButton:
             text: "Clean Unused Icons & Images"
             on_release:
                 root.dismiss()
                 Clock.schedule_once(lambda dt: app.confirm_clean_icons(), 0)
 
-        PrimaryButton:
+        MenuToolButton:
+            text: "Manage Categories"
+            on_release:
+                root.dismiss()
+                Clock.schedule_once(lambda dt: app.open_category_dialog(), 0)
+
+        MenuToolButton:
+            text: "Manage Subcategories"
+            on_release:
+                root.dismiss()
+                Clock.schedule_once(lambda dt: app.open_subcategory_dialog(), 0)
+
+        MenuNavButton:
             text: "Open Database"
             on_release:
                 root.dismiss()
                 Clock.schedule_once(lambda dt: app.open_database(), 0)
 
-        AccentButton:
+        MenuNavButton:
             text: "Open Assets Folder"
             on_release:
                 root.dismiss()
                 Clock.schedule_once(lambda dt: app.open_assets_folder(), 0)
 
-        SuccessButton:
+        MenuCreateButton:
             text: "Add Topic"
-            disabled: False
-            opacity: 1
             on_release:
                 root.dismiss()
                 Clock.schedule_once(lambda dt: app.open_new_topic(), 0)
@@ -362,7 +359,7 @@
                     rectangle: self.x + 1, self.y + 1, self.width - 2, self.height - 2
                     width: 2
 
-        OrangeButton:
+        SyncButton:
             id: sync_btn
             disabled: not app.is_admin_mode()
             opacity: 1 if app.is_admin_mode() else 0.5
@@ -378,7 +375,7 @@
                     rounded_rectangle: self.x + 1, self.y + 1, self.width - 2, self.height - 2, 0
                     width: 2
 
-        DangerButton:
+        MenuDangerButton:
             text: "Quit Application"
             on_release:
                 root.dismiss()
@@ -475,58 +472,48 @@
             text_size: (self.width, None)
             shorten: True
 
+
     BoxLayout:
         orientation: "horizontal"
         size_hint_x: None
-        width: "130dp"   # adjust if needed
-        spacing: "5dp"
+        width: dp(140)
+        spacing: dp(6)
+        padding: [0, dp(6)]
 
-        # ✅ ONE combined promote/demote button
-        Button:
-            size_hint: None, None
-            size: "36dp", "36dp"
-            background_normal: ""
-            background_color: app.COLOR_WHITE_SOFT
+        # ✅ PROMOTE / DEMOTE
+        IconButton:
+            size: dp(36), dp(36)
 
-            # ✅ only visible in admin mode
             opacity: 1 if app.is_admin_mode() else 0
             disabled: not app.is_admin_mode()
 
-            # ✅ ACTION SWITCH
+            source: app.get_icon_path("upload.png") if root.data.get("source") == "user" else app.get_icon_path("download.png")
+
             on_release:
                 app.promote_topic(root.data) if root.data.get("source") == "user" else app.demote_topic(root.data)
 
-            Image:
-                size: "28dp", "28dp"
-                center_x: self.parent.center_x
-                center_y: self.parent.center_y
-
-                # ✅ ICON SWITCH
-                source: app.get_icon_path("upload.png") if root.data.get("source") == "user" else app.get_icon_path("download.png")
-
         # ✅ EDIT
         IconButton:
+            size: dp(36), dp(36)
+
             disabled: not (app.is_admin_mode() or root.data.get("source") == "user")
             opacity: 1 if (app.is_admin_mode() or root.data.get("source") == "user") else 0.3
-            on_release: app.edit_topic(root.data)
 
-            Image:
-                source: app.get_icon_path("edit.png")
-                center_x: self.parent.center_x
-                center_y: self.parent.center_y
-                size: "28dp", "28dp"
+            source: app.get_icon_path("edit.png")
+
+            on_release: app.edit_topic(root.data)
 
         # ✅ DELETE
         IconButton:
+            size: dp(36), dp(36)
+
             disabled: not (app.is_admin_mode() or root.data.get("source") == "user")
             opacity: 1 if (app.is_admin_mode() or root.data.get("source") == "user") else 0.3
+
+            source: app.get_icon_path("delete.png")
+
             on_release: app.delete_topic(root.data)
 
-            Image:
-                source: app.get_icon_path("delete.png")
-                center_x: self.parent.center_x
-                center_y: self.parent.center_y
-                size: "28dp", "28dp"
 
 #----------- Screens --------------
 <MenuScreen>:
@@ -590,7 +577,7 @@
 
                     Image:
                         source: app.get_icon_path("arrow_back.png")
-                        size: app.FONT_TITLE * 1.5, app.FONT_TITLE * 1.5
+                        size: app.FONT_TITLE * 2, app.FONT_TITLE * 2
                         center_x: self.parent.center_x   # ✅ CRITICAL
                         center_y: self.parent.center_y   # ✅ CRITICAL
 
@@ -636,18 +623,9 @@
                 height: app.FONT_TITLE * 3.4
                 spacing: app.FONT_TEXT * 0.5
 
-                Button:
-                    background_normal: ''
-                    background_color: app.COLOR_TRANSPARENT
-                    size_hint_x: None
-                    width: app.FONT_TITLE * 2
+                IconButton:
+                    source: app.get_icon_path("arrow_back.png")
                     on_release: root.manager.current = 'menu'
-
-                    Image:
-                        source: app.get_icon_path("arrow_back.png")
-                        center_x: self.parent.center_x
-                        center_y: self.parent.center_y
-                        size: app.FONT_TITLE * 1.6, app.FONT_TITLE * 1.6
 
                 TextInput:
                     id: local_search

@@ -31,7 +31,7 @@ from src.services.editor_service import (
 from src.logic.taxonomy import build_taxonomy
 from src.ui.components import HoverRow, EntryListItem, ExpandableSection
 from src.ui.file_picker_popup import open_file_picker
-
+from src.services.subcategory_service import load_subcategories
 
 
 class AddTopicScreen(Screen):
@@ -47,6 +47,31 @@ class AddTopicScreen(Screen):
         Wrap text with safe font (NotoSans) for full unicode support.
         """
         return f"[font=NotoSans]{text}[/font]"
+
+    def _load_defined_subcategories(self):
+        """
+        Load subcategories only from subcategories.json.
+        Returns:
+            - a sorted list of subcategory names
+            - a mapping {subcategory_name_lower: icon_filename}
+        """
+        subs_data = load_subcategories()
+
+        names = []
+        icon_map = {}
+
+        for item in subs_data:
+            name = str(item.get("name") or "").strip()
+            icon = str(item.get("icon") or "").strip()
+
+            if not name:
+                continue
+
+            names.append(name)
+            icon_map[name.lower()] = icon
+
+        names = sorted(set(names), key=str.lower)
+        return names, icon_map
 
     def _now(self):
         return datetime.now().isoformat(timespec="seconds")
@@ -147,13 +172,15 @@ class AddTopicScreen(Screen):
                 data = app.APP_DATA
                 topics = data.get("topics", [])
 
-
                 (
                     self.cat_to_icon,
                     self.sub_to_icon,
                     self.sub_icon_global,
                     self.all_subcategories,
                 ) = build_taxonomy(topics)
+
+                # ✅ NEW: load subcategories only from json definition
+                self.defined_subcategories, self.defined_sub_icons = self._load_defined_subcategories()
 
                 self._populate_category_spinner()
 
@@ -187,39 +214,27 @@ class AddTopicScreen(Screen):
         self.ids.sub_icon.text = ""
 
     def on_category_changed(self, category_text):
-        if not hasattr(self, "sub_to_icon"):
+        if not hasattr(self, "cat_to_icon"):
             return
 
         if getattr(self, "_skip_callbacks", False):
             return
 
-        #if category_text == "Click to choose category":
-        #    return
-        """
-        Called by KV on category spinner change.
-        Updates subcategory dropdown and auto-fills cat_icon / sub_icon.
-        """
         cat = str(category_text).strip()
 
         # auto-fill Cat_Icon
         cat_icon = self.cat_to_icon.get(cat, "")
         self.ids.cat_icon.text = cat_icon
 
-        # update subcategory list
-        subs = sorted(
-            [s.capitalize() for s in self.all_subcategories],
-            key=str.lower
-        )
-
+        # ✅ use only subcategories defined in subcategories.json
+        subs = list(getattr(self, "defined_subcategories", []))
 
         if not subs:
-            subs = ["General"]   # ✅ fallback
+            subs = ["General"]
 
         self.ids.subcategory.values = subs
 
-        # start clean: do NOT keep old selection
         if not self.edit_mode:
-            # only reset in add mode
             self.ids.subcategory.text = "Select Subcategory"
             self.ids.sub_icon.text = ""
 
@@ -229,28 +244,28 @@ class AddTopicScreen(Screen):
         if getattr(self, "_skip_callbacks", False):
             return
 
-        if subcategory_text == "Click to choose subcategory":
+        if subcategory_text in ("Click to choose subcategory", "Select Subcategory"):
             return
 
-        """
-        Called by KV on subcategory spinner change.
-        Auto-fills Sub_Icon using the (Category, Subcategory) mapping.
-        """
-        cat = str(self.ids.category.text).strip()
         sub = str(subcategory_text).strip().lower()
 
-        # ✅ first try category-specific
-        sub_icon = self.sub_to_icon.get((cat, sub), "")
+        # ✅ FIRST: icon from subcategories.json
+        sub_icon = getattr(self, "defined_sub_icons", {}).get(sub, "")
 
-        # ✅ fallback to GLOBAL mapping
+        # optional fallback to old taxonomy-based mapping
         if not sub_icon:
-            sub_icon = self.sub_icon_global.get(sub, "")
+            cat = str(self.ids.category.text).strip()
 
-        # ✅ fallback to category icon
-        if not sub_icon:
-            sub_icon = self.ids.cat_icon.text
+            sub_icon = self.sub_to_icon.get((cat, sub), "")
+
+            if not sub_icon:
+                sub_icon = self.sub_icon_global.get(sub, "")
+
+            if not sub_icon:
+                sub_icon = self.ids.cat_icon.text
 
         self.ids.sub_icon.text = sub_icon
+
 
 
     def cancel_edit(self):

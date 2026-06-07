@@ -1,3 +1,54 @@
+VERSION 1.9.0 — Category System Integration
+
+Features
+- Added full category management system (create, edit, delete)
+- Introduced categories.json as configuration registry
+- Categories now auto-generated from topic data
+- Added category dialog UI (mirrors subcategory management)
+- Integrated Cat_Icon support across system
+
+Improvements
+- Unified data architecture using app.APP_DATA (removed global state inconsistencies)
+- Improved startup flow with async-safe taxonomy generation
+- Synchronized category and subcategory generation logic
+
+Fixes
+- Fixed race condition where taxonomy generation ran before Firebase data was loaded
+- Fixed inconsistent data access between services and UI
+- Corrected icon fallback behaviour when Cat_Icon missing
+
+VERSION 1.8.0 — Dialog System & Architecture Refactor
+
+Improvements
+Refactored main application architecture with clear separation between UI, dialogs, and services
+Reduced complexity in main.py by delegating UI logic to dedicated dialog components
+Improved maintainability through centralised dialog handling system
+Enhanced code readability with cleaner responsibility boundaries (App → Services → UI)
+Improved consistency of popup behaviour across the application
+Streamlined icon handling using unified icon service
+
+Features
+Introduced reusable dialog system:
+
+cleanup_dialog
+confirm_dialog
+promotion_dialog
+
+Added centralised cleanup dialog with preview, delete, and undo workflow
+Added reusable confirmation dialog component for destructive actions
+Added reusable promotion dialog for topic publishing workflow
+Integrated dedicated icon service for resolving, copying, and managing assets
+Modularised topic promotion/demotion logic into service layer
+Improved extensibility for future UI components and dialogs
+
+Fixes
+Fixed inconsistent popup behaviour caused by duplicate inline implementations
+Resolved cleanup dialog rendering inconsistencies
+Fixed icon handling duplication across multiple modules
+Fixed multiple sources of UI state inconsistencies in main.py
+Removed legacy popup code paths causing maintenance issues
+Improved stability of delete and promotion workflows
+
 VERSION 1.7.0 — UI System & AppWindow Upgrade
 
 Improvements

@@ -15,6 +15,7 @@ from pathlib import Path
 from src.utils.first_run import initialize_first_run
 from src.utils.runtime_paths import is_dev_mode, get_runtime_paths
 from src.services.update_content import update_assets, update_cache
+from src.services.category_service import generate_categories_from_topics
 from src.services.editor_service import is_admin_enabled
 from src.services.editor_service import delete_topic_from_firebase
 from src.services.icon_service import (
@@ -23,7 +24,7 @@ from src.services.icon_service import (
     copy_official_icon_to_user_icons,
     delete_official_icon_if_unused
 )
-
+from src.services.subcategory_service import generate_from_topics
 from src.services.topic_service import do_promote_topic, do_demote_topic
 from src.screens.add_topic_screen import AddTopicScreen
 from src.services.icon_cleanup import (
@@ -41,7 +42,9 @@ from src.screens.app_info_screen import AppInfoScreen
 from src.ui.about_popup import show_about_popup
 from src.ui.dialogs.cleanup_dialog import show_cleanup_dialog, undo_cleanup
 from src.ui.dialogs.confirm_dialog import show_confirm_dialog
+from src.ui.dialogs.subcategory_dialog import show_subcategory_dialog
 from src.ui.dialogs.promotion_dialog import show_promotion_dialog
+from src.ui.dialogs.category_dialog import show_category_dialog
 from src.ui.styled_popup import create_popup_container
 from src.ui.window_manager import apply_desktop_window_defaults, toggle_orientation
 
@@ -108,6 +111,9 @@ from kivy.uix.popup import Popup
 from kivy.uix.scrollview import ScrollView
 from kivy.graphics import Color, RoundedRectangle, Line
 
+
+from src.services.subcategory_service import generate_from_topics
+
 # ----- Check if python 3.12 is installed ---------
 
 if sys.version_info >= (3, 14):
@@ -141,7 +147,7 @@ LabelBase.register(
 # ✅ ensure runtime dirs & config exist
 initialize_first_run()
 
-# --- UI DEFINITIONS (KV) ---
+# --- UI DEFINITIONS (KV) --
 # The KV layout was moved from the inlined KV string to an external file.
 # This is a lossless move: main.kv contains the exact same KV content as before.
 KV = None  # KV now lives in main.kv
@@ -321,9 +327,34 @@ class LinuxHowToApp(App):
         popup.dismiss()              # ✅ close popup first
         self.sm.current = "app_info" # ✅ then switch screen
 
+
     def fetch_database(self):
-        fetch_database(self)          # ✅ call imported service
-        self.build_step_index()       # ✅ rebuild index after data loads
+        # 1) Load data from Firebase / cache
+        fetch_database(self)
+
+        # 2) Build step index from the freshly loaded data
+        Clock.schedule_once(self._generate_taxonomies_when_ready, 0.2)
+        self.build_step_index()
+
+    def _generate_taxonomies_when_ready(self, _dt=0):
+        topics = self.APP_DATA.get("topics", [])
+
+        print("DEBUG taxonomy wait -> topics in self.APP_DATA:", len(topics))
+
+        # wait until Firebase/app data is really present
+        if not topics:
+            Clock.schedule_once(self._generate_taxonomies_when_ready, 0.2)
+            return
+
+        # ✅ now data is really available
+        generate_from_topics(self, overwrite=False)
+        generate_categories_from_topics(self, overwrite=True)   # keep True only while debugging
+
+        print("✅ Taxonomy generation completed")
+
+
+
+
 
     def refresh_data_only(self):
         fetch_database(self)          # ✅ lightweight data refresh
@@ -756,7 +787,6 @@ class LinuxHowToApp(App):
         )
 
     #---- update button behaviour -----
-
     def update_app_from_git(self, *args):
 
         # UI state
@@ -835,7 +865,6 @@ class LinuxHowToApp(App):
         self.update_border = self.COLOR_TRANSPARENT           # ✅ reset
 
     #---- syncronize button behaviour -----
-
     def sync_success(self, *args):
         self.sync_text = "Sync successful ✓"
         self.sync_bg = self.COLOR_WHITE_SOFT
@@ -882,6 +911,12 @@ class LinuxHowToApp(App):
 
     def open_about_popup(self, *args):
         show_about_popup(self)
+
+    def open_category_dialog(self):
+        show_category_dialog(self)
+
+    def open_subcategory_dialog(self):
+        show_subcategory_dialog(self)
 
 class ClickableHeader(ButtonBehavior, BoxLayout):
     def __init__(self, **kwargs):
