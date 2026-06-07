@@ -245,6 +245,9 @@ class LinuxHowToApp(App):
     admin_enabled = BooleanProperty(False)   # ✅ for disabeling admin buttons
     admin_override = BooleanProperty(False)
 
+    is_landscape = False
+    previous_size = None
+
     #----------helpers-----------
     def _get_protected_icons(self):
         """
@@ -610,6 +613,7 @@ class LinuxHowToApp(App):
         delete_local_topic(topic_id)
         self.refresh_data_only()
 
+    #----------- update version ----------
     def update_version_labels(self):
         """
         Update all version labels using self.metadata (Excel)
@@ -644,9 +648,42 @@ class LinuxHowToApp(App):
     def on_start(self):
         pass
 
+    #--------- screen rotation ----------
     def toggle_orientation(self):
-        w, h = Window.size
-        Window.size = (850, 500) if w < h else (500, 850)
+        from kivy.core.window import Window
+        from kivy.clock import Clock
+
+        # store current size for restore
+        if not self.is_landscape:
+            self.previous_size = Window.size
+
+        min_w = Window.minimum_width or 400
+        min_h = Window.minimum_height or 600
+
+        if not self.is_landscape:
+            # switch to landscape safely
+            new_w = max(900, min_w)
+            new_h = max(550, min_h)
+
+            Window.size = (new_w, new_h)
+            self.is_landscape = True
+
+        else:
+            # restore previous size
+            if self.previous_size:
+                Window.size = self.previous_size
+            else:
+                Window.size = (600, 1000)
+
+            self.is_landscape = False
+
+        # ✅ VERY IMPORTANT: force layout update
+        Clock.schedule_once(lambda dt: self.fix_layout(), 0.05)
+
+    def fix_layout(self):
+        if hasattr(self, "root"):
+            self.root.do_layout()
+
 
     def open_app_menu(self):
         self._menu_popup = AppMenu()
@@ -704,7 +741,6 @@ class LinuxHowToApp(App):
         last_update = self.metadata.get("last update", "")
 
         self.version_string = f"v{version} | {last_update}"
-
 
 
         # Also trigger the standard menu population

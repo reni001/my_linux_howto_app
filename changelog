@@ -1,101 +1,206 @@
-v0.4.3 – Data handling improvements
-- Improved topic and step loading from cache
-- Stabilised data access across screens
-- Fixed inconsistencies in topic display
+VERSION 1.7.0 — UI System & AppWindow Upgrade
+
+Improvements
+
+Introduced resizable application window with dynamic layout scaling
+Added top-aligned window positioning for improved desktop usability
+Stabilised window behaviour across Linux environments (Arch, Ubuntu)
+Improved overall UI consistency through unified popup styling
+Enhanced spacing, typography, and layout balance across screens
+Improved first-run experience with automatic runtime configuration setup
+
+Features
+
+Implemented reusable themed popup system across the application
+Added unified file picker component (used for icons, screenshots, configuration files)
+Introduced consistent popup design matching application theme
+Enabled Firebase read access without requiring service account key
+Added automatic Firebase configuration initialisation on first run
+Improved AppImage packaging workflow with fully working distribution build
+
+Fixes
+
+Fixed window resizing instability and recursive resize crash
+Fixed window positioning issues causing incorrect default placement
+Fixed inconsistent popup styling across different screens
+Fixed file picker UI (oversized buttons, small text, default styling)
+Fixed missing firebase.json causing empty data on first run
+Resolved AppImage runtime configuration path issues
+Fixed inconsistencies in cache and Firebase fallback behaviour
+
+VERSION 1.6.1 – App Info & Changelog Polish
+
+Improvements
+
+Improved App Info editor layout
+Added formatted changelog preview with icons and section styling
+Improved changelog readability and hierarchy
+Better popup styling consistency between preview and About window
+Improved Save button placement and visibility
+
+Fixes
+
+Fixed changelog editor layout issues
+Fixed duplicate changelog field issues
+Fixed scroll/layout problems in App Info editor
+Fixed popup changelog rendering mismatch
+Fixed icon spacing and alignment in changelog display
 
 
-🔹 v0.4.4 – Navigation improvements
-- Improved navigation between category, detail, and article screens
-- Fixed issues with topic selection and screen transitions
-- Cleaned UI state handling when switching screens
+VERSION 1.6.0 – Performance & Editor Improvements
+
+Improvements
+
+Implemented step indexing (major performance boost)
+Reduced UI rebuilds during navigation
+Optimised screen refresh logic to avoid unnecessary reloads
+Improved app responsiveness when opening categories and topics
+Introduced lazy data loading at startup
+
+Features
+
+Added Date_Created and Date_Updated tracking
+Improved topic editor workflow
+Enhanced duplicate detection and merging logic
+
+Fixes
+
+Fixed menu not loading due to fetch scheduling bug
+Fixed recursive fetch_database call issue
+Fixed UI refresh inconsistencies after data updates
 
 
-🔹 v0.5.0 – Core architecture stabilisation
-- Introduced central APP_DATA structure
-- Unified topic and step handling across the application
-- Refactored DetailScreen to rely on cached data
-- Improved consistency between local and remote topics
+VERSION 1.5.5 – Editor Stability & UX Improvements
+
+Improvements
+
+Improved step editing (update vs add mode)
+Better step ordering and renumbering logic
+Cleaner UI feedback for step selection
+Improved icon handling and preview logic
+
+Fixes
+
+Fixed step overwrite edge cases
+Fixed screenshot handling reliability
+Fixed inconsistent icon updates in header preview
 
 
-🔹 v0.5.1 – Editing and local data support
-- Added support for local topic creation and editing
-- Improved handling of user-generated topics
-- Fixed persistence issues when saving local content
+VERSION 1.5.0 – Enhanced Topic Editing & Merge Logic
+
+Features
+
+Introduced topic merge workflow with preview popup
+Added merge strategies (Add / Replace / Skip)
+Added duplicate detection across topics
+Improved local vs official topic handling
+
+Improvements
+
+Improved data consistency during edits
+Improved topic update logic (local + Firebase)
+Better handling of icons during merge
+
+Fixes
+
+Fixed duplicate topic edge cases
+Improved merge reliability
 
 
-🔹 v0.5.2 – Admin and editing workflow
-- Introduced admin mode for editing and advanced actions
-- Improved topic editing and deletion logic
-- Stabilised UI behaviour for edit interactions
+VERSION 1.4.0 – Local Mode & Sync Workflow
+
+Features
+
+Added USER vs ADMIN mode separation
+Introduced local storage (user_data.json)
+Added user-specific icons (user_icons/)
+Implemented “Promote to Official” workflow
+
+Improvements
+
+Improved sync process (safe commit before pull)
+Update process now non-destructive (no file deletion)
+
+Fixes
+
+Resolved icon loading inconsistencies
+Prevented Git overwrite issues
+Improved asset handling reliability
 
 
-🔹 v0.6.0 – Icon system introduction
-- Introduced icon system for topics and categories
-- Added support for user-provided icons
-- Improved visual consistency in lists and menus
+VERSION 1.3.0 – Sync System Redesign
+
+🔄 Sync & Update
+
+Reworked Git sync to avoid data loss (commit before pull)
+Update process made non-destructive (no asset deletion)
+
+Improvements
+
+Removed Excel dependency (no pandas)
+Simplified system to JSON + Firebase
+Improved icon resolution (user_icons fallback)
+Cleaned duplicated sync logic
+
+Fixes
+
+Fixed icon preview errors
+Fixed missing icon warnings
+Fixed unintended Git overwrites
 
 
-🔹 v0.6.5 – UI and menu improvements
-- Improved application menu layout and structure
-- Introduced color-based button hierarchy
-- Enhanced visual clarity of navigation actions
+VERSION 1.1.0 – Editor & UI Improvements
+
+Features
+
+New Topic Editor with step management
+Admin/User mode with UI restrictions
+Dynamic topic icons
+
+Improvements
+
+Improved Topic_ID generation
+Improved duplicate handling
+Improved UI layout
+
+Fixes
+
+Fixed Firebase step saving issues
+Fixed edit behaviour inconsistencies
 
 
-🔹 v0.6.6 – Icon cleanup system
-- Added automatic cleanup of unused icons
-- Improved detection of used icons in topics
-- Prevented deletion of essential UI and category icons
+VERSION 1.0.1 – Sync Stability
+
+Improvements
+
+Added automatic version increment during sync
+Improved Firebase sync reliability
+Improved GitHub auto-sync (pull --rebase)
+
+Fixes
+
+Fixed version bump loop issue
+Fixed Excel corruption during sync
+Fixed metadata path handling
 
 
-🔹 v0.6.7 – Stability fixes
-- Fixed protected icon list issue (missing comma bug)
-- Prevented unintended deletion of UI icons
-- Improved reliability of cleanup process
+VERSION 1.0.0 – Initial Release
+
+Features
+
+Kivy multi-screen UI
+Excel-based content system
+Firebase integration
+Search functionality
+Expandable content sections
+Code snippet support
+Local caching
 
 
-🔹 v0.6.8 – Interaction fixes
-- Fixed touch interaction issues in menu popup
-- Prevented accidental triggering of adjacent buttons
-- Improved responsiveness of button actions
+DEV VERSION
 
+Features
 
-🔹 v0.6.9 – Button consistency fix
-- Corrected mismatches between button logic and visual states
-- Fixed update and sync buttons affecting wrong elements
-- Improved consistency of dynamic button feedback
-
-
-🔹 v0.7.0 – UI refinement
-- Improved visual consistency of menu layout
-- Reworked button color progression (rainbow structure)
-- Enhanced readability and usability of actions
-
-
-🔹 v0.7.1 – Layout fixes
-- Fixed layout issues caused by incorrect widget nesting
-- Resolved button alignment problems in menu
-- Improved rendering stability of popup components
-
-
-🔹 v0.7.2 – UI stability and data consistency
-- Restored stable button architecture after icon experiment
-- Preserved dynamic feedback for update and sync buttons
-- Added subtle press animation for improved responsiveness
-- Fixed alphabetical sorting of topics within subcategories
-- Improved reliability of DetailScreen grouping and rendering
-
-
-✅ ✅ Moving to your public version (v1.0)
-Since you said:
-
-“actually I am already in version 1 since I am public”
-
-👉 you can now define:
-
-✅ v1.0.0 – Public release
-- First public release of Linux How-To application
-- Stable data architecture with APP_DATA
-- Integrated topic and step management (local and remote)
-- Clean navigation across categories, topics, and articles
-- Icon system with safe cleanup mechanism
-- Improved UI consistency and responsive interaction
+Early UI prototypes
+Initial sync pipeline
+Experimental data structures
