@@ -1,22 +1,15 @@
-# 🧠 Linux HowTo App
+# 🧠 Linux HowTo App 
 
-## 📍 Installation & Developer Guide
+## 📖 Overview 
 
----
+The Linux HowTo App is a Python + Kivy desktop application for browsing, managing, and synchronising Linux documentation. 
 
-## 📖 Overview
+It acts as a personal documentation hub + lightweight content management system (CMS) with: 
 
-This application is a **Python + Kivy desktop app** for browsing and managing Linux how-to instructions. This Kivy-based application serves as a personal documentation hub. This project features dynamic synchronization between a local Excel database and Google Firebase.
-
-It combines:
-
-| Component | Role |
-|----------|------|
-| 📊 Excel (`main.xlsx`) | Local database |
-| ☁️ Firebase | Central content updates |
-| 📁 Git | Sync of icons & screenshots |
-
----
+✅ Online + offline support 
+✅ Structured categories & subcategories 
+✅ Editable topics with steps and code snippets 
+✅ Synchronisation via Firebase + Git 
 
 ## 📸 Screenshots
 | Main Menu | Category View | Article View | Menu Section |
@@ -25,550 +18,338 @@ It combines:
 
 ---
 
-## 🔁 Synchronisation Concept
+## 🚀 Key Features 
 
-- Firebase → **content updates (pull-only)**
-- Git → **assets (icons, screenshots)**
-- Local files → **offline usage**
+### 📂 Content System 
 
-✅ Works offline after first sync  
-✅ Works across multiple computers  
-✅ No backend setup required for users  
+- Categories & Subcategories 
+- Topics with structured steps 
+- Code snippets, screenshots, URLs 
+- Automatic taxonomy generation from content 
 
----
+### 🔄 Synchronisation 
 
-## ⚠️ Requirements & Compatibility
+- Firebase → content updates 
+- Git → icons & screenshots 
+- Local cache → offline usage 
 
-### ✅ Supported Systems
-It is designed to be supported on all linux based systems. I tested it on:
-
-- Garuda Arch Linux
-- Ubuntu 2020
-
----
-
-### ⚠️ Python Version (CRITICAL)
-
-I developed this app on Garuda Linux and encountered during processing issues with the compatibility of Kivy with the newest python (3.14)
-
-- ✅ Python **3.12 works**
-- ❌ Python **3.14 does NOT work properly with the current Kivy (Kivy incompatibility)**
-
-👉 On Arch Linux you may need to install Python 3.12 manually
-
----
-
-## 📂 Project Location
-
-Example:
-~/Documents/apps/my_linux_howto_app/
-
-<<<<<<< HEAD
-
-=======
- 
->>>>>>> 0191bb8 (change of app icon)
----
-
-# 👤 PART A — USER INSTALLATION
-
----
-
- 
-## Installation and running the App using the script:
-
-### Download the repo from git into the folder where you want the app to be installed:
-```
-https://github.com/reni001/my_linux_howto_app.git
-```
-It will create a folder named: my_linux_howto_app
+✅ Works offline after first sync 
+✅ Sync across multiple devices 
+✅ No backend setup required for standard users 
  
 
-### Installation
+### 🧑‍💻 Editing & Content Management 
 
-go into the my_linux_howto_app folder and run
-``` bash
-./install.sh
-```
+Create, edit, and delete topics 
+Step-by-step editor with ordering 
+Auto-generated Topic IDs 
+Icon preview and management 
+Promote / demote content (local ↔ official) 
+ 
 
-later to run the app run
-```bash
-./run.sh
-```
+### 🧩 Dynamic Taxonomy 
 
+Categories and subcategories stored as JSON 
+Automatically generated from topic data 
+Editable via UI dialogs 
+Icons linked to categories (Cat_Icon) 
+
+ 
+### 🎨 UI & UX 
+
+Responsive layout (desktop + laptop) 
+Unified icon system 
+Clean top/bottom navigation bars 
+Admin-aware UI (features enabled/disabled dynamically) 
+ 
 ---
-## Manual installation
-## 1️⃣ Install System Dependencies
+## 🔐 Admin vs User Mode 
 
-### Arch Linux
+The app operates in two modes: 
+ 
+### 👤 User Mode (Default) 
 
-```bash
-sudo pacman -Syu
-sudo pacman -S python python-pip git
-```
+✅ Can: 
 
-Check version:
-python --version
-👉 If version is 3.14 → install Python 3.12 (e.g. via pyenv)
+Browse content 
+Search topics 
+Work offline 
+View documentation 
 
-```bash
-    sudo pacman -S pyenv
-    pyenv install 3.12
-    pyenv local 3.12
-   ```
-    
-    Verify the version before creating your venv:
-    python --version  # Should show 3.12.x
-         
-    ### Why we had to do this:
-    * **Kivy Wheels:** Sometimes Kivy doesn't have "pre-built" wheels for the brand-new Python version that Arch just released. By moving back to 3.12, we ensure all the library "parts" fit together without having to compile them from scratch (which takes forever).
+❌ Cannot: 
 
-### Debian-based (Ubuntu)
-sudo apt update
-sudo apt install python3.12 python3.12-venv python3-pip git
+Edit topics 
+Delete entries 
+Sync or push changes 
+Manage categories/subcategories 
 
+### 🛠 Admin Mode 
+
+✅ Can: 
+
+Create / edit / delete topics 
+Manage categories & subcategories 
+Promote local topics → official (Firebase) 
+Demote official topics → local 
+Run sync (Firebase + Git) 
+ 
+
+### 🔄 Switching Mode 
+
+Toggle in the Application Menu 
+
+UI updates dynamically: 
+Buttons enabled/disabled 
+Icons change visibility 
+ 
 ---
-## 2️⃣  Install System Dependencies
-Kivy requires specific X11 and OpenGL headers to render the UI on Arch:
-    
-```bash
-    sudo pacman -S --needed base-devel libx11 libxkbcommon-x11 mesa-utils mtdev  
-```
-    
+## ⚙️ Requirements 
+
+### ✅ Supported Systems 
+
+Arch Linux (tested) 
+Ubuntu / Debian (tested) 
+
+ 
+### ⚠️ Python Version 
+
+✅ Python 3.12 
+✅ minimum Python 3.9
+
+❌ Python 3.14 (Kivy incompatibility) 
+ 
 ---
-## 2️⃣ Download the App
+## 📦 Installation 
 
-```bash
-git clone https://github.com/reni001/my_linux_howto_app.git
-cd my_linux_howto_app
+### ✅ Option 1 — Quick Install (Recommended) 
+
+```
+1     git clone https://github.com/reni001/my_linux_howto_app.git 
+2     cd my_linux_howto_app 
+3      
+4     ./install.sh 
+5     ./run.sh 
+```
+ 
+### ✅ Option 2 — Manual Install 
+
+#### 1️⃣ Install dependencies 
+
+Arch Linux 
+```
+1     sudo pacman -Syu 
+2     sudo pacman -S python python-pip git 
 ```
 
-### 📂 Project Structure
+If Python 3.14: 
 
-```bash
-my_linux_howto_app/
-├── src/
-│   ├── main.py
-│   ├── sync.py
-│   ├── update_content.py
-│   ├── runtime_paths.py
-│   ├── config.py
-│   └── first_run.py
-│
-├── config/
-│   └── firebase.json
-│
-├── data/
-│   └── main.xlsx
-│
-├── assets/
-│   ├── icons/
-│   └── screenshots/
+```
+1     sudo pacman -S pyenv 
+2     pyenv install 3.12 
+3     pyenv local 3.12 
+```
+ 
+
+Ubuntu / Debian 
+
+```
+1     sudo apt update 
+2     sudo apt install python3.12 python3.12-venv python3-pip git 
 ```
 
+ 
+#### 2️⃣ System libraries (Kivy) 
+```
+1     sudo pacman -S --needed base-devel libx11 libxkbcommon-x11 mesa-utils mtdev 
+```
+
+ 
+#### 3️⃣ Clone repository 
+
+```
+1     git clone https://github.com/reni001/my_linux_howto_app.git 
+2     cd my_linux_howto_app 
+```
+ 
+
+#### 4️⃣ Create virtual environment 
+
+```
+1     python3.12 -m venv venv 
+2     source venv/bin/activate 
+```
+ 
+
+#### 5️⃣ Install Python dependencies 
+```
+1     pip install --upgrade pip setuptools wheel 
+2     pip install kivy pandas requests firebase-admin openpyxl 
+```
+
+ 
+
+#### 6️⃣ Run the app 
+```
+1     python -m src.main 
+```
+
+ 
+#### 📁 Runtime Data Location 
+```
+1     ~/.local/share/linux-howto/ 
+```
+
+ 
 ---
-## 3️⃣ Create Virtual Environment
+## Structure 
 
-```bash
-python3.12 -m venv venv
-source venv/bin/activate
 ```
-
----
-## 4️⃣ Install Python Dependencies
-
-```bash
-pip install --upgrade pip setuptools wheel
-pip install kivy pandas requests firebase-admin openpyxl
+1     data/ 
+2     ├── cache.json 
+3     ├── firebase.json 
+4     ├── categories.json 
+5     ├── subcategories.json 
+6      
+7     assets/ 
+8     ├── icons/ 
+9     ├── screenshots/ 
 ```
+ 
 
----
-## 5️⃣ Run the App
+### 🧠 Data Flow 
 
-```bash
-python -m src.main
-```
-
----
-## 📁 Local Data Structure (IMPORTANT)
-
-The app stores runtime data in:
-
-```bash
-~/.local/share/linux-howto/
-```
-
-### Structure
-
-```bash
-~/.local/share/linux-howto/
-│
-├── data/
-│   ├── main.xlsx
-│   ├── firebase.json
-│   ├── cache.json
-│   └── serviceAccountKey.json
-│
-└── assets/
-    ├── icons/
-    └── screenshots/
-```
-
-#### 🧠 File Explanation
-📁 data/
-
-| File | Purpose |
+| Source | Purpose |
 | :---: | :---: |
-| main.xlsx | Local database |
-| firebase.json |Firebase connection | 
-| cache.json | Sync track |
-| ingserviceAccountKey.json | Authentication|
+| Firebase | official content  |
+| Local cache |offline storage | 
+| categories.json | category registry |
+| subcategories.json | subcategory registry 
+| assets/ | images and icons|
 
+### 🔄 Synchronisation Flow 
 
-📁 assets/
+At startup: 
 
-| Folder | Purpose |
-| :---: | :---: |
-| icons/ | UI icons |
-| screenshots |Tutorial images | 
-
-
----
-## 🔄 Synchronisation Behaviour
-
-At startup:
-
-1. Load local Excel
-2. Connect to Firebase
-3. Pull latest content
-4. Update Excel
-5. Sync icons/screenshots from Git
-
-
----
-##⚠️ Known Issue — firebase.json
-
-File:
-
-```bash
-config/firebase.json
-```
-
-
-👉 Should be copied automatically to:
-
-```bash
-~/.local/share/linux-howto/data/firebase.json
-```
-
-❗ If it fails
-
-Run manually:
-
-```bash
-Shellmkdir -p ~/.local/share/linux-howto/datacp config/firebase.json ~/.local/share/linux-howto/data/firebase.json
-mkdir -p ~/.local/share/linux-howto/data
-cp config/firebase.json ~/.local/share/linux-howto/data/firebase.json
-```
-
----
-##⚠🔥 Firebase Usage
-✅ Default Mode
-
-Uses developer Firebase backend
-No setup required
-
-✅ Users can
-
-Pull updates
-Use offline
-Browse content
-
-❌ Users cannot
-
-Push data
-Modify database
-Upload assets
-
----
-### ⚙️ Optional: Own Firebase Setup
-
-1. Create project
-https://console.firebase.google.com
-
-2. Generate key
-Project Settings → Service Accounts
-Click Generate new private key
-
-
-3. Place file
-~/.local/share/linux-howto/data/serviceAccountKey.json
-
-4. Update config
-Edit:
-```bash
-config/firebase.json
-```
-
-Example of how the firebasr.json needs to look like:
-
-```bash
-{
-  "databaseURL": "https://your-project.firebaseio.com"
-}
-```
-
----
-##📡 Git-Based Asset Sync
-
-Assets (icons + screenshots) are synchronised from your repository.
-
-### 🧠 Multi-device Design
-
-| Component | Sync Method |
-| :---: | :---: |
-| Excel data | Firebase |
-| Icons/screenshots | Git | 
-| Cache | Local |
-
-
-### 🔄 Updating the App
-
-git pull
-source venv/bin/activate
-pip install -r requirements.txt
-
----
-##📡 🧪 Troubleshooting
-
-###❌ App does not start
-
-```bash
-python -m src.main
-```
-
-### ❌ Firebase issues
-
-Check:
-```bash
-firebase.json exists
-serviceAccountKey.json (if needed)
-```
-
-### ❌ Missing assets
-```bash
-git pull
-```
-
-### ❌ Kivy install fails
-```bash
-pip install cython
-pip install kivy
-```
-
-### Issue: App won't open on Wayland,
-Cause: Graphics backend mismatch,
-Fix: Run: KIVY_WINDOW=sdl2 python main.py
-
-### Issue: Icons aligned to the left,
-Cause: Missing layout spacer,
-Fix: A Widget spacer was added in ArticleScreen KV to force icons to the right.
-
-### Issue: """Write access denied"" (403)",
-Cause: Cached Git credentials,
-Fix: Clear Git cache or use a Personal Access Token (PAT) for authentication.
-
-### Issue: Massive Repo Size (93MB),
-Cause: venv folder tracked,
-Fix: Use git rm -r --cached . and update .gitignore to purge large environment files.
-
-### Issue: Clipboard Fail,
-Cause: Missing xclip,
-Fix: Install xclip or xsel via pacman for terminal copy-paste support.
-
+1. Fetch data from Firebase 
+2. Merge with local cache 
+3. Build internal data structures 
+4. Generate categories & subcategories 
+5. Load UI 
 
  
 ---
+## 📂 Project Structure 
 
-# 🔧 PART B — DEVELOPER GUIDE
-
----
-
-```Bash
-📂 Project Structure
-my_linux_howto_app-v3/
-├── src/
-│   ├── main.py
-│   ├── sync.py
-│   ├── update_content.py
-│   ├── runtime_paths.py
-│   ├── config.py
-│   └── first_run.py
-│
-├── config/
-│   └── firebase.json
-│
-├── data/
-│   └── main.xlsx
-│
-├── assets/
+```
+1     src/ 
+2     ├── main.py                  # app entrypoint 
+3     ├── services/               # business logic layer 
+4     │   ├── category_service.py 
+5     │   ├── subcategory_service.py 
+6     │   ├── data_service.py 
+7     │   ├── sync.py 
+8     │ 
+9     ├── ui/ 
+10    │   ├── dialogs/ 
+11    │   ├── theme.py 
+12    │ 
+13    ├── screens/ 
+14    │   ├── menu_screen.py 
+15    │   ├── detail_screen.py 
+16    │   ├── article_screen.py 
+17    │   ├── add_topic_screen.py 
+18  
+19    assets/ 
+20    data/ 
+21    config/ 
 ```
 
----
-## 🧠 Developer Responsibilities
-You maintain:
-
-Firebase content
-Excel-based dataset
-Assets (icons/screenshots)
-
-
----
-## 🔄 Sync Architecture
-
-### Firebase
-Firebase → sync.py → main.xlsx
-
-
-### Git Assets
-Git → update_content.py → ~/.local/share/linux-howto/assets/
-
-
----
-## ➕ Adding Content
-
-### Option 1 — Firebase
-Update backend → users auto receive updates
-
-### Option 2 — Excel
-Modify:
+--- 
+## 🔧 Architecture Overview 
 ```
-data/main.xlsx
+1     UI (Kivy) 
+2        ↓ 
+3     App Controller (main.py) 
+4        ↓ 
+5     Services Layer 
+6        ↓ 
+7     Data Layer (Firebase / JSON / Cache) 
 ```
+ 
+---
+## 📡 Sync Model 
 
-### Add Images
-``` bash
-cp image.png assets/screenshots/git add .
-git commit -m "add asset"git push 
-```
+| Component | Source |
+| :---: | :---: |
+| Topics | Firebase |
+| Categories | generated from topics|
+| Subcategories | generated from topics| 
+| Icons | Git |
+| Cache | local system | 
 
 ---
-## 🔥 Use Your Own Firebase (Forking)
+## ⚠️ Troubleshooting 
 
-Create Firebase project
-Generate service key
-Replace:
-
-``` bash
-~/.local/share/linux-howto/data/serviceAccountKey.json
+App doesn’t start 
 ```
+1     python -m src.main 
+```
+ 
+Firebase issues 
 
-Edit:
+Check: 
+```
+1     ~/.local/share/linux-howto/data/firebase.json 
+```
+ 
+Missing icons 
+```
+1     git pull 
+```
+ 
+Kivy issues (Wayland) 
+```
+1     KIVY_WINDOW=sdl2 python src/main.py 
+```
+ 
+Clipboard issues 
+```
+1     sudo pacman -S xclip 
+```
+--- 
+## 🧪 Developer Notes 
 
-firebase.json
+You maintain: 
 
+- Firebase data 
+- Categories & subcategories 
+- Icons & screenshots 
+- UI components 
 
-🛠 Customisation Options
-
-- Change Excel structure
-- Replace Firebase backend
-- Modify Kivy UI
-- Extend sync logic
-
-
+ 
 ---
-## ✅ Summary
+## 💡 Extensibility 
 
-| Layer | Technology |
-| UI | Kivy |
-| Data | Excel |
-| Backend | Firebase |
-| Assets | Git |
+You can: 
 
+- Replace Firebase backend 
+- Extend topic schema 
+- Modify UI (Kivy KV files) 
+- Add new sync logic 
+ 
+---
+## ✅ Summary 
 
-### 🚀 Result
-✅ Automatic updates
-✅ Offline capable
-✅ Multi-device sync
-✅ Lightweight architecture
+The app is now a: 
 
-### 🚀 Next Improvements
+✅ Linux documentation browser 
+✅ Offline-capable knowledge base 
+✅ Lightweight content management system 
+✅ Multi-device synchronised environment 
 
-Create AppImage
-Create apk for android
-Create apk for android phones
+ 
+---
+## 🚀 Current Version 
 
-# Changelog 
-
-## 🚀 Version 1.1.0 — Topic Editor & UI Improvements
-
-### ✨ New Features
-
-✅ Introduced full Topic Editor screen
-Create, edit, and update topics within the app
-Integrated steps editor with preview and ordering
-
-✅ Added step management system
-Add, edit, delete, and reorder steps
-Step buffer (pending_steps) for batch saving
-
-✅ Implemented dynamic Topic Icon handling
-Live preview when selecting or typing icon
-Automatic copying of icons into assets
-Consistent icon display across screens
-
-
-### 🧠 Data & Logic Improvements
-
-✅ Redesigned Topic_ID generation
-Short format: cat4_sub4_title6
-Automatic duplicate handling with numeric suffix
-
-✅ Fixed step persistence
-Steps now saved correctly using unique Firebase keys
-Replaced numeric IDs with push-based keys
-
-✅ Improved edit mode behaviour
-No longer creates duplicate topics on save
-Correct handling of Firebase _key
-
-✅ Added full overwrite logic
-Topic updates replace previous version cleanly
-Steps re-synchronised on save
-
-
-### 🔐 Security & Role Management
-
-✅ Introduced Admin/User mode separation
-Edit and delete actions disabled in user mode
-UI reflects permissions (buttons greyed out or hidden)
-
-✅ Backend protection maintained (Firebase key required)
-
-### 🎨 UI & UX Improvements
-
-✅ Improved header layout
-Proper alignment of icons and title
-Single-line title display
-
-
-✅ Added dynamic topic icon in editor header
-Shows correct icon in edit mode
-Live update after icon selection and save
-
-✅ Improved form behaviour
-Form persists after saving (supports iterative editing)
-
-✅ Enhanced step list display
-Clean layout with edit / delete / reorder buttons
-
-
-### 🐛 Bug Fixes
-
-✅ Fixed crash when opening older topics (missing method)
-✅ Fixed Topic_ID overwrite issues
-✅ Fixed icon preview inconsistencies
-✅ Fixed Firebase step write overwriting
-✅ Fixed incorrect UI reset after save
-
+v1.9.0 — Category System Integration 
 
