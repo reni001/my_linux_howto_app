@@ -42,6 +42,12 @@ class AddTopicScreen(Screen):
     pending_steps = ListProperty([])  # list of step dicts to save together with the topic
     selected_step_index = NumericProperty(-1)   # -1 means "no step selected"
     
+    def _txt(self, text: str) -> str:
+        """
+        Wrap text with safe font (NotoSans) for full unicode support.
+        """
+        return f"[font=NotoSans]{text}[/font]"
+
     def _now(self):
         return datetime.now().isoformat(timespec="seconds")
 
@@ -80,9 +86,9 @@ class AddTopicScreen(Screen):
             try:
                 fname = self.import_screenshot(str(path))
                 self.ids.step_screenshot.text = fname
-                self.ids.status_label.text = f"✅ Screenshot selected: {fname}"
+                self.ids.status_label.text = self._txt(f"✔ Screenshot selected: {fname}")
             except Exception as e:
-                self.ids.status_label.text = f"❌ Screenshot import failed: {e}"
+                self.ids.status_label.text = self._txt(f"❌ Screenshot import failed: {e}")
 
         open_file_picker(
             title="Select Screenshot",
@@ -97,9 +103,9 @@ class AddTopicScreen(Screen):
         app = App.get_running_app()
 
         if not app.is_admin_mode():
-            self.ids.status_label.text = "User mode: saving locally"
+            self.ids.status_label.text = self._txt("User mode: saving locally")
         else:
-            self.ids.status_label.text = ""
+            self.ids.status_label.text = self._txt("")
 
         if self.edit_mode:
             # keep Topic_ID locked
@@ -355,12 +361,12 @@ class AddTopicScreen(Screen):
         try:
             step_order = int(self.ids.step_order.text.strip())
         except Exception:
-            self.ids.status_label.text = "Step_Order must be an integer (e.g. 1, 2, 3)."
+            self.ids.status_label.text = self._txt("⚠️ Step_Order must be an integer (e.g. 1, 2, 3).")
             return
 
         instruction = self.ids.step_instruction.text.strip()
         if not instruction:
-            self.ids.status_label.text = "Instruction is required."
+            self.ids.status_label.text = self._txt("⚠️ Instruction is required.")
             return
         # Build step dict
         step = {
@@ -397,7 +403,7 @@ class AddTopicScreen(Screen):
         self.refresh_steps_list()
         self.ids.form_scroll.scroll_y = 0.3
 
-        self.ids.status_label.text = f"Step saved."
+        self.ids.status_label.text = self._txt(f"✅ Step saved.")
 
 
     def remove_last_step(self):
@@ -406,7 +412,7 @@ class AddTopicScreen(Screen):
             self.renumber_steps()
             self.refresh_steps_preview()
             self.refresh_steps_list()
-            self.ids.status_label.text = "Last step removed."
+            self.ids.status_label.text = self._txt("Last step removed.")
 
     def clear_step_form(self):
         self.ids.step_order.text = ""
@@ -741,7 +747,7 @@ class AddTopicScreen(Screen):
                 merged_topic["local_only"] = True
 
                 app.update_local_topic(existing_topic_id, merged_topic, merged_steps)
-                self.ids.status_label.text = "✅ Local topics merged"
+                self.ids.status_label.text = self._txt("✅ Local topics merged")
 
             # ✅ OFFICIAL duplicate → update Firebase
             else:
@@ -759,7 +765,7 @@ class AddTopicScreen(Screen):
                     payload["Topic_ID"] = existing_topic_id
                     add_step_to_firebase(payload)
 
-                self.ids.status_label.text = "✅ Official topics merged"
+                self.ids.status_label.text = self._txt("✅ Official topics merged")
 
             # ✅ cleanup local duplicate if editing another local topic
             try:
@@ -791,7 +797,7 @@ class AddTopicScreen(Screen):
             Clock.schedule_once(_restore_category, 0.4)
 
         except Exception as e:
-            self.ids.status_label.text = f"❌ Merge failed: {e}"
+            self.ids.status_label.text = self._txt(f"❌ Merge failed: {e}")
 
 
     def refresh_steps_list(self):
@@ -822,7 +828,8 @@ class AddTopicScreen(Screen):
 
             # LEFT: TEXT (flexible width)
             lbl = Label(
-                text=f"{order}. {title}",
+                text=f"[font=NotoSans]{order}. {title}[/font]",
+                markup=True,
                 size_hint_x=1,          # ✅ takes remaining space
                 halign="left",
                 valign="middle",
@@ -991,7 +998,7 @@ class AddTopicScreen(Screen):
 
         # ✅ 3. Required fields
         if not topic["Category"] or not topic["Title"]:
-            self.ids.status_label.text = "Category and Title are required."
+            self.ids.status_label.text = self._txt("⚠️ Category and Title are required.")
             return
 
         # ✅ 4. Duplicate check BEFORE any icon copy or save
@@ -1023,12 +1030,12 @@ class AddTopicScreen(Screen):
                     topic_payload["local_only"] = True
 
                     app.update_local_topic(self.edit_topic_id, topic_payload, step_payloads)
-                    self.ids.status_label.text = "✅ Local topic updated"
+                    self.ids.status_label.text = self._txt("✅ Local topic updated")
 
                 # create new local topic
                 else:
                     app.save_local_topic(topic_payload, step_payloads)
-                    self.ids.status_label.text = "✅ Topic saved locally"
+                    self.ids.status_label.text = self._txt("✅ Topic saved locally")
 
                 target_category = topic.get("Category", "")
 
@@ -1046,7 +1053,7 @@ class AddTopicScreen(Screen):
                 return
 
             except Exception as e:
-                self.ids.status_label.text = f"❌ Local save failed: {e}"
+                self.ids.status_label.text = self._txt(f"❌ Local save failed: {e}")
                 return
 
         # ✅ 7. OFFICIAL / FIREBASE SAVE PATH
@@ -1098,7 +1105,7 @@ class AddTopicScreen(Screen):
             if "topic_id" in self.ids:
                 self.ids.topic_id.text = topic_id
 
-            self.ids.status_label.text = f"✅ Saved topic + steps (Topic_ID: {str(topic_id)[:8]}…)"
+            self.ids.status_label.text = self._txt(f"✅ Saved topic + steps (Topic_ID: {str(topic_id)[:8]}…)")
 
             if "topic_id" in self.ids:
                 self.ids.topic_id.text = topic_id
@@ -1108,7 +1115,7 @@ class AddTopicScreen(Screen):
             self.edit_topic_key = topic_key
 
         except Exception as e:
-            self.ids.status_label.text = f"❌ Save failed: {e}"
+            self.ids.status_label.text = self._txt(f"❌ Save failed: {e}")
 
     def on_kv_post(self, base_widget):
         from kivy.uix.textinput import TextInput

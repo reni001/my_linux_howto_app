@@ -11,13 +11,16 @@ class AddStepScreen(Screen):
     """
     topic_map = {}   # display_text -> topic_id
 
+    def _txt(self, text: str) -> str:
+        return f"[font=NotoSans]{text}[/font]"
+
     def on_pre_enter(self):
         if not is_admin_enabled():
-            self.ids.status_label.text = "Editor disabled (admin key missing)."
+            self.ids.status_label.text = self._txt("⚠️ Editor disabled (admin key missing).")
             self.ids.save_btn.disabled = True
             self.ids.add_step_btn.disabled = True
         else:
-            self.ids.status_label.text = ""
+            self.ids.status_label.text = self._txt("")
             self.ids.save_btn.disabled = False
             self.ids.add_step_btn.disabled = False
 
@@ -84,7 +87,7 @@ class AddStepScreen(Screen):
 
     def save_step(self):
         if not is_admin_enabled():
-            self.ids.step_status.text = "Editor disabled (admin key missing)."
+            self.ids.status_label.text = self._txt("⚠️ Editor disabled (admin key missing).")
             return
 
         chosen = self.ids.topic_spinner.text

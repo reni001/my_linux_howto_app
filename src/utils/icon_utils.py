@@ -4,14 +4,15 @@ from pathlib import Path
 from src.utils.runtime_paths import get_runtime_paths
 
 
-
 def get_icon_path(filename):
     paths = get_runtime_paths()
 
+    icons_core = paths["assets"] / "icons_core"
     icons = paths["assets"] / "icons"
     user_icons = paths["assets"] / "user_icons"
 
-    default_icon = icons / "default.png"
+    # ✅ fallback now from core (IMPORTANT)
+    default_icon = icons_core / "default.png"
 
     if not filename:
         return str(default_icon)
@@ -20,30 +21,35 @@ def get_icon_path(filename):
     if filename.lower() in ("", "nan", "none"):
         return str(default_icon)
 
-    # ✅ private icons are explicitly marked with user_
+    # ✅ 1 — CORE icons (NEW!)
+    core_path = icons_core / filename
+    if core_path.is_file():
+        return str(core_path)
+
+    # ✅ 2 — user icons (if prefixed)
     if filename.startswith("user_"):
         user_path = user_icons / filename
         if user_path.is_file():
             return str(user_path)
 
-        # fallback just in case
+        # fallback
         icon_path = icons / filename
         if icon_path.is_file():
             return str(icon_path)
 
-        print(f"⚠️ Missing user icon file: {filename}")
+        print(f"⚠ Missing user icon file: {filename}")
         return str(default_icon)
 
-    # ✅ official icons
+    # ✅ 3 — official icons
     icon_path = icons / filename
     if icon_path.is_file():
         return str(icon_path)
 
-    # fallback just in case
+    # ✅ 4 — fallback: user icons
     user_path = user_icons / filename
     if user_path.is_file():
         return str(user_path)
 
-    print(f"⚠️ Missing icon file: {filename}")
+    # ✅ 5 — final fallback
+    print(f"⚠ Missing icon file: {filename}")
     return str(default_icon)
-
