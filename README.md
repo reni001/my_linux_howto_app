@@ -40,27 +40,26 @@ It acts as a personal documentation hub + lightweight content management system 
 
 ### 🧑‍💻 Editing & Content Management 
 
-Create, edit, and delete topics 
-Step-by-step editor with ordering 
-Auto-generated Topic IDs 
-Icon preview and management 
-Promote / demote content (local ↔ official) 
+- Create, edit, and delete topics 
+- Step-by-step editor with ordering 
+- Auto-generated Topic IDs 
+- Icon preview and management 
+- Promote / demote content (local ↔ official) 
  
 
 ### 🧩 Dynamic Taxonomy 
 
-Categories and subcategories stored as JSON 
-Automatically generated from topic data 
-Editable via UI dialogs 
-Icons linked to categories (Cat_Icon) 
+- Categories and subcategories stored as JSON 
+- Automatically generated from topic data 
+- Editable via UI dialogs 
+- Icons linked to categories (Cat_Icon) 
 
- 
-### 🎨 UI & UX 
+ ### 🎨 UI & UX 
 
-Responsive layout (desktop + laptop) 
-Unified icon system 
-Clean top/bottom navigation bars 
-Admin-aware UI (features enabled/disabled dynamically) 
+- Responsive layout (desktop + laptop) 
+- Unified icon system 
+- Clean top/bottom navigation bars 
+- Admin-aware UI (features enabled/disabled dynamically) 
  
 ---
 ## 🔐 Admin vs User Mode 
@@ -71,38 +70,40 @@ The app operates in two modes:
 
 ✅ Can: 
 
-Browse content 
-Search topics 
-Work offline 
-View documentation 
+- Browse content 
+- Search topics 
+- Work offline 
+- View documentation
+- Manage categories/subcategories (only offline content)
 
 ❌ Cannot: 
 
-Edit topics 
-Delete entries 
-Sync or push changes 
-Manage categories/subcategories 
+- Edit topics 
+- Delete entries 
+- Sync or push changes 
+
 
 ### 🛠 Admin Mode 
 
 ✅ Can: 
 
-Create / edit / delete topics 
-Manage categories & subcategories 
-Promote local topics → official (Firebase) 
-Demote official topics → local 
-Run sync (Firebase + Git) 
+- Create / edit / delete topics 
+- Manage categories & subcategories 
+- Promote local topics → official (Firebase) 
+- Demote official topics → local 
+- Run sync (Firebase + Git) 
  
 
 ### 🔄 Switching Mode 
 
 Toggle in the Application Menu 
 
-UI updates dynamically: 
-Buttons enabled/disabled 
-Icons change visibility 
+- UI updates dynamically: 
+- Buttons enabled/disabled 
+- Icons change visibility 
  
 ---
+
 ## ⚙️ Requirements 
 
 ### ✅ Supported Systems 
@@ -119,6 +120,7 @@ Ubuntu / Debian (tested)
 ❌ Python 3.14 (Kivy incompatibility) 
  
 ---
+
 ## 📦 Installation 
 
 ### ✅ Option 1 — Quick Install (Recommended) 
@@ -198,9 +200,9 @@ Ubuntu / Debian
 ```
 1     ~/.local/share/linux-howto/ 
 ```
-
  
 ---
+
 ## Structure 
 
 ```
@@ -226,6 +228,7 @@ Ubuntu / Debian
 | subcategories.json | subcategory registry 
 | assets/ | images and icons|
 
+
 ### 🔄 Synchronisation Flow 
 
 At startup: 
@@ -236,8 +239,8 @@ At startup:
 4. Generate categories & subcategories 
 5. Load UI 
 
- 
 ---
+ 
 ## 📂 Project Structure 
 
 ```
@@ -265,6 +268,7 @@ At startup:
 ```
 
 --- 
+
 ## 🔧 Architecture Overview 
 ```
 1     UI (Kivy) 
@@ -277,6 +281,7 @@ At startup:
 ```
  
 ---
+
 ## 📡 Sync Model 
 
 | Component | Source |
@@ -288,35 +293,37 @@ At startup:
 | Cache | local system | 
 
 ---
+
 ## ⚠️ Troubleshooting 
 
-App doesn’t start 
+### App doesn’t start 
 ```
 1     python -m src.main 
 ```
  
-Firebase issues 
+### Firebase issues 
 
 Check: 
 ```
 1     ~/.local/share/linux-howto/data/firebase.json 
 ```
  
-Missing icons 
+### Missing icons 
 ```
 1     git pull 
 ```
  
-Kivy issues (Wayland) 
+### Kivy issues (Wayland) 
 ```
 1     KIVY_WINDOW=sdl2 python src/main.py 
 ```
  
-Clipboard issues 
+### Clipboard issues 
 ```
 1     sudo pacman -S xclip 
 ```
 --- 
+
 ## 🧪 Developer Notes 
 
 You maintain: 
@@ -328,6 +335,7 @@ You maintain:
 
  
 ---
+
 ## 💡 Extensibility 
 
 You can: 
@@ -338,6 +346,7 @@ You can:
 - Add new sync logic 
  
 ---
+
 ## ✅ Summary 
 
 The app is now a: 
@@ -346,10 +355,9 @@ The app is now a:
 ✅ Offline-capable knowledge base 
 ✅ Lightweight content management system 
 ✅ Multi-device synchronised environment 
-
  
 ---
+
 ## 🚀 Current Version 
 
 v1.9.0 — Category System Integration 
-
