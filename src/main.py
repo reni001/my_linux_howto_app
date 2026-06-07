@@ -23,6 +23,8 @@ from src.services.icon_service import (
     copy_official_icon_to_user_icons,
     delete_official_icon_if_unused
 )
+
+from src.services.topic_service import do_promote_topic, do_demote_topic
 from src.screens.add_topic_screen import AddTopicScreen
 from src.services.icon_cleanup import (
     clean_unused_icons,
@@ -39,6 +41,7 @@ from src.screens.app_info_screen import AppInfoScreen
 from src.ui.about_popup import show_about_popup
 from src.ui.dialogs.cleanup_dialog import show_cleanup_dialog, undo_cleanup
 from src.ui.dialogs.confirm_dialog import show_confirm_dialog
+from src.ui.dialogs.promotion_dialog import show_promotion_dialog
 from src.ui.styled_popup import create_popup_container
 from src.ui.window_manager import apply_desktop_window_defaults, toggle_orientation
 
@@ -721,225 +724,36 @@ class LinuxHowToApp(App):
         return None
 
     # -------- promote topic (make it public) --------
-
-    def _do_promote_topic(self, data):
-        from src.services.firebase_service import add_topic_to_firebase, add_step_to_firebase
-
-        print(f"🚀 Promoting topic: {data.get('Title')}")
-
-        try:
-            local_topic_id = str(data.get("Topic_ID") or "")
-
-            # ✅ 1. Copy icon from user_icons → official icons
-            icon_filename = data.get("Topic_Icon", "")
-            icon_filename = copy_user_icon_to_official(icon_filename)
-
-            # ✅ 2. Prepare official topic payload
-            topic = dict(data)
-            topic["Topic_Icon"] = icon_filename
-
-            # remove local-only fields
-            for key in ["source", "_key", "local_only"]:
-                topic.pop(key, None)
-
-            # IMPORTANT:
-            # Let Firebase assign a fresh official Topic_ID instead of reusing local user_topic_X
-            topic.pop("Topic_ID", None)
-
-            # ✅ 3. Upload topic
-            topic_key, new_topic_id = add_topic_to_firebase(topic)
-
-            # ✅ 4. Upload steps
-            for step in self.APP_DATA.get("steps", []):
-                if str(step.get("Topic_ID")) == local_topic_id:
-                    payload = dict(step)
-                    for key in ["source", "_key", "local_only"]:
-                        payload.pop(key, None)
-                    payload["Topic_ID"] = str(new_topic_id)
-                    add_step_to_firebase(payload)
-
-            # ✅ 5. Remove local version after successful publish
-            self.delete_local_topic(local_topic_id)
-
-            # ✅ 6. remove user icon after successful promote
-            original_user_icon_name = str(data.get("Topic_Icon") or "")
-            if original_user_icon_name:
-                paths = get_runtime_paths()
-                user_icon_path = paths["assets"] / "user_icons" / original_user_icon_name
-
-                try:
-                    if user_icon_path.exists():
-                        user_icon_path.unlink()
-                        print(f"✅ Removed user icon after promote: {user_icon_path}")
-                    else:
-                        print(f"ℹ️ No user icon to remove after promote: {user_icon_path}")
-                except Exception as e:
-                    print(f"⚠️ Could not delete user icon after promote: {e}")
-
-            print(f"✅ Promotion complete → official Topic_ID: {new_topic_id}")
-            self.refresh_data_only()
-
-        except Exception as e:
-            print(f"❌ Promotion failed: {e}")
-
-
     def promote_topic(self, data):
-
-        title = data.get("Title", "this topic")
         duplicate = self._find_official_duplicate(data)
 
-        if duplicate:
-            dup_title = duplicate.get("Title", "")
-            dup_cat = duplicate.get("Category", "")
-            dup_sub = duplicate.get("Subcategory", "")
-            dup_id = duplicate.get("Topic_ID", "")
+        def do_promote():
+            do_promote_topic(self, data)
 
-            message = (
-                f"Possible duplicate detected.\n\n"
-                f"Local topic:\n{title}\n\n"
-                f"Existing official topic:\n"
-                f"{dup_title}\n"
-                f"Category: {dup_cat}\n"
-                f"Subcategory: {dup_sub}\n"
-                f"Topic_ID: {dup_id}\n\n"
-                f"Do you want to promote it anyway?"
-            )
-            popup_title = "Possible Duplicate"
-            confirm_text = "PROMOTE ANYWAY"
-        else:
-            message = f"Promote this topic to official content?\n\n{title}"
-            popup_title = "Promote Topic"
-            confirm_text = "PROMOTE"
-
-        # ✅ SAME STYLE AS ABOUT POPUP
-        root = create_popup_container()
-
-        inner = BoxLayout(
-            orientation="vertical",
-            padding=[20, 15, 20, 20],
-            spacing=15,
-            size_hint=(0.95, 0.95),
-            pos_hint={"center_x": 0.5, "center_y": 0.5}
+        show_promotion_dialog(
+            self,
+            data,
+            duplicate,
+            on_confirm=do_promote
         )
-
-        # ✅ Title
-        inner.add_widget(Label(
-            text=f"[b]{popup_title}[/b]",
-            markup=True,
-            font_size="18sp",
-            color=self.COLOR_WHITE
-        ))
-
-        # ✅ Message
-        inner.add_widget(Label(
-            text=message,
-            halign="center"
-        ))
-
-        # ✅ Buttons
-        btn_box = BoxLayout(size_hint_y=None, height="40dp", spacing=10)
-
-        btn_yes = Button(
-            text=confirm_text,
-            background_normal='',
-            background_color=self.COLOR_BLUE_MEDIUM,
-            color=self.COLOR_WHITE
-        )
-
-        btn_no = Button(
-            text="Cancel",
-            background_normal='',
-            background_color=self.COLOR_GREY_DARK,
-            color=self.COLOR_WHITE
-        )
-
-        btn_box.add_widget(btn_yes)
-        btn_box.add_widget(btn_no)
-        inner.add_widget(btn_box)
-
-        root.add_widget(inner)
-
-        popup = Popup(
-            title="",
-            content=root,
-            size_hint=(0.7, 0.5),
-            background="",
-            background_color=(0, 0, 0, 0),
-            separator_height=0
-        )
-
-        def confirm_promote(instance):
-            popup.dismiss()
-            self._do_promote_topic(data)
-
-        btn_yes.bind(on_release=confirm_promote)
-        btn_no.bind(on_release=lambda x: popup.dismiss())
-
-        popup.open()
 
     #---- demote topic (make it private) -------
-
     def demote_topic(self, data):
 
         if str(data.get("source") or "") == "user":
             return
 
-        topic_id = str(data.get("Topic_ID") or "")
-        topic_key = str(data.get("_key") or "")
-        category = data.get("Category", "")
+        def do_demote():
+            do_demote_topic(self, data)
 
-        if not topic_id or not topic_key:
-            print("❌ Missing Topic_ID or _key")
-            return
-
-        try:
-            # ✅ 1. collect steps
-            steps = [
-                dict(s) for s in self.APP_DATA.get("steps", [])
-                if str(s.get("Topic_ID") or "") == topic_id
-            ]
-
-            # ✅ 2. copy icon to user_icons
-            icon_name = str(data.get("Topic_Icon") or "")
-            new_icon_name = copy_official_icon_to_user_icons(icon_name)
-
-            # ✅ 3. create local topic
-            local_topic = dict(data)
-            local_topic["Topic_Icon"] = new_icon_name
-            local_topic["source"] = "user"
-            local_topic["local_only"] = True
-            local_topic["_key"] = topic_id
-            local_topic["Topic_ID"] = topic_id
-
-            self.update_local_topic(topic_id, local_topic, steps)
-
-            # ✅ 4. delete from Firebase
-            delete_topic_from_firebase(topic_key, topic_id)
-            icon_name = str(data.get("Topic_Icon") or "")
-
-            # ✅ 5. delete icon if unused
-            delete_official_icon_if_unused(self.APP_DATA, icon_name, topic_id)
-
-            # ✅ 6. refresh + restore category
-            self.refresh_data_only()
-
-            self.sm.current = "menu"
-
-            def _restore(_dt):
-                try:
-                    detail = self.root.get_screen("details")
-                    detail.header_title = category
-                    detail.show_category(category)
-                    self.root.current = "details"
-                except Exception as e:
-                    print("DEBUG restore failed:", e)
-
-            Clock.schedule_once(_restore, 0.4)
-
-            print(f"✅ Topic demoted: {topic_id}")
-
-        except Exception as e:
-            print("❌ Demotion failed:", e)
+        show_confirm_dialog(
+            self,
+            title="Demote Topic",
+            message="This will remove the topic from official content and make it local.\n\nContinue?",
+            confirm_text="DEMOTE",
+            confirm_color=self.COLOR_ORANGE,
+            on_confirm=do_demote,
+        )
 
     #---- update button behaviour -----
 
