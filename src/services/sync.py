@@ -10,6 +10,7 @@ from firebase_admin import credentials, db, initialize_app
 
 from src.utils.runtime_paths import get_runtime_paths
 from src.utils.config import load_firebase_config
+from src.services.backup_service import backup_runtime_snapshot
 
 # ---------------------------
 # Runtime paths
@@ -38,8 +39,8 @@ def init_firebase():
 
         initialize_app(cred, {"databaseURL": db_url})
 
-# ✅ Promote user icons to official icons (for Git sync)
 
+# ✅ Promote user icons to official icons (for Git sync)
 user_icons = paths["assets"] / "user_icons"
 icons = paths["assets"] / "icons"
 
@@ -92,7 +93,6 @@ def git_sync(repo_root: Path, version: str):
     print("➕ Git: adding content…")
     git(repo_root, "add", "data/cache.json", "assets")
 
-    # check if changes exist
     result = subprocess.run(
         ["git", "-C", str(repo_root), "diff", "--cached", "--quiet"]
     )
@@ -128,6 +128,13 @@ def main():
     if "topics" not in data or not data["topics"]:
         print("❌ No topics → abort")
         return
+
+    # ✅ Full backup before overwriting cache/assets
+    backup_runtime_snapshot(
+        data=data,
+        assets_path=paths["assets"],
+        max_keep=15
+    )
 
     # ✅ Save JSON cache
     CACHE_FILE.parent.mkdir(parents=True, exist_ok=True)

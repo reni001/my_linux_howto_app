@@ -8,12 +8,14 @@ import subprocess
 import sys
 import traceback
 import shutil
+import json
 from threading import Thread
 from pathlib import Path
 
 # --- Project imports ---
 from src.utils.first_run import initialize_first_run
 from src.utils.runtime_paths import is_dev_mode, get_runtime_paths
+from src.services.backup_service import get_backups, restore_backup_file, backup_database
 from src.services.update_content import update_assets, update_cache
 from src.services.category_service import generate_categories_from_topics
 from src.services.editor_service import is_admin_enabled
@@ -39,6 +41,7 @@ from src.screens.article_screen import ArticleScreen
 from src.screens.add_step_screen import AddStepScreen
 from src.screens.json_viewer_screen import JsonViewerScreen
 from src.screens.app_info_screen import AppInfoScreen
+from src.services.subcategory_service import generate_from_topics
 from src.ui.about_popup import show_about_popup
 from src.ui.dialogs.cleanup_dialog import show_cleanup_dialog, undo_cleanup
 from src.ui.dialogs.confirm_dialog import show_confirm_dialog
@@ -110,9 +113,6 @@ from kivy.uix.modalview import ModalView
 from kivy.uix.popup import Popup
 from kivy.uix.scrollview import ScrollView
 from kivy.graphics import Color, RoundedRectangle, Line
-
-
-from src.services.subcategory_service import generate_from_topics
 
 # ----- Check if python 3.12 is installed ---------
 
@@ -348,13 +348,9 @@ class LinuxHowToApp(App):
 
         # ✅ now data is really available
         generate_from_topics(self, overwrite=False)
-        generate_categories_from_topics(self, overwrite=True)   # keep True only while debugging
+        generate_categories_from_topics(self, overwrite=False)   # keep True only while debugging
 
         print("✅ Taxonomy generation completed")
-
-
-
-
 
     def refresh_data_only(self):
         fetch_database(self)          # ✅ lightweight data refresh
@@ -371,6 +367,154 @@ class LinuxHowToApp(App):
     def delete_local_topic(self, topic_id: str):
         delete_local_topic(topic_id)
         self.refresh_data_only()
+
+    def restore_backup(self, backup_path):
+
+        try:
+            # ✅ restore files (data + assets)
+            cache_file = restore_backup_file(backup_path)
+
+            print(f"✅ Restored backup: {backup_path}")
+
+            with open(cache_file, "r", encoding="utf-8") as f:
+                restored_data = json.load(f)
+
+            topics = restored_data.get("topics", [])
+            steps = restored_data.get("steps", [])
+
+            # ✅ normalise structure
+            if isinstance(topics, dict):
+                topics = list(topics.values())
+
+            if isinstance(steps, dict):
+                steps = list(steps.values())
+
+            restored_topics = [t for t in topics if isinstance(t, dict)]
+            restored_steps = [s for s in steps if isinstance(s, dict)]
+
+            print("DEBUG restored topics:", len(restored_topics))
+
+            # ✅ inject as LOCAL topics
+            restored_count = 0
+
+            for topic in restored_topics:
+                tid = topic.get("Topic_ID")
+
+                if not tid:
+                    continue
+
+                # ✅ mark as LOCAL
+                topic["source"] = "user"
+
+                topic_steps = [
+                    s for s in restored_steps
+                    if s.get("Topic_ID") == tid
+                ]
+
+                try:
+                    add_local_topic_and_steps(topic, topic_steps)
+                    restored_count += 1
+                except Exception as e:
+                    print(f"⚠ Skipped topic {tid}: {e}")
+
+            print(f"✅ Restored {restored_count} topics as LOCAL content")
+
+            # ✅ refresh (this will reload merged local + firebase view)
+            self.refresh_data_only()
+
+        except Exception as e:
+            print(f"❌ Restore failed: {e}")
+
+    def show_restore_backup_dialog(self):
+            backups = get_backups()
+            print("DEBUG backups:", backups)
+
+            root = create_popup_container()
+
+            inner = BoxLayout(
+                orientation="vertical",
+                padding=[20, 15, 20, 20],
+                spacing=10,
+                size_hint=(0.95, 0.95),
+                pos_hint={"center_x": 0.5, "center_y": 0.5}
+            )
+
+            inner.add_widget(Label(
+                text="[b]Restore Backup[/b]",
+                markup=True,
+                font_size="16sp",
+                size_hint_y=None,
+                height=dp(30),
+                color=self.COLOR_WHITE
+            ))
+
+            scroll = ScrollView(size_hint=(1, 1))
+
+            container = BoxLayout(
+                orientation="vertical",
+                size_hint_y=None,
+                spacing=8
+            )
+            container.bind(minimum_height=container.setter("height"))
+
+            if not backups:
+                container.add_widget(Label(
+                    text="No backups found",
+                    size_hint_y=None,
+                    height=dp(40),
+                    color=self.COLOR_WHITE
+                ))
+            else:
+                for backup_file in backups[:20]:
+                    btn = Button(
+                        text=backup_file.name,
+                        size_hint_y=None,
+                        height=dp(45),
+                        background_normal='',
+                        background_color=self.COLOR_BLUE_MEDIUM,
+                        color=self.COLOR_WHITE
+                    )
+                    btn.bind(on_release=lambda btn, path=backup_file: self._confirm_restore(path))
+                    container.add_widget(btn)
+
+            scroll.add_widget(container)
+            inner.add_widget(scroll)
+
+            btn_close = Button(
+                text="Close",
+                size_hint_y=None,
+                height=dp(42),
+                background_normal='',
+                background_color=self.COLOR_GREY_DARK,
+                color=self.COLOR_WHITE
+            )
+
+            inner.add_widget(btn_close)
+
+            root.add_widget(inner)
+
+            popup = Popup(
+                title="",
+                content=root,
+                size_hint=(0.75, 0.75),
+                background="",
+                background_color=(0, 0, 0, 0),
+                separator_height=0
+            )
+
+            btn_close.bind(on_release=lambda x: popup.dismiss())
+
+            popup.open()
+
+    def _confirm_restore(self, backup_path):
+        show_confirm_dialog(
+            self,
+            title="Restore Backup",
+            message=f"Restore this backup?\n\n{backup_path.name}",
+            confirm_text="RESTORE",
+            confirm_color=self.COLOR_ORANGE,
+            on_confirm=lambda: self.restore_backup(backup_path),
+        )
 
     #----------- update version ----------
     def update_version_labels(self):
@@ -686,6 +830,9 @@ class LinuxHowToApp(App):
 
             def do_delete():
                 try:
+                    # ✅ BACKUP BEFORE LOCAL DELETE
+                    self.backup_current_data()
+
                     self.delete_local_topic(topic_id)
                     delete_user_icon_if_unused(self.APP_DATA, icon_name, topic_id)
                 except Exception as e:
@@ -709,6 +856,9 @@ class LinuxHowToApp(App):
 
         def do_delete():
             try:
+                # ✅ BACKUP BEFORE FIREBASE DELETE
+                self.backup_current_data()
+
                 deleted_topics, deleted_steps = delete_topic_from_firebase(node_key, topic_id)
                 print(f"✅ Deleted topics: {deleted_topics}, steps: {deleted_steps}")
 
@@ -731,6 +881,17 @@ class LinuxHowToApp(App):
     # -------- duplicate helper -------
     def _norm(self, value):
         return str(value or "").strip().lower()
+
+
+    def backup_current_data(self):
+        """
+        Delegate backup creation to backup_service for consistent naming.
+        """
+        try:
+            backup_database(self)
+        except Exception as e:
+            print(f"❌ Backup failed: {e}")
+
 
     def _find_official_duplicate(self, data):
         """

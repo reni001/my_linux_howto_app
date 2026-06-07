@@ -329,6 +329,12 @@
                 root.dismiss()
                 Clock.schedule_once(lambda dt: app.open_subcategory_dialog(), 0)
 
+        MenuToolButton:
+            text: "Restore Backup"
+            on_release:
+                root.dismiss()
+                Clock.schedule_once(lambda dt: app.show_restore_backup_dialog(), 0)
+
         MenuNavButton:
             text: "Open Database"
             on_release:
