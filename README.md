@@ -73,14 +73,15 @@ The app operates in two modes:
 - Browse content 
 - Search topics 
 - Work offline 
-- View documentation 
+- View documentation
+- Manage categories/subcategories (only offline content)
 
 ❌ Cannot: 
 
 - Edit topics 
 - Delete entries 
 - Sync or push changes 
-- Manage categories/subcategories 
+
 
 ### 🛠 Admin Mode 
 
@@ -102,6 +103,7 @@ Toggle in the Application Menu
 - Icons change visibility 
  
 ---
+
 ## ⚙️ Requirements 
 
 ### ✅ Supported Systems 
@@ -118,6 +120,7 @@ Ubuntu / Debian (tested)
 ❌ Python 3.14 (Kivy incompatibility) 
  
 ---
+
 ## 📦 Installation 
 
 ### ✅ Option 1 — Quick Install (Recommended) 
@@ -197,9 +200,9 @@ Ubuntu / Debian
 ```
 1     ~/.local/share/linux-howto/ 
 ```
-
  
 ---
+
 ## Structure 
 
 ```
@@ -225,6 +228,7 @@ Ubuntu / Debian
 | subcategories.json | subcategory registry 
 | assets/ | images and icons|
 
+
 ### 🔄 Synchronisation Flow 
 
 At startup: 
@@ -235,8 +239,8 @@ At startup:
 4. Generate categories & subcategories 
 5. Load UI 
 
- 
 ---
+ 
 ## 📂 Project Structure 
 
 ```
@@ -264,6 +268,7 @@ At startup:
 ```
 
 --- 
+
 ## 🔧 Architecture Overview 
 ```
 1     UI (Kivy) 
@@ -276,6 +281,7 @@ At startup:
 ```
  
 ---
+
 ## 📡 Sync Model 
 
 | Component | Source |
@@ -287,35 +293,37 @@ At startup:
 | Cache | local system | 
 
 ---
+
 ## ⚠️ Troubleshooting 
 
-App doesn’t start 
+### App doesn’t start 
 ```
 1     python -m src.main 
 ```
  
-Firebase issues 
+### Firebase issues 
 
 Check: 
 ```
 1     ~/.local/share/linux-howto/data/firebase.json 
 ```
  
-Missing icons 
+### Missing icons 
 ```
 1     git pull 
 ```
  
-Kivy issues (Wayland) 
+### Kivy issues (Wayland) 
 ```
 1     KIVY_WINDOW=sdl2 python src/main.py 
 ```
  
-Clipboard issues 
+### Clipboard issues 
 ```
 1     sudo pacman -S xclip 
 ```
 --- 
+
 ## 🧪 Developer Notes 
 
 You maintain: 
@@ -327,6 +335,7 @@ You maintain:
 
  
 ---
+
 ## 💡 Extensibility 
 
 You can: 
@@ -337,6 +346,7 @@ You can:
 - Add new sync logic 
  
 ---
+
 ## ✅ Summary 
 
 The app is now a: 
@@ -345,9 +355,9 @@ The app is now a:
 ✅ Offline-capable knowledge base 
 ✅ Lightweight content management system 
 ✅ Multi-device synchronised environment 
-
  
 ---
+
 ## 🚀 Current Version 
 
 v1.9.0 — Category System Integration 
