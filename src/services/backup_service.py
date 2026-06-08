@@ -118,10 +118,87 @@ def get_backups():
     return backups
 
 
+def _topic_key(topic):
+    return str(
+        topic.get("Topic_ID")
+        or topic.get("topic_id")
+        or ""
+    ).strip().lower()
+
+
+def _step_key(step):
+    topic_id = str(
+        step.get("Topic_ID")
+        or step.get("topic_id")
+        or ""
+    ).strip().lower()
+
+    step_order = str(
+        step.get("Step_Order")
+        or step.get("order")
+        or ""
+    ).strip().lower()
+
+    instruction = str(
+        step.get("Instruction")
+        or step.get("instruction")
+        or ""
+    ).strip().lower()
+
+    # using instruction as fallback helps if order is missing
+    return f"{topic_id}|{step_order}|{instruction}"
+
+
+def _deduplicate_data(data):
+    """
+    Deduplicate a single backup dataset.
+    Keeps first occurrence of each topic / step.
+    """
+    data = _normalise_backup_payload(data)
+
+    seen_topics = set()
+    unique_topics = []
+
+    for topic in data.get("topics", []):
+        if not isinstance(topic, dict):
+            continue
+
+        key = _topic_key(topic)
+        if not key:
+            continue
+
+        if key in seen_topics:
+            continue
+
+        seen_topics.add(key)
+        unique_topics.append(topic)
+
+    seen_steps = set()
+    unique_steps = []
+
+    for step in data.get("steps", []):
+        if not isinstance(step, dict):
+            continue
+
+        key = _step_key(step)
+        if not key:
+            continue
+
+        if key in seen_steps:
+            continue
+
+        seen_steps.add(key)
+        unique_steps.append(step)
+
+    data["topics"] = unique_topics
+    data["steps"] = unique_steps
+    return data
+
+
 def restore_backup_file(backup_path):
     """
     Restore backup folder contents into runtime data and assets.
-    Returns the path to restored cache.json
+    Restores ONLY the selected backup snapshot (not merged with current cache).
     """
     paths = get_runtime_paths()
 
@@ -134,8 +211,15 @@ def restore_backup_file(backup_path):
     if not data_file.exists():
         raise FileNotFoundError(f"Missing data.json in backup: {backup_path}")
 
-    shutil.copy2(data_file, cache_file)
+    with open(data_file, "r", encoding="utf-8") as f:
+        incoming = json.load(f)
 
+    restored = _deduplicate_data(incoming)
+
+    with open(cache_file, "w", encoding="utf-8") as f:
+        json.dump(restored, f, indent=2, ensure_ascii=False)
+
+    # ✅ restore assets/icons too
     if assets_src.exists():
         shutil.copytree(assets_src, assets_dst, dirs_exist_ok=True)
 

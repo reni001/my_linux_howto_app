@@ -1,5 +1,13 @@
 # 🧠 Linux HowTo App 
 
+## 🚀 v2.0.0 — Introducing Backup & Restore
+Your data is now safe, recoverable, and under your control.
+v2.0.0 adds a full backup system with one-click restore into a local workspace, allowing you to recover, review, and promote content without risk.
+
+🔹 Restore → Review → Promote
+🔹 No more permanent data loss
+🔹 Fully snapshot-based backups (data + assets)
+
 ## 📖 Overview 
 
 The Linux HowTo App is a Python + Kivy desktop application for browsing, managing, and synchronising Linux documentation. 
@@ -358,6 +366,76 @@ The app is now a:
  
 ---
 
-## 🚀 Current Version 
+# 🚀 Current Version 
 
-v1.9.0 — Category System Integration 
+## 🚀 v2.0.0 — Backup & Restore System
+This release is a major milestone for the Linux HowTo App, introducing a complete data safety layer and transforming the app into a fully reliable content management system.
+
+### 🔐 Data Safety & Recovery
+With v2.0.0, your content is no longer at risk:
+
+✅ Full snapshot backups (data + icons + screenshots)
+✅ Automatic backups before sync and destructive actions
+✅ Consistent backup format across all operations
+✅ Local backup storage with automatic cleanup
+
+Every change is now protected — accidental deletions or sync issues are no longer a concern.
+
+### 🔄 Restore System (Local Recovery Workflow)
+The new restore system allows safe, controlled recovery of content:
+
+✅ Browse and select backups directly in the UI
+✅ Restore content into your local workspace
+✅ Review and validate restored topics before publishing
+✅ Promote restored topics to Firebase when ready
+
+This ensures a safe workflow:
+
+Restore → Review → Promote ✅
+
+No direct overwrite of official content, no risk of corruption.
+
+### 🎨 Asset-Aware Backups
+Backups now include more than just data:
+
+✅ Icons
+✅ Screenshots
+✅ User assets
+
+Restoring a backup now fully rebuilds the original state — not just the metadata.
+
+### 🧠 Improved Data Integrity
+Several core improvements make the app more robust:
+
+✅ Normalised data structures (topics & steps always consistent)
+✅ Stable restore logic (no Firebase overwrite after restore)
+✅ Reliable backup sorting (latest first)
+✅ Unified behaviour between sync and local operations
+
+
+### 🖥 UI Integration
+The restore system is fully integrated into your workflow:
+
+✅ Themed restore popup (aligned with app UI system)
+✅ Backup list with correct ordering
+✅ Confirmation dialog for safe restore execution
+✅ Seamless UI refresh after restore
+
+
+### 🛠 Stability Fixes
+This release also resolves several critical issues:
+
+Fixed restore being overwritten by Firebase on reload
+Fixed crash caused by malformed step data ('str' object has no attribute 'get')
+Fixed inconsistent backup formats between sync and delete operations
+Fixed missing icons after restore
+Fixed incomplete or missing backup detection in UI
+Fixed restore execution inconsistencies and syntax issues
+
+
+### ✅ Summary
+With v2.0.0, the Linux HowTo App evolves into a safe, resilient, and production-ready content system:
+
+🔹 Your data is protected
+🔹 Your workflow is controlled
+🔹 Your content is recoverable

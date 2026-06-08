@@ -18,6 +18,7 @@ from src.utils.runtime_paths import is_dev_mode, get_runtime_paths
 from src.services.backup_service import get_backups, restore_backup_file, backup_database
 from src.services.update_content import update_assets, update_cache
 from src.services.category_service import generate_categories_from_topics
+from src.services.data_service import fetch_database
 from src.services.editor_service import is_admin_enabled
 from src.services.editor_service import delete_topic_from_firebase
 from src.services.icon_service import (
@@ -396,11 +397,27 @@ class LinuxHowToApp(App):
 
             # ✅ inject as LOCAL topics
             restored_count = 0
+            skipped_count = 0
+
+            existing_topic_ids = {
+                str(t.get("Topic_ID") or "").strip().lower()
+                for t in self.APP_DATA.get("topics", [])
+                if isinstance(t, dict)
+            }
 
             for topic in restored_topics:
-                tid = topic.get("Topic_ID")
+                tid = str(topic.get("Topic_ID") or "").strip()
 
                 if not tid:
+                    skipped_count += 1
+                    continue
+
+                norm_tid = tid.lower()
+
+                # ✅ skip exact duplicate already present
+                if norm_tid in existing_topic_ids:
+                    print(f"↪ Skipping duplicate topic during restore: {tid}")
+                    skipped_count += 1
                     continue
 
                 # ✅ mark as LOCAL
@@ -408,14 +425,19 @@ class LinuxHowToApp(App):
 
                 topic_steps = [
                     s for s in restored_steps
-                    if s.get("Topic_ID") == tid
+                    if str(s.get("Topic_ID") or "").strip().lower() == norm_tid
                 ]
 
                 try:
                     add_local_topic_and_steps(topic, topic_steps)
+                    existing_topic_ids.add(norm_tid)
                     restored_count += 1
                 except Exception as e:
                     print(f"⚠ Skipped topic {tid}: {e}")
+                    skipped_count += 1
+
+            print(f"✅ Restored {restored_count} topics as LOCAL content")
+            print(f"↪ Skipped {skipped_count} duplicate / invalid topics")
 
             print(f"✅ Restored {restored_count} topics as LOCAL content")
 
@@ -515,6 +537,11 @@ class LinuxHowToApp(App):
             confirm_color=self.COLOR_ORANGE,
             on_confirm=lambda: self.restore_backup(backup_path),
         )
+
+
+    def reload_data(self):
+        self.APP_DATA = fetch_database(force_reload=True)
+        self.refresh_ui()
 
     #----------- update version ----------
     def update_version_labels(self):
