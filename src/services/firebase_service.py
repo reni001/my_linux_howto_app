@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import re
+import hashlib
 from datetime import datetime
 
 import firebase_admin
@@ -33,11 +34,16 @@ def suffix_if_needed(base: str, existing_ids: set[str]) -> str:
         n += 1
     return f"{base}_{n}"
 
+
 def generate_topic_id(topic: dict, existing_ids: set[str] | None = None) -> str:
     """
-    Short Topic_ID format: cat4_sub4_title6
-    If duplicate, append: base_2, base_3...
+    Improved Topic_ID:
+    format: cat6_sub6_title12_hash4
+
+    Example:
+    archli_appli_micro_texted_7f4a
     """
+
     def slug(s: str) -> str:
         s = (str(s) if s is not None else "").lower().strip()
         s = s.replace(" ", "_")
@@ -45,25 +51,34 @@ def generate_topic_id(topic: dict, existing_ids: set[str] | None = None) -> str:
         s = re.sub(r"_+", "_", s).strip("_")
         return s
 
-    cat = slug(topic.get("Category", ""))[:4] or "catx"
-    sub = slug(topic.get("Subcategory", ""))[:4] or "subx"
-    title = slug(topic.get("Title", ""))[:6] or "titlex"
+    # ✅ slightly longer slices (better uniqueness)
+    cat = slug(topic.get("Category"))[:6] or "catx"
+    sub = slug(topic.get("Subcategory"))[:6] or "subx"
+    title = slug(topic.get("Title"))[:12] or "titlex"
+
     base = f"{cat}_{sub}_{title}"
 
-    if not existing_ids:
-        return base
+    # ✅ deterministic hash based on content
+    hash_input = f"{topic.get('Category','')}_{topic.get('Subcategory','')}_{topic.get('Title','')}"
+    short_hash = hashlib.md5(hash_input.encode()).hexdigest()[:4]
 
-    if base not in existing_ids:
-        return base
+    candidate = f"{base}_{short_hash}"
 
-    n = 2
-    while f"{base}_{n}" in existing_ids:
-        n += 1
-    return f"{base}_{n}"
+    # ✅ final safety fallback (very rare)
+    if existing_ids:
+        if candidate not in existing_ids:
+            return candidate
+
+        n = 2
+        while f"{candidate}_{n}" in existing_ids:
+            n += 1
+        return f"{candidate}_{n}"
+
+    return candidate
 
 def add_topic_to_firebase(topic: dict, overwrite: bool = False):
     """
-    Firebase node key: numeric string (1, 2, 3, ...)
+    Firebase node key: automatic Firebase push key
     Topic_ID field: semantic string (cat_sub_title)
     """
     _ensure_admin_firebase()
@@ -90,29 +105,25 @@ def add_topic_to_firebase(topic: dict, overwrite: bool = False):
             topic_id = generate_topic_id(topic, existing_ids)
         topic["Topic_ID"] = topic_id
 
-    # overwrite/edit uses stored firebase key (_key)
+    # ✅ EDIT / OVERWRITE existing topic
     if overwrite:
         node_key = str(topic.get("_key") or "").strip()
         if not node_key:
             raise ValueError("Missing _key for overwrite. Cannot update topic without Firebase node key.")
+
         topic["_key"] = node_key
         topics_ref.child(node_key).set(topic)
         return node_key, topic_id
 
-    # new topic: choose next numeric node key (single-writer assumption)
-    numeric_keys = []
-    if isinstance(all_topics, dict):
-        for k in all_topics.keys():
-            if str(k).isdigit():
-                numeric_keys.append(int(k))
+    # ✅ NEW topic → let Firebase generate unique key
+    new_ref = topics_ref.push()
+    node_key = new_ref.key
 
-    next_id = (max(numeric_keys) + 1) if numeric_keys else 1
-    while topics_ref.child(str(next_id)).get() is not None:
-        next_id += 1
+    if not node_key:
+        raise RuntimeError("Firebase push failed: no key returned")
 
-    node_key = str(next_id)
     topic["_key"] = node_key
-    topics_ref.child(node_key).set(topic)
+    new_ref.set(topic)
 
     if topics_ref.child(node_key).get() is None:
         raise RuntimeError("Firebase write failed: topic missing after write")
