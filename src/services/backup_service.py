@@ -30,6 +30,65 @@ def _normalise_backup_payload(data):
 
     return out
 
+def _collect_used_assets(data):
+    """
+    Scan topics + steps and collect only the actually used asset files
+    (icons + screenshots).
+    """
+    paths = get_runtime_paths()
+    assets_root = paths["assets"]
+
+    used_files = set()
+
+    # --- topics: icons ---
+    for t in data.get("topics", []):
+        for key in ("Topic_Icon", "Cat_Icon", "Sub_Icon"):
+            filename = str(t.get(key) or "").strip()
+            if not filename:
+                continue
+
+            for sub in ["icons", "user_icons"]:
+                p = assets_root / sub / filename
+                if p.exists():
+                    used_files.add(p)
+
+    # --- steps: screenshots ---
+    for s in data.get("steps", []):
+        filename = str(s.get("Screenshot") or "").strip()
+        if filename:
+            p = assets_root / "screenshots" / filename
+            if p.exists():
+                used_files.add(p)
+
+    return used_files
+
+def _copy_assets_subset(data, backup_folder):
+    """
+    Copy only used icons + screenshots + always icons_core.
+    """
+
+    paths = get_runtime_paths()
+    assets_root = paths["assets"]
+    assets_dst = backup_folder / "assets"
+    assets_dst.mkdir(parents=True, exist_ok=True)
+
+    used_files = _collect_used_assets(data)
+
+    # ✅ copy only needed files
+    for src in used_files:
+        rel = src.relative_to(assets_root)
+        dst = assets_dst / rel
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(src, dst)
+
+    # ✅ ALWAYS include core icons (important!)
+    core_src = assets_root / "icons_core"
+    core_dst = assets_dst / "icons_core"
+
+    if core_src.exists():
+        shutil.copytree(core_src, core_dst, dirs_exist_ok=True)
+
+    print(f"✅ Smart backup: {len(used_files)} assets copied")
 
 def backup_database(app):
     """
@@ -46,14 +105,13 @@ def backup_database(app):
 
     payload = _normalise_backup_payload(app.APP_DATA)
 
+    data = payload
+
     with open(backup_folder / "data.json", "w", encoding="utf-8") as f:
         json.dump(payload, f, indent=2, ensure_ascii=False)
 
-    assets_src = paths["assets"]
-    assets_dst = backup_folder / "assets"
+    _copy_assets_subset(data, backup_folder)
 
-    if assets_src.exists():
-        shutil.copytree(assets_src, assets_dst, dirs_exist_ok=True)
 
     print(f"✅ Full backup created: {backup_folder}")
 
@@ -75,14 +133,15 @@ def backup_runtime_snapshot(data, assets_path, max_keep=15):
 
     payload = _normalise_backup_payload(data)
 
+    # ✅ ensure structure matches list format for asset scanning
+    data = payload
+
+
     with open(backup_folder / "data.json", "w", encoding="utf-8") as f:
         json.dump(payload, f, indent=2, ensure_ascii=False)
 
-    assets_src = Path(assets_path)
-    assets_dst = backup_folder / "assets"
+    _copy_assets_subset(data, backup_folder)
 
-    if assets_src.exists():
-        shutil.copytree(assets_src, assets_dst, dirs_exist_ok=True)
 
     print(f"✅ Snapshot backup created: {backup_folder}")
 
@@ -221,6 +280,17 @@ def restore_backup_file(backup_path):
 
     # ✅ restore assets/icons too
     if assets_src.exists():
-        shutil.copytree(assets_src, assets_dst, dirs_exist_ok=True)
+        for src in assets_src.rglob("*"):
+            if not src.is_file():
+                continue
+
+            rel = src.relative_to(assets_src)
+            dst = assets_dst / rel
+
+            dst.parent.mkdir(parents=True, exist_ok=True)
+
+            # ✅ only overwrite if newer or missing
+            if not dst.exists() or src.stat().st_mtime > dst.stat().st_mtime:
+                shutil.copy2(src, dst)
 
     return cache_file

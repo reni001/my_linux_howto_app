@@ -30,6 +30,41 @@ def get_icon_path(filename: str) -> str:
     return str(fallback)
 
 
+def copy_topic_icon_by_mode(source_path: str, target_filename: str = "", admin_mode: bool = False) -> str:
+    """
+    Copy a selected topic icon into the correct runtime folder.
+
+    admin_mode=True  -> assets/icons
+    admin_mode=False -> assets/user_icons
+
+    Returns the stored filename (not full path).
+    """
+    if not source_path:
+        return target_filename or ""
+
+    src = Path(source_path).expanduser()
+    if not src.exists() or not src.is_file():
+        raise FileNotFoundError(f"Icon source not found: {source_path}")
+
+    paths = get_runtime_paths()
+
+    if admin_mode:
+        target_dir = paths["assets"] / "icons"
+    else:
+        target_dir = paths["assets"] / "user_icons"
+
+    target_dir.mkdir(parents=True, exist_ok=True)
+
+    final_name = (target_filename or src.name).strip()
+    dst = target_dir / final_name
+
+    # avoid unnecessary overwrite
+    if src.resolve() != dst.resolve():
+        shutil.copy2(src, dst)
+
+    return final_name
+
+
 def copy_icon_to_core(src_path: str) -> str:
     """
     Copy a chosen icon into assets/icons_core and return the filename.

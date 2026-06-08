@@ -296,43 +296,51 @@ class AddTopicScreen(Screen):
 
     def _import_icon(self, src_path: str) -> str:
         """
-        Import icon into user_icons safely:
-        - reuse if already exists
-        - reuse official if already exists
-        - only copy if truly new
+        Import icon depending on mode:
+        - ADMIN → assets/icons
+        - USER → assets/user_icons
         """
 
         from src.utils.runtime_paths import get_runtime_paths
         import shutil
         from pathlib import Path
+        from kivy.app import App
 
         if not src_path:
             return ""
 
+        app = App.get_running_app()
         paths = get_runtime_paths()
-        user_dir = paths["assets"] / "user_icons"
+
+        # ✅ SELECT TARGET BASED ON MODE
+        if app.is_admin_mode():
+            target_dir = paths["assets"] / "icons"
+        else:
+            target_dir = paths["assets"] / "user_icons"
+
         official_dir = paths["assets"] / "icons"
 
-        user_dir.mkdir(parents=True, exist_ok=True)
+        target_dir.mkdir(parents=True, exist_ok=True)
 
         filename = Path(src_path).name
 
-        user_target = user_dir / filename
+        target_path = target_dir / filename
         official_target = official_dir / filename
 
-        # ✅ 1. already in user_icons → reuse
-        if user_target.exists():
-            print(f"ℹ️ Reusing existing user icon: {filename}")
+
+        # ✅ 1. already in target → reuse
+        if target_path.exists():
+            print(f"ℹ️ Reusing existing icon: {filename}")
             return filename
 
-        # ✅ 2. already in official → reuse (no copy!)
+        # ✅ 2. already in official folder → reuse
         if official_target.exists():
             print(f"ℹ️ Using existing official icon: {filename}")
             return filename
 
-        # ✅ 3. new file → copy
-        shutil.copy2(src_path, user_target)
-        print(f"✅ Imported new icon: {user_target}")
+        # ✅ 3. copy to correct folder
+        shutil.copy2(src_path, target_path)
+        print(f"✅ Imported icon: {target_path}")
 
         return filename
 
