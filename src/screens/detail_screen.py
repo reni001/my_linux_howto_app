@@ -132,7 +132,7 @@ class DetailScreen(Screen):
                     item
                 )
 
-                print("DEBUG fixed item:", original)   # optional
+                #print("DEBUG fixed item:", original)   # optional
 
                 btn = EntryListItem(
                     title=original.get("Title", ""),

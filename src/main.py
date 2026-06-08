@@ -2,6 +2,11 @@
 # --- Standard library ---
 import requests
 import os
+
+# ✅ Reduce Kivy console noise
+os.environ["KIVY_NO_CONSOLELOG"] = "1"
+os.environ["KIVY_LOG_LEVEL"] = "warning"
+
 import platform
 import webbrowser
 import subprocess
@@ -11,6 +16,11 @@ import shutil
 import json
 from threading import Thread
 from pathlib import Path
+import logging
+
+logging.getLogger("urllib3").setLevel(logging.WARNING)
+logging.getLogger("requests").setLevel(logging.WARNING)
+
 
 # --- Project imports ---
 from src.utils.first_run import initialize_first_run
