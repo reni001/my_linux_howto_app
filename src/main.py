@@ -21,30 +21,11 @@ import logging
 logging.getLogger("urllib3").setLevel(logging.WARNING)
 logging.getLogger("requests").setLevel(logging.WARNING)
 
-
 # --- Project imports ---
 from src.utils.first_run import initialize_first_run
 from src.utils.runtime_paths import is_dev_mode, get_runtime_paths
-from src.services.backup_service import get_backups, restore_backup_file, backup_database
-from src.services.update_content import update_assets, update_cache
-from src.services.category_service import generate_categories_from_topics
-from src.services.data_service import fetch_database
-from src.services.editor_service import is_admin_enabled
-from src.services.editor_service import delete_topic_from_firebase
-from src.services.icon_service import (
-    get_icon_path as resolve_icon_path,
-    copy_user_icon_to_official,
-    copy_official_icon_to_user_icons,
-    delete_official_icon_if_unused
-)
-from src.services.subcategory_service import generate_from_topics
-from src.services.topic_service import do_promote_topic, do_demote_topic
+
 from src.screens.add_topic_screen import AddTopicScreen
-from src.services.icon_cleanup import (
-    clean_unused_icons,
-    delete_user_icon_if_unused,
-    find_unused_icons
-)
 from src.screens.menu_screen import MenuScreen
 from src.screens.search_screen import SearchScreen
 from src.screens.detail_screen import DetailScreen
@@ -52,7 +33,46 @@ from src.screens.article_screen import ArticleScreen
 from src.screens.add_step_screen import AddStepScreen
 from src.screens.json_viewer_screen import JsonViewerScreen
 from src.screens.app_info_screen import AppInfoScreen
+from src.services.backup_service import get_backups, restore_backup_file, backup_database
+
+# --- Data / Core services ---
+from src.services.data_service import (
+    fetch_database,
+    load_app_metadata,
+    APP_DATA,
+    add_local_topic_and_steps,
+    update_local_topic_and_steps,
+    delete_local_topic
+)
+from src.services.category_service import generate_categories_from_topics
 from src.services.subcategory_service import generate_from_topics
+
+# --- Topic / Editor logic ---
+from src.services.editor_service import is_admin_enabled, delete_topic_from_firebase
+from src.services.topic_service import do_promote_topic, do_demote_topic
+
+# --- Backup / Update ---
+from src.services.backup_service import (
+    get_backups,
+    restore_backup_file,
+    backup_database
+)
+from src.services.update_content import update_assets, update_cache
+
+# --- Icons ---
+from src.services.icon_service import (
+    get_icon_path as resolve_icon_path,
+    copy_user_icon_to_official,
+    copy_official_icon_to_user_icons,
+    delete_official_icon_if_unused
+)
+from src.services.icon_cleanup import (
+    clean_unused_icons,
+    delete_user_icon_if_unused,
+    find_unused_icons
+)
+
+# --- UI / dialogs ---
 from src.ui.about_popup import show_about_popup
 from src.ui.dialogs.cleanup_dialog import show_cleanup_dialog, undo_cleanup
 from src.ui.dialogs.confirm_dialog import show_confirm_dialog
@@ -62,15 +82,6 @@ from src.ui.dialogs.category_dialog import show_category_dialog
 from src.ui.styled_popup import create_popup_container
 from src.ui.window_manager import apply_desktop_window_defaults, toggle_orientation
 
-
-from src.services.data_service import (
-    fetch_database,
-    load_app_metadata,
-    APP_DATA,
-    add_local_topic_and_steps,
-    update_local_topic_and_steps,
-    delete_local_topic
-)
 from src.ui.theme import (
     COLOR_TRANSPARENT,
     COLOR_WHITE_SOFT,
@@ -156,15 +167,18 @@ LabelBase.register(
 )
 
 # ✅ ensure runtime dirs & config exist
-initialize_first_run()
+# ✅ Only run once per session (no repeat)
+if not getattr(sys, "_app_initialized", False):
+    initialize_first_run()
+    sys._app_initialized = True
 
 # --- UI DEFINITIONS (KV) --
 # The KV layout was moved from the inlined KV string to an external file.
 # This is a lossless move: main.kv contains the exact same KV content as before.
-KV = None  # KV now lives in main.kv
+
+KV = None
 KV_FILE = str(Path(__file__).parent / "main.kv")
-if KV_FILE not in Builder.files:
-    Builder.load_file(KV_FILE)
+
 
 
 def open_url(url):
@@ -241,7 +255,8 @@ class LinuxHowToApp(App):
 
     project_root = StringProperty("")
 
-    # --- Typography scale ---   _CATEGORY = NumericProperty(26)
+    # --- Typography scale ---
+    FONT_CATEGORY = NumericProperty(26)
     FONT_SUBCATEGORY = NumericProperty(21)
     FONT_TITLE = NumericProperty(24)
     FONT_TEXT = NumericProperty(19)
@@ -322,9 +337,7 @@ class LinuxHowToApp(App):
     def undo_cleanup(self, *args):
         undo_cleanup(self)
 
-
     def check_connection(self):
-        import requests
         try:
             requests.get("https://www.google.com", timeout=1)
             self.connection_status = "ONLINE"
@@ -348,20 +361,24 @@ class LinuxHowToApp(App):
         self.build_step_index()
 
     def _generate_taxonomies_when_ready(self, _dt=0):
+        if getattr(self, "_taxonomy_ready", False):
+            return
+
         topics = self.APP_DATA.get("topics", [])
 
-        print("DEBUG taxonomy wait -> topics in self.APP_DATA:", len(topics))
-
-        # wait until Firebase/app data is really present
+        # wait until data is really loaded
         if not topics:
             Clock.schedule_once(self._generate_taxonomies_when_ready, 0.2)
             return
 
-        # ✅ now data is really available
+        # ✅ now safe to run
         generate_from_topics(self, overwrite=False)
-        generate_categories_from_topics(self, overwrite=False)   # keep True only while debugging
+        generate_categories_from_topics(self, overwrite=False)
 
         print("✅ Taxonomy generation completed")
+
+        # ✅ mark as done ONLY AFTER execution
+        self._taxonomy_ready = True
 
     def refresh_data_only(self):
         fetch_database(self)          # ✅ lightweight data refresh
@@ -403,7 +420,8 @@ class LinuxHowToApp(App):
             restored_topics = [t for t in topics if isinstance(t, dict)]
             restored_steps = [s for s in steps if isinstance(s, dict)]
 
-            print("DEBUG restored topics:", len(restored_topics))
+            #debug only
+            #print("DEBUG restored topics:", len(restored_topics))
 
             # ✅ inject as LOCAL topics
             restored_count = 0
@@ -636,7 +654,7 @@ class LinuxHowToApp(App):
 
         """Updates the version label across all application screens."""
         if not hasattr(self, 'sm'):
-            Clock.schedule_once(lambda dt: self.refresh_ui_data(), 0.1)
+            Clock.schedule_once(lambda dt: self.refresh_ui_data(), 0.6)
             return
 
         version = self.metadata.get("version", "0.0.0")
@@ -701,6 +719,8 @@ class LinuxHowToApp(App):
             pass
 
     def build(self):
+        if KV_FILE not in Builder.files:
+            Builder.load_file(KV_FILE)
         self.APP_DATA = APP_DATA
         self.admin_enabled = is_admin_enabled()
         self.admin_override = False
@@ -717,8 +737,8 @@ class LinuxHowToApp(App):
         self.sm.add_widget(AppInfoScreen(name="app_info"))
         self.sm.add_widget(JsonViewerScreen(name="json_viewer"))
 
-        Clock.schedule_once(lambda dt: self.fetch_database(), 0)
-        Clock.schedule_once(lambda dt: self.refresh_ui_data(), 0.1)
+        Clock.schedule_once(lambda dt: self.fetch_database(), 0.5)
+        Clock.schedule_once(lambda dt: self.refresh_ui_data(), 0.6)
 
         Window.bind(size=self.update_typography_scale)
         Clock.schedule_once(self.update_typography_scale, 0)
@@ -899,7 +919,7 @@ class LinuxHowToApp(App):
                 deleted_topics, deleted_steps = delete_topic_from_firebase(node_key, topic_id)
                 print(f"✅ Deleted topics: {deleted_topics}, steps: {deleted_steps}")
 
-                Clock.schedule_once(lambda dt: self.fetch_database(), 0)
+                Clock.schedule_once(lambda dt: self.fetch_database(), 0.5)
                 Clock.schedule_once(lambda dt: self.refresh_ui_data(), 0.5)
 
             except Exception as e:
