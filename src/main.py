@@ -483,8 +483,6 @@ class LinuxHowToApp(App):
             print(f"✅ Restored {restored_count} topics as LOCAL content")
             print(f"↪ Skipped {skipped_count} duplicate / invalid topics")
 
-            print(f"✅ Restored {restored_count} topics as LOCAL content")
-
             # ✅ refresh (this will reload merged local + firebase view)
             self.refresh_all()
 
