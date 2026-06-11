@@ -66,6 +66,7 @@ from src.services.topic_action_service import (
     demote_topic as svc_demote_topic,
 )
 
+
 # --- Icons ---
 from src.services.icon_service import (
     get_icon_path as resolve_icon_path,
@@ -300,18 +301,11 @@ class LinuxHowToApp(App):
         toggle_orientation(self)
 
     def get_icon_path(self, filename):
-        if not filename:
-            return ""
         return resolve_icon_path(filename)
 
     #----------helpers-----------
 
     def update_typography_scale(self, *args):
-
-        if hasattr(self, "_font_initialized"):
-            return
-        self._font_initialized = True
-
         """
         Scale fonts based on current window width.
         Baseline: desktop layout around 900 px wide = 1.0 scale
@@ -545,9 +539,10 @@ class LinuxHowToApp(App):
             menu_screen = self.sm.get_screen('menu')
 
             #if not getattr(menu_screen, "_is_populated", False):
-            if not getattr(menu_screen, "_is_populated", False):
-                Clock.schedule_once(lambda dt: menu_screen.populate_menu(), 0)
-                menu_screen._is_populated = True
+            menu_screen.ids.menu_container.clear_widgets()
+            menu_screen.populate_menu()
+            menu_screen._is_populated = True
+
 
             # ✅ NEW: If user is currently on DetailScreen, reload it after data refresh
             try:
@@ -613,22 +608,16 @@ class LinuxHowToApp(App):
         self.sm.add_widget(AppInfoScreen(name="app_info"))
         self.sm.add_widget(JsonViewerScreen(name="json_viewer"))
 
-        Clock.schedule_once(self._startup_sequence, 0.5)
-        return self.sm
-
-    def _startup_sequence(self, dt):
-        self.fetch_database()
-        Clock.schedule_once(lambda dt: self.refresh_ui_data(), 0.2)
-        if getattr(self, "_taxonomy_attempts", 0) > 10:
-            return
-        self._taxonomy_attempts = getattr(self, "_taxonomy_attempts", 0) + 1
-
+        Clock.schedule_once(lambda dt: self.fetch_database(), 0.5)
+        Clock.schedule_once(lambda dt: self.refresh_ui_data(), 0.6)
 
         Window.bind(size=self.update_typography_scale)
         Clock.schedule_once(self.update_typography_scale, 0)
 
         # ✅ FIX: apply window AFTER build
         Clock.schedule_once(lambda dt: apply_desktop_window_defaults(), 0.05)
+
+        return self.sm
 
     def txt(self, text: str) -> str:
         return f"[font=NotoSans]{text}[/font]"

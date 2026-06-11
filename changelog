@@ -1,4 +1,127 @@
-VERSION 1.9.0 — Category System Integration
+# Changelog
+
+---
+
+## ✅ v2.2.0 — Architecture Refactor & Codebase Cleanup
+
+### 🧱 Refactoring (Major internal improvements)
+
+- Extracted restore logic into `restore_service`
+- Extracted delete logic into `topic_delete_service`
+- Extracted promote/demote logic into `topic_action_service`
+- Extracted restore dialog UI into `ui/dialogs/restore_dialog`
+- Moved duplicate detection logic (`_find_official_duplicate`) into service layer
+- Centralised local data modifications using `_apply_local_change()`
+- Introduced `refresh_all()` for unified refresh handling
+- Reduced duplication in save/update/delete flows
+
+---
+
+### ✅ Improvements
+
+- Clear separation of concerns:
+  - `main.py` → orchestration only
+  - `services/` → behaviour and data logic
+  - `ui/` → dialogs and presentation
+- Significantly reduced `main.py` complexity
+- Improved maintainability and modularity
+- Safer update pattern for local data changes
+- Cleaner and more predictable data refresh flow
+
+---
+
+### ⚡ Performance & Stability
+
+- Fixed recursion issue in refresh handling
+- Reduced risk of UI-triggered infinite loops
+- Improved data refresh reliability after edits
+
+---
+
+### 🔒 Behaviour
+
+- No functional changes
+- Fully backward compatible
+- Existing workflows unchanged
+
+---
+
+### 🧪 Testing
+
+Validated flows:
+
+- Create / edit / delete local topics ✅
+- Promote / demote topics ✅
+- Backup / restore operations ✅
+- UI dialogs (restore, delete, promote) ✅
+
+---
+
+## 🎯 Summary
+
+This release introduces a **clean, modular architecture** without changing behaviour.
+
+> 🚀 The application is now structurally ready for scaling, optimisation, and future feature development.
+
+VERSION 2.1.0 – Sync, Keys & Logging Refinement
+
+Features
+
+Introduced Firebase push-key system for Topic _key (replaces numeric indexing)
+Implemented improved Topic_ID generation using deterministic hash suffix for uniqueness
+Added smart backup system (only stores used icons and screenshots)
+Added fast restore system (restores only required assets instead of full asset folder)
+
+
+Improvements
+
+Significantly reduced terminal verbosity for cleaner runtime output
+Introduced controlled debug strategy (preparation for central debug handling)
+Optimised topic creation by removing expensive topic counting logic
+Improved sync performance and scalability (safe for multi-device operation)
+
+
+Fixes
+
+Fixed backup not being triggered during sync (data normalisation issue)
+Fixed backup system returning zero assets due to incorrect structure handling
+Removed excessive debug output ("DEBUG fixed item") causing terminal flooding
+Fixed redundant logging outputs in runtime workflow
+
+VERSION 2.0.0 Backup & Restore System
+
+FEATURES
+
+Full backup system (folder-based snapshot: data + assets)
+Restore system (recover backups as local content)
+Sync-integrated backup (automatic snapshot before Firebase overwrite)
+Backup browser in UI (list + select + restore)
+Restore into local workspace (no direct Firebase overwrite)
+Support for restoring multiple backups safely
+Unified backup format across delete + sync
+
+IMPROVEMENTS
+
+Consistent backup naming and structure
+Robust sorting of backups (latest first based on timestamp)
+Normalised backup data structure (topics + steps always lists)
+Improved restore reliability (no silent overwrite by Firebase)
+Icons and assets now included in backups
+UI restore dialog aligned with themed popup system
+Safer workflow: restore → review → promote
+
+FIXES
+
+Fixed restore being overwritten by Firebase on reload
+Fixed crash when restoring invalid step structure ('str' object has no attribute 'get')
+Fixed inconsistent backup formats between sync and delete
+Fixed missing icons after restore
+Fixed incomplete backup detection in restore dialog
+Fixed malformed restore function (syntax + execution issues)
+Fixed missing or partially loaded topics after restore
+Fixed sorting and visibility issues in backup list
+
+VERSION 1.9.0 - Category System Integration
 
 Features
 - Added full category management system (create, edit, delete)
@@ -49,6 +172,7 @@ Fixed multiple sources of UI state inconsistencies in main.py
 Removed legacy popup code paths causing maintenance issues
 Improved stability of delete and promotion workflows
 
+
 VERSION 1.7.0 — UI System & AppWindow Upgrade
 
 Improvements
@@ -78,9 +202,7 @@ Fixed file picker UI (oversized buttons, small text, default styling)
 Fixed missing firebase.json causing empty data on first run
 Resolved AppImage runtime configuration path issues
 Fixed inconsistencies in cache and Firebase fallback behaviour
-
 VERSION 1.6.1 – App Info & Changelog Polish
-
 Improvements
 
 Improved App Info editor layout
@@ -255,3 +377,4 @@ Features
 Early UI prototypes
 Initial sync pipeline
 Experimental data structures
+

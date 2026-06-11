@@ -1,3 +1,4 @@
+#:import os os
 #:import App kivy.app.App
 #:import dp kivy.metrics.dp
 #:import ButtonBehavior kivy.uix.behaviors.ButtonBehavior
@@ -21,6 +22,12 @@
 
 
 # ------ Button Definitions -------
+
+<StyledButton@Button>:
+    background_normal: ''
+    background_down: ''
+    background_color: 0, 0, 0, 0
+    color: app.COLOR_WHITE
 
 # ----------------------------
 # GENERIC APP BUTTONS
