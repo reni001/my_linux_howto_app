@@ -33,7 +33,6 @@ from src.screens.article_screen import ArticleScreen
 from src.screens.add_step_screen import AddStepScreen
 from src.screens.json_viewer_screen import JsonViewerScreen
 from src.screens.app_info_screen import AppInfoScreen
-from src.services.backup_service import get_backups, restore_backup_file, backup_database
 
 # --- Data / Core services ---
 from src.services.data_service import (
@@ -384,17 +383,34 @@ class LinuxHowToApp(App):
         fetch_database(self)          # ✅ lightweight data refresh
         self.build_step_index()
 
-    def save_local_topic(self, topic: dict, steps: list[dict]):
-        add_local_topic_and_steps(topic, steps)
+    def refresh_all(self):
+        """
+        Centralised refresh after data changes.
+        Keeps behaviour identical to current implementation.
+        """
         self.refresh_data_only()
+
+    def _apply_local_change(self, action):
+        """
+        Safely apply local change + refresh.
+        """
+        action()
+        self.refresh_all()
+
+    def save_local_topic(self, topic: dict, steps: list[dict]):
+        self._apply_local_change(
+            lambda: add_local_topic_and_steps(topic, steps)
+        )
 
     def update_local_topic(self, topic_id: str, topic: dict, steps: list[dict]):
-        update_local_topic_and_steps(topic_id, topic, steps)
-        self.refresh_data_only()
+        self._apply_local_change(
+            lambda: update_local_topic_and_steps(topic_id, topic, steps)
+        )
 
     def delete_local_topic(self, topic_id: str):
-        delete_local_topic(topic_id)
-        self.refresh_data_only()
+        self._apply_local_change(
+            lambda: delete_local_topic(topic_id)
+        )
 
     def restore_backup(self, backup_path):
 
@@ -470,7 +486,7 @@ class LinuxHowToApp(App):
             print(f"✅ Restored {restored_count} topics as LOCAL content")
 
             # ✅ refresh (this will reload merged local + firebase view)
-            self.refresh_data_only()
+            self.refresh_all()
 
         except Exception as e:
             print(f"❌ Restore failed: {e}")

@@ -172,7 +172,7 @@ class ArticleScreen(Screen):
             url_list = [u.strip() for u in raw_topic_urls.split(',') if u.strip()]
             for link in url_list:
                 url_box = BoxLayout(orientation='horizontal', size_hint_y=None, height=dp(30), spacing=dp(10))
-                url_box.add_widget(Image(source='assets/icons/link2.png', size_hint_x=None, width=dp(20)))
+                url_box.add_widget(Image(source='assets/icons_core/link2.png', size_hint_x=None, width=dp(20)))
                 url_btn = Button(text=link, color=[0.1, 0.4, 0.8, 1], background_color=[0,0,0,0], font_size='18sp', underline=True, halign='left', shorten=True, shorten_from='right', size_hint_x=1)
                 url_btn.bind(size=lambda s, w: setattr(s, 'text_size', (w[0], None)))
                 url_btn.bind(on_release=lambda x, u=link: self.open_url(u))
