@@ -50,7 +50,7 @@ from src.services.subcategory_service import generate_from_topics
 from src.services.editor_service import is_admin_enabled, delete_topic_from_firebase
 from src.services.topic_service import do_promote_topic, do_demote_topic
 
-# --- Backup / Update / Restore---
+# --- Backup / Update / Restore/ delete ---
 from src.services.backup_service import (
     get_backups,
     restore_backup_file,
@@ -59,6 +59,7 @@ from src.services.backup_service import (
 from src.services.update_content import update_assets, update_cache
 from src.services.restore_service import restore_backup as svc_restore_backup
 from src.ui.dialogs.restore_dialog import show_restore_backup_dialog as ui_show_restore_dialog
+from src.services.topic_delete_service import delete_topic as svc_delete_topic
 
 # --- Icons ---
 from src.services.icon_service import (
@@ -737,67 +738,7 @@ class LinuxHowToApp(App):
         self.sm.current = "add_topic"
 
     def delete_topic(self, data):
-
-        topic_id = str(data.get("Topic_ID") or "")
-        if not topic_id:
-            return
-
-        icon_name = str(data.get("Topic_Icon") or "")
-
-        # -----------------------------
-        # ✅ LOCAL DELETE
-        # -----------------------------
-        if data.get("source") == "user":
-
-            def do_delete():
-                try:
-                    # ✅ BACKUP BEFORE LOCAL DELETE
-                    self.backup_current_data()
-
-                    self.delete_local_topic(topic_id)
-                    delete_user_icon_if_unused(self.APP_DATA, icon_name, topic_id)
-                except Exception as e:
-                    print(f"❌ Local delete failed: {e}")
-
-            show_confirm_dialog(
-                self,
-                title="Delete Topic",
-                message="Are you sure you want to delete this topic?",
-                confirm_text="DELETE",
-                confirm_color=self.COLOR_RED,
-                on_confirm=do_delete,
-            )
-
-            return
-
-        # -----------------------------
-        # ✅ FIREBASE DELETE
-        # -----------------------------
-        node_key = str(data.get("_key") or "")
-
-        def do_delete():
-            try:
-                # ✅ BACKUP BEFORE FIREBASE DELETE
-                self.backup_current_data()
-
-                deleted_topics, deleted_steps = delete_topic_from_firebase(node_key, topic_id)
-                print(f"✅ Deleted topics: {deleted_topics}, steps: {deleted_steps}")
-
-                Clock.schedule_once(lambda dt: self.fetch_database(), 0.5)
-                Clock.schedule_once(lambda dt: self.refresh_ui_data(), 0.5)
-
-            except Exception as e:
-                print(f"❌ Delete failed: {e}")
-
-        show_confirm_dialog(
-            self,
-            title="Delete Topic",
-            message="Are you sure you want to delete this topic?",
-            confirm_text="DELETE",
-            confirm_color=self.COLOR_RED,
-            on_confirm=do_delete,
-        )
-
+        svc_delete_topic(self, data)
 
     # -------- duplicate helper -------
     def _norm(self, value):
