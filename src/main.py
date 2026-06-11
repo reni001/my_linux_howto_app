@@ -61,6 +61,12 @@ from src.services.restore_service import restore_backup as svc_restore_backup
 from src.ui.dialogs.restore_dialog import show_restore_backup_dialog as ui_show_restore_dialog
 from src.services.topic_delete_service import delete_topic as svc_delete_topic
 
+from src.services.topic_action_service import (
+    promote_topic as svc_promote_topic,
+    demote_topic as svc_demote_topic,
+)
+
+
 # --- Icons ---
 from src.services.icon_service import (
     get_icon_path as resolve_icon_path,
@@ -778,36 +784,14 @@ class LinuxHowToApp(App):
         return None
 
     # -------- promote topic (make it public) --------
+
     def promote_topic(self, data):
-        duplicate = self._find_official_duplicate(data)
-
-        def do_promote():
-            do_promote_topic(self, data)
-
-        show_promotion_dialog(
-            self,
-            data,
-            duplicate,
-            on_confirm=do_promote
-        )
+        svc_promote_topic(self, data)
 
     #---- demote topic (make it private) -------
+
     def demote_topic(self, data):
-
-        if str(data.get("source") or "") == "user":
-            return
-
-        def do_demote():
-            do_demote_topic(self, data)
-
-        show_confirm_dialog(
-            self,
-            title="Demote Topic",
-            message="This will remove the topic from official content and make it local.\n\nContinue?",
-            confirm_text="DEMOTE",
-            confirm_color=self.COLOR_ORANGE,
-            on_confirm=do_demote,
-        )
+        svc_demote_topic(self, data)
 
     #---- update button behaviour -----
     def update_app_from_git(self, *args):
