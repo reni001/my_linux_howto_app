@@ -3,6 +3,7 @@
 #:import ButtonBehavior kivy.uix.behaviors.ButtonBehavior
 #:import Clock kivy.clock.Clock
 
+<LazyImage@Image>:
 
 <ClickableStatus@ButtonBehavior+BoxLayout>:
     canvas.before:
@@ -404,7 +405,7 @@
             radius: [20,]
 
     # ✅ REAL widget
-    Image:
+    LazyImage:
         source: root.icon_source
         size_hint: None, None
         size: root.icon_size, root.icon_size
@@ -433,7 +434,7 @@
             pos: [self.pos[0]+2, self.pos[1]+2]
             size: [self.size[0]-4, self.size[1]-4]
             radius: [10,]
-    Image:
+    LazyImage:
         source: root.icon_source
         size_hint_x: None
         width: '60dp'

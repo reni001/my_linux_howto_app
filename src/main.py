@@ -917,6 +917,20 @@ class LinuxHowToApp(App):
     def open_subcategory_dialog(self):
         show_subcategory_dialog(self)
 
+
+class LazyImage(Image):
+    def on_kv_post(self, base_widget):
+        if self.source:
+            src = self.source
+            self.source = ""
+
+            # load icon in next frame → non-blocking
+            Clock.schedule_once(
+                lambda dt: setattr(self, "source", src),
+                0
+            )
+
+
 class ClickableHeader(ButtonBehavior, BoxLayout):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
