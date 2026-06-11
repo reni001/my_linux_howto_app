@@ -760,29 +760,6 @@ class LinuxHowToApp(App):
         except Exception as e:
             print(f"❌ Backup failed: {e}")
 
-
-    def _find_official_duplicate(self, data):
-        """
-        Check duplicates only against OFFICIAL topics
-        (not local user topics).
-        """
-        wanted_cat = self._norm(data.get("Category"))
-        wanted_sub = self._norm(data.get("Subcategory"))
-        wanted_title = self._norm(data.get("Title"))
-
-        for topic in self.APP_DATA.get("topics", []):
-            if topic.get("source") == "user":
-                continue
-
-            if (
-                self._norm(topic.get("Category")) == wanted_cat and
-                self._norm(topic.get("Subcategory")) == wanted_sub and
-                self._norm(topic.get("Title")) == wanted_title
-            ):
-                return topic
-
-        return None
-
     # -------- promote topic (make it public) --------
 
     def promote_topic(self, data):
