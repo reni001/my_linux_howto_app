@@ -375,6 +375,11 @@ class LinuxHowToApp(App):
         self.build_step_index()
 
     def _generate_taxonomies_when_ready(self, _dt=0):
+
+        if getattr(self, "_taxonomy_attempts", 0) > 10:
+            return
+        self._taxonomy_attempts = getattr(self, "_taxonomy_attempts", 0) + 1
+
         if getattr(self, "_taxonomy_ready", False):
             return
 
@@ -613,22 +618,21 @@ class LinuxHowToApp(App):
         self.sm.add_widget(AppInfoScreen(name="app_info"))
         self.sm.add_widget(JsonViewerScreen(name="json_viewer"))
 
+        apply_desktop_window_defaults()
+
         Clock.schedule_once(self._startup_sequence, 0.5)
+
         return self.sm
 
     def _startup_sequence(self, dt):
         self.fetch_database()
         Clock.schedule_once(lambda dt: self.refresh_ui_data(), 0.2)
-        if getattr(self, "_taxonomy_attempts", 0) > 10:
-            return
-        self._taxonomy_attempts = getattr(self, "_taxonomy_attempts", 0) + 1
-
 
         Window.bind(size=self.update_typography_scale)
         Clock.schedule_once(self.update_typography_scale, 0)
 
         # ✅ FIX: apply window AFTER build
-        Clock.schedule_once(lambda dt: apply_desktop_window_defaults(), 0.05)
+        #Clock.schedule_once(lambda dt: apply_desktop_window_defaults(), 0)
 
     def txt(self, text: str) -> str:
         return f"[font=NotoSans]{text}[/font]"

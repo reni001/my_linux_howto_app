@@ -13,7 +13,7 @@ def setup_window(*args):
     screen_w, screen_h = Window.system_size
 
     # ✅ use most of height
-    HEIGHT = int(screen_h * 0.9)
+    HEIGHT = int(screen_h * 0.95)
 
     # ✅ phone ratio (9:16)
     WIDTH = int(HEIGHT * 9 / 16)
