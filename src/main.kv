@@ -143,7 +143,6 @@
     pos_hint: {"center_y": 0.5}
     fit_mode: "contain"
 
-
 #----------- Panel Definitions ------------------------
 <StyledPanel@BoxLayout>:
     size_hint_y: None
@@ -854,7 +853,7 @@
                         background_color: app.COLOR_TRANSPARENT
                         size_hint_x: None
                         width: '50dp'
-                        on_release: app.root.current = 'menu'
+                        on_release: app.root.current = app.previous_screen
                         Image:
                             source: app.get_icon_path("arrow_back.png")
                             center: self.parent.center
@@ -1269,7 +1268,7 @@
                     width: app.FONT_TITLE * 2
                     size: app.FONT_TITLE * 1.6, app.FONT_TITLE * 1.6
 
-                    on_release: app.root.current = 'menu'
+                    on_release: app.root.current = app.previous_screen
                     Image:
                         source: app.get_icon_path("arrow_back.png")
                         center: self.parent.center
@@ -1305,7 +1304,7 @@
                         background_color: app.COLOR_WHITE
                         border: 0,0,0,0
                         text: ""
-                        on_release: app.root.current = 'menu'
+                        on_release: app.root.current = app.previous_screen
 
         ScrollView:
             do_scroll_x: False
@@ -1405,7 +1404,6 @@
                     size_hint_y: None
                     height: dp(8)
 
-
                 # -------- EDITOR --------
                 BoxLayout:
                     orientation: "vertical"
@@ -1426,7 +1424,6 @@
                         size_hint_y: None
                         font_size: app.FONT_TEXT
                         height: max(self.minimum_height, app.FONT_TEXT * 8)
-
 
         # -------- FIXED SAVE BAR --------
         StyledPanel:

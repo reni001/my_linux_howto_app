@@ -2,7 +2,6 @@ import os
 from pathlib import Path
 from src.utils.runtime_paths import get_runtime_paths
 
-
 def load_local_version():
     try:
         paths = get_runtime_paths()

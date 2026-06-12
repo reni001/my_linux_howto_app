@@ -66,7 +66,6 @@ from src.services.version_service import (
     is_appimage
 )
 
-
 # --- Topic / Editor logic ---
 from src.services.editor_service import is_admin_enabled, delete_topic_from_firebase
 from src.services.topic_service import do_promote_topic, do_demote_topic
@@ -87,6 +86,7 @@ from src.services.topic_action_service import (
     demote_topic as svc_demote_topic,
 )
 from src.services.update_content import update_assets, update_cache, upgrade_app_files
+from src.services.navigation_service import NavigationService
 
 # --- Icons ---
 from src.services.icon_service import (
@@ -326,6 +326,8 @@ class LinuxHowToApp(App):
 
     is_landscape = False
     previous_size = None
+
+    previous_screen = StringProperty("menu")
 
 
     def toggle_orientation(self):
@@ -659,6 +661,7 @@ class LinuxHowToApp(App):
         self.sm.add_widget(AddStepScreen(name="add_step"))
         self.sm.add_widget(AppInfoScreen(name="app_info"))
         self.sm.add_widget(JsonViewerScreen(name="json_viewer"))
+        self.nav = NavigationService()
 
         apply_desktop_window_defaults()
 
@@ -799,7 +802,9 @@ class LinuxHowToApp(App):
 
         screen = self.sm.get_screen("add_topic")
         screen.load_topic_for_edit(data)
+        self.previous_screen = self.sm.current
         self.sm.current = "add_topic"
+
 
     def delete_topic(self, data):
         svc_delete_topic(self, data)
@@ -1031,6 +1036,7 @@ class LinuxHowToApp(App):
             lambda dt: setattr(screen, "_skip_callbacks", False), 0.1
         )
 
+        self.previous_screen = self.sm.current
         self.sm.current = "add_topic"
 
     def open_about_popup(self, *args):
