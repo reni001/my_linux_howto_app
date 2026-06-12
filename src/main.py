@@ -57,12 +57,15 @@ from src.services.data_service import (
 )
 from src.services.category_service import generate_categories_from_topics
 from src.services.subcategory_service import generate_from_topics
+
 from src.services.version_service import (
     load_local_version,
+    write_local_version,
     get_remote_version,
     is_upgrade_available,
-    write_local_version
+    is_appimage
 )
+
 
 # --- Topic / Editor logic ---
 from src.services.editor_service import is_admin_enabled, delete_topic_from_firebase
