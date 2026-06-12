@@ -1,4 +1,42 @@
 [
-  {"name": "Networking", "icon": "network.png"},
-  {"name": "System", "icon": "system.png"}
+  {
+    "name": "Application",
+    "icon": "category.png"
+  },
+  {
+    "name": "Hardware",
+    "icon": "hardware.png"
+  },
+  {
+    "name": "OS related",
+    "icon": "os.png"
+  },
+  {
+    "name": "HowTo",
+    "icon": "howto.png"
+  },
+  {
+    "name": "Tweaks",
+    "icon": "tweaks.png"
+  },
+  {
+    "name": "Cloud",
+    "icon": "cloud2.png"
+  },
+  {
+    "name": "Links",
+    "icon": "link2.png"
+  },
+  {
+    "name": "Internet",
+    "icon": "wifi2.png"
+  },
+  {
+    "name": "General",
+    "icon": "general.png"
+  },
+  {
+    "name": "Tips",
+    "icon": "tips_category.png"
+  }
 ]

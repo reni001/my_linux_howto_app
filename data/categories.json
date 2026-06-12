@@ -1,4 +1,26 @@
 [
-  { "name": "Linux", "icon": "linux.png" },
-  { "name": "Windows", "icon": "windows.png" }
+  {
+    "name": "Arch Linux (Garuda)",
+    "icon": "arch-garuda.png"
+  },
+  {
+    "name": "Debian",
+    "icon": "debian.png"
+  },
+  {
+    "name": "Fedora",
+    "icon": "fedora.png"
+  },
+  {
+    "name": "Other",
+    "icon": "other.png"
+  },
+  {
+    "name": "Raspberry Pi",
+    "icon": "raspi-pi.png"
+  },
+  {
+    "name": "Windows Tips",
+    "icon": "win.png"
+  }
 ]
