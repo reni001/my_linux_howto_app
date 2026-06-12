@@ -7,6 +7,18 @@ import webbrowser
 from threading import Thread
 
 
+# ----------------------------------------
+# ENV DETECTION
+# ----------------------------------------
+
+def is_wsl():
+    return "microsoft" in platform.release().lower()
+
+
+# ----------------------------------------
+# ASYNC EXECUTION (safe & visible errors)
+# ----------------------------------------
+
 def _run_async(cmd):
     def runner():
         try:
@@ -20,11 +32,9 @@ def _run_async(cmd):
 
     Thread(target=runner, daemon=True).start()
 
-
-def is_wsl():
-    return "microsoft" in platform.release().lower()
-
-
+# ----------------------------------------
+# WSL PATH CONVERSION
+# ----------------------------------------
 
 def _wsl_to_windows_path(path):
     try:
@@ -33,6 +43,9 @@ def _wsl_to_windows_path(path):
     except Exception:
         return path
 
+# ----------------------------------------
+# OPEN FILE / FOLDER
+# ----------------------------------------
 
 def open_path(path: str):
     if not os.path.exists(path):
@@ -52,6 +65,10 @@ def open_path(path: str):
     else:
         subprocess.Popen(['xdg-open', path])  # ✅ no thread
 
+
+# ----------------------------------------
+# OPEN URL (FINAL CLEAN LOGIC)
+# ---------------------------------------
 
 
 def open_url(url: str):

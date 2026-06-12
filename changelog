@@ -2,6 +2,120 @@
 
 ---
 
+VERSION 2.3.5
+Features
+
+Cross‑platform system integration (major)
+
+- Centralised system_open_service for:
+
+  - Opening URLs
+  - Opening files (database)
+  - Opening asset folders
+
+- Full support for:
+
+  - Linux (Arch, Ubuntu, etc.)
+  - Windows
+  - WSL (Windows Subsystem for Linux)
+
+- WSL integration support
+
+  - Automatic detection of WSL environment
+  - File opening redirected to:
+    - Windows Explorer for folders
+    - Windows applications for files
+    - Windows browser for URLs
+
+  - Path conversion using wslpath
+
+- Modular architecture improvement
+
+  - External system calls removed from main.py
+  - Dedicated service layer (system_open_service.py)
+  - Cleaner separation of:
+    - UI (screens)
+    - Logic (services)
+    - System interactions
+
+Improvements
+
+
+Improved installer robustness
+
+OS detection refined (Debian, Arch, Fedora, WSL)
+Python version validation improved
+Better error handling for missing dependencies
+
+
+
+WSL install optimisation
+
+Avoids installing unnecessary Linux GUI tools
+Clear instructions for enabling WSLg (wsl --update)
+Skips GUI test when not available
+
+
+
+Better URL handling
+
+Automatic correction of malformed URLs:
+
+adds https:// if missing
+decodes HTML entities (&amp; → &)
+
+
+Consistent behaviour across platforms
+
+
+
+Improved error visibility
+
+Added traceback output in async subprocess calls
+Eliminates silent failures during file/URL opening
+
+
+
+UI responsiveness
+
+Removed blocking subprocess calls that caused freezes
+Async execution only where required (WSL/Windows)
+
+
+
+
+Fixes
+
+Fixed crash when clicking links:
+
+Missing open_url method in ArticleScreen
+Incorrect indentation (method defined inside go_back)
+
+Fixed runtime crash:
+
+NameError: html not defined → added import
+
+Fixed broken URL parsing:
+
+Corrupted startswith() logic in earlier version
+
+Fixed WSL path handling:
+
+Explorer opening wrong directory → resolved with wslpath -w
+
+Fixed URL opening in WSL:
+
+explorer.exe fallback replaced with proper handling
+
+Fixed UI freeze:
+
+Improper threading of webbrowser.open
+Blocking subprocess calls removed
+
+Fixed inconsistent behaviour:
+
+Mixed use of webbrowser, xdg-open, and manual calls unified
+
 VERSION 2.3.0 - Upgrade System & Version Tracking
 
 Features

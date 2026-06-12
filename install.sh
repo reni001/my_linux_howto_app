@@ -52,14 +52,32 @@ echo "[INFO] OS detected: $OS"
 
 install_ubuntu() {
     echo "[INFO] Installing Ubuntu/Debian dependencies..."
-    sudo apt update
-    sudo apt install -y \
-        python3-venv python3-dev build-essential \
-        libgl1-mesa-dev libgles2-mesa-dev \
-        libgstreamer1.0-dev gstreamer1.0-plugins-base \
-        libmtdev-dev libjpeg-dev libpng-dev pkg-config \
-        || echo "[WARNING] dependency install failed"
 
+    sudo apt update
+
+    if [ "$IS_WSL" = true ]; then
+        echo "[INFO] ⚙️ WSL detected → minimal GUI dependencies"
+
+        sudo apt install -y \
+            python3-venv python3-dev build-essential \
+            libgl1 libgles2 \
+            || echo "[WARNING] dependency install failed"
+
+        # ✅ OPTIONAL (only for debugging / fallback)
+        # No heavy editors needed because Windows handles opening
+        echo "[INFO] Skipping desktop apps (WSL uses Windows programs)"
+
+    else
+        echo "[INFO] Standard Linux install"
+
+        sudo apt install -y \
+            python3-venv python3-dev build-essential \
+            libgl1-mesa-dev libgles2-mesa-dev \
+            libgstreamer1.0-dev gstreamer1.0-plugins-base \
+            libmtdev-dev libjpeg-dev libpng-dev pkg-config \
+            xdg-utils \
+            || echo "[WARNING] dependency install failed"
+    fi
 }
 
 install_fedora() {
@@ -106,9 +124,10 @@ esac
 
 IS_WSL=false
 
-if grep -qi microsoft /proc/version 2>/dev/null; then
+if grep -qi microsoft /proc/version 2>/dev/null || \
+   grep -qi microsoft /proc/sys/kernel/osrelease 2>/dev/null; then
     IS_WSL=true
-    echo "[INFO] WSL environment detected"
+    echo "[INFO] ✅ WSL environment detected"
 fi
 
 # ----------------------------------------
@@ -296,19 +315,19 @@ fi
 # TEST RUN
 # ----------------------------------------
 
-echo "[INFO] Running first test..."
+echo "[INFO] Skipping auto-run test..."
 
-cd "$APP_DIR"
-
-if [ "$IS_WSL" = true ] && [ -z "$DISPLAY" ]; then
-    echo "[INFO] Skipping GUI test (no display in WSL)"
-else
+if [ "$IS_WSL" = false ]; then
     if "$VENV_DIR/bin/python" -m src.main; then
         echo "[INFO] ✅ App started successfully"
     else
         echo "[WARNING] First run produced warnings"
     fi
+else
+    echo "[INFO] Run manually in WSL with:"
+    echo "  ./run.sh"
 fi
+
 
 # ----------------------------------------
 # DONE
@@ -322,3 +341,18 @@ echo ""
 echo "Run with:"
 echo "cd $APP_DIR && source venv/bin/activate && python -m src.main"
 echo "or: ./run.sh"
+
+
+if [ "$IS_WSL" = true ]; then
+    echo ""
+    echo "------------------------------------------"
+    echo " WSL Notes"
+    echo "------------------------------------------"
+    echo ""
+    echo "✔ Files open in Windows apps automatically"
+    echo "✔ Browser links open in Windows browser"
+    echo ""
+    echo "If something does not open:"
+    echo "  Ensure Windows default apps are configured"
+    echo ""
+fi
