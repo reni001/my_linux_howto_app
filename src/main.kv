@@ -123,7 +123,6 @@
 
 
 #----------- Panel Definitions ------------------------
-
 <StyledPanel@BoxLayout>:
     size_hint_y: None
     height: '65dp'
@@ -208,6 +207,9 @@
     # ---- LEFT BUTTON ----
     IconButton:
         source: app.get_icon_path("arrow_back.png")
+        opacity: 1 if root.left_action else 0     # ✅ visible only if action exists
+        disabled: not root.left_action            # ✅ prevent clicks when hidden
+
         on_release:
             root.left_action() if root.left_action else None
 
@@ -227,7 +229,7 @@
         source: app.get_icon_path(root.right_icon) if root.right_icon else ""
         on_release:
             root.right_action() if root.right_action else None
-# -----------------
+
 
 <JumpToTopButton@ButtonBehavior+Image>:
     source: app.get_icon_path("top.png")
@@ -386,6 +388,13 @@
                         root.dismiss()
                         Clock.schedule_once(lambda dt: app.open_subcategory_dialog(), 0)
 
+                Widget:
+                    size_hint_y: None
+                    height: dp(3)
+
+                MenuSectionLabel:
+                    text: "Backup"
+
                 MenuBackupButton:
                     text: app.backup_text
                     on_release:
@@ -397,13 +406,6 @@
                         Line:
                             rectangle: self.x + 1, self.y + 1, self.width - 2, self.height - 2
                             width: 2
-
-                Widget:
-                    size_hint_y: None
-                    height: dp(3)
-
-                MenuSectionLabel:
-                    text: "DATA"
 
                 MenuToolButton:
                     text: "Restore Backup"
@@ -627,6 +629,7 @@
 
             TopBar:
                 title: "LINUX HOW-TO"
+                left_action: None   # ✅ hides back button
                 right_icon: "search.png"
                 right_action: lambda: setattr(root.manager, "current", "search")
 
