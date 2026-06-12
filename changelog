@@ -2,91 +2,90 @@
 
 ---
 
-## ✅ v2.2.0 — Architecture Refactor & Codebase Cleanup
+VERSION 2.3.0 - Upgrade System & Version Tracking
 
-### 🧱 Refactoring (Major internal improvements)
+Features
 
-- Extracted restore logic into `restore_service`
-- Extracted delete logic into `topic_delete_service`
-- Extracted promote/demote logic into `topic_action_service`
-- Extracted restore dialog UI into `ui/dialogs/restore_dialog`
-- Moved duplicate detection logic (`_find_official_duplicate`) into service layer
-- Centralised local data modifications using `_apply_local_change()`
-- Introduced `refresh_all()` for unified refresh handling
-- Reduced duplication in save/update/delete flows
+- Added full Upgrade App system (updates complete application from GitHub)
+- Introduced separation between Update Data and Upgrade App
+- Implemented local vs remote version tracking
+- Added version.txt to store installed application version
+- Installer now creates version.txt during first installation
+
+Improvements
+
+- Upgrade button now reflects state:
+  - "Upgrade Available"
+  - "Up to Date"
+- Unified button behaviour across system actions:
+  - Success → green on white
+  - Failure → red on white
+  - Idle → light neutral style
+- Improved system structure:
+  - version_service handles version logic
+  - update_content handles update logic
+- Improved consistency between update, upgrade, and sync workflows
+
+Fixes
+
+- Fixed upgrade being restricted to development mode only
+- Fixed incorrect version display (previously showed 0.0.0)
+- Fixed missing version initialisation on new installations
+- Fixed missing AppImage detection causing runtime errors
 
 ---
 
-### ✅ Improvements
+VERSION 2.2.0 - Architecture Refactor & Codebase Cleanup
+
+Features
+
+- Extracted restore logic into restore_service
+- Extracted delete logic into topic_delete_service
+- Extracted promote/demote logic into topic_action_service
+- Extracted restore dialog into ui/dialogs/restore_dialog
+
+Improvements
 
 - Clear separation of concerns:
-  - `main.py` → orchestration only
-  - `services/` → behaviour and data logic
-  - `ui/` → dialogs and presentation
-- Significantly reduced `main.py` complexity
+  - main.py → orchestration only
+  - services → behaviour and data logic
+  - ui → dialogs and presentation
+- Reduced duplication in save/update/delete flows
+- Centralised local data handling using _apply_local_change()
+- Introduced refresh_all() for unified refresh handling
 - Improved maintainability and modularity
-- Safer update pattern for local data changes
-- Cleaner and more predictable data refresh flow
 
----
-
-### ⚡ Performance & Stability
+Fixes
 
 - Fixed recursion issue in refresh handling
 - Reduced risk of UI-triggered infinite loops
 - Improved data refresh reliability after edits
 
----
-
-### 🔒 Behaviour
-
-- No functional changes
-- Fully backward compatible
-- Existing workflows unchanged
-
----
-
-### 🧪 Testing
-
-Validated flows:
-
-- Create / edit / delete local topics ✅
-- Promote / demote topics ✅
-- Backup / restore operations ✅
-- UI dialogs (restore, delete, promote) ✅
-
----
-
-## 🎯 Summary
-
-This release introduces a **clean, modular architecture** without changing behaviour.
-
-> 🚀 The application is now structurally ready for scaling, optimisation, and future feature development.
 
 VERSION 2.1.0 – Sync, Keys & Logging Refinement
 
 Features
 
-Introduced Firebase push-key system for Topic _key (replaces numeric indexing)
-Implemented improved Topic_ID generation using deterministic hash suffix for uniqueness
-Added smart backup system (only stores used icons and screenshots)
-Added fast restore system (restores only required assets instead of full asset folder)
+- Introduced Firebase push-key system for Topic _key (replaces numeric indexing)
+- Implemented improved Topic_ID generation using deterministic hash suffix for uniqueness
+- Added smart backup system (only stores used icons and screenshots)
+- Added fast restore system (restores only required assets instead of full asset folder)
 
 
 Improvements
 
-Significantly reduced terminal verbosity for cleaner runtime output
-Introduced controlled debug strategy (preparation for central debug handling)
-Optimised topic creation by removing expensive topic counting logic
-Improved sync performance and scalability (safe for multi-device operation)
+- Significantly reduced terminal verbosity for cleaner runtime output
+- Introduced controlled debug strategy (preparation for central debug handling)
+- Optimised topic creation by removing expensive topic counting logic
+- Improved sync performance and scalability (safe for multi-device operation)
 
 
 Fixes
 
-Fixed backup not being triggered during sync (data normalisation issue)
-Fixed backup system returning zero assets due to incorrect structure handling
-Removed excessive debug output ("DEBUG fixed item") causing terminal flooding
-Fixed redundant logging outputs in runtime workflow
+- Fixed backup not being triggered during sync (data normalisation issue)
+- Fixed backup system returning zero assets due to incorrect structure handling
+- Removed excessive debug output ("DEBUG fixed item") causing terminal flooding
+- Fixed redundant logging outputs in runtime workflow
 
 VERSION 2.0.0 Backup & Restore System
 
@@ -361,20 +360,20 @@ VERSION 1.0.0 – Initial Release
 
 Features
 
-Kivy multi-screen UI
-Excel-based content system
-Firebase integration
-Search functionality
-Expandable content sections
-Code snippet support
-Local caching
+- Kivy multi-screen UI
+- Excel-based content system
+- Firebase integration
+- Search functionality
+- Expandable content sections
+- Code snippet support
+- Local caching
 
 
 DEV VERSION
 
 Features
 
-Early UI prototypes
-Initial sync pipeline
-Experimental data structures
+- Early UI prototypes
+- Initial sync pipeline
+- Experimental data structures
 

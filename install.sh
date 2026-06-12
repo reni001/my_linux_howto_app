@@ -199,6 +199,17 @@ else
 fi
 
 # ----------------------------------------
+# CREATE VERSION FILE (IMPORTANT)
+# ----------------------------------------
+
+echo "Creating version file..."
+
+echo "2.2.0" > "$DATA_DIR/version.txt"
+
+echo "[INFO] version.txt created with version 2.2.0"
+
+
+# ----------------------------------------
 # ENSURE PYTHON PACKAGE STRUCTURE
 # ----------------------------------------
 
