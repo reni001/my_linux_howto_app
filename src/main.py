@@ -675,6 +675,9 @@ class LinuxHowToApp(App):
     def txt(self, text: str) -> str:
         return f"[font=NotoSans]{text}[/font]"
 
+    def is_appimage():
+        return "APPIMAGE" in os.environ
+
     def is_admin_mode(self):
         if self.admin_override:
             return not self.admin_enabled   # ✅ flips mode
@@ -928,6 +931,10 @@ class LinuxHowToApp(App):
 
         def run_upgrade():
             try:
+                # ✅ handle AppImage inside thread
+                if is_appimage():
+                    raise RuntimeError("Download the latest AppImage to upgrade.")
+
                 print("🔄 Upgrading app source from Git...")
 
                 repo_root = Path(__file__).resolve().parent.parent
