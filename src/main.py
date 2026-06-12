@@ -272,6 +272,12 @@ class LinuxHowToApp(App):
     FONT_BUTTON = NumericProperty(20)
     FONT_CODE = NumericProperty(18)
 
+    # --- Backup button visuals ---
+    backup_text = StringProperty("Create Backup")
+    backup_bg = ListProperty(list(COLOR_PURPLE))
+    backup_fg = ListProperty(list(COLOR_WHITE))
+    backup_border = ListProperty([0, 0, 0, 0])
+
     # --- Update button visuals ---
     update_text = StringProperty("Update Content")
     update_bg = ListProperty([1, 0.7, 0.3, 1])          # orange
@@ -762,18 +768,48 @@ class LinuxHowToApp(App):
     def _norm(self, value):
         return str(value or "").strip().lower()
 
+    # --------- backup --------
+    def backup_current_data(self, *args):
 
-    def backup_current_data(self):
-        """
-        Delegate backup creation to backup_service for consistent naming.
-        """
-        try:
-            backup_database(self)
-        except Exception as e:
-            print(f"❌ Backup failed: {e}")
+        # --- UI: show running ---
+        self.backup_text = "Creating backup..."
+        self.backup_bg = [0.9, 0.9, 0.9, 1]
+        self.backup_fg = list(self.COLOR_BLUE_DARK)
+        self.backup_border = list(self.COLOR_TRANSPARENT)
+
+        def run_backup():
+            try:
+                backup_database(self)
+                Clock.schedule_once(self.backup_success, 0)
+            except Exception as e:
+                print(f"❌ Backup failed: {e}")
+                Clock.schedule_once(self.backup_failed, 0)
+
+        Thread(target=run_backup, daemon=True).start()
+
+    def backup_success(self, *args):
+        self.backup_text = "Backup created ✓"
+        self.backup_bg = self.COLOR_WHITE_SOFT
+        self.backup_fg = self.COLOR_GREEN
+        self.backup_border = self.COLOR_GREEN
+
+        Clock.schedule_once(self.restore_backup_button, 2)
+
+    def backup_failed(self, *args):
+        self.backup_text = "Backup failed x"
+        self.backup_bg = self.COLOR_WHITE_SOFT
+        self.backup_fg = self.COLOR_RED
+        self.backup_border = self.COLOR_RED
+
+        Clock.schedule_once(self.restore_backup_button, 3)
+
+    def restore_backup_button(self, *args):
+        self.backup_text = "Create Backup"
+        self.backup_bg = self.COLOR_PURPLE
+        self.backup_fg = self.COLOR_WHITE
+        self.backup_border = self.COLOR_TRANSPARENT
 
     # -------- promote topic (make it public) --------
-
     def promote_topic(self, data):
         svc_promote_topic(self, data)
 

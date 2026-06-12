@@ -19,6 +19,7 @@
     background_down: ''
     background_color: 0, 0, 0, 0
     color: app.COLOR_WHITE
+    font_name: "NotoSans"
 
 
 # ------ Button Definitions -------
@@ -67,6 +68,10 @@
 
 <MenuToolButton@MenuButton>:
     background_color: app.COLOR_PURPLE if self.state == 'normal' else app.COLOR_PURPLE_DARK
+
+<MenuBackupButton@MenuButton>:
+    background_color: app.backup_bg if self.state == 'normal' else app.COLOR_PURPLE_DARK
+    color: app.backup_fg
 
 <MenuDangerButton@MenuButton>:
     background_color: app.COLOR_RED if self.state == 'normal' else app.COLOR_RED_DARK
@@ -322,6 +327,18 @@
             on_release:
                 root.dismiss()
                 Clock.schedule_once(lambda dt: app.open_subcategory_dialog(), 0)
+
+        MenuBackupButton:
+            text: app.backup_text
+            on_release:
+                Clock.schedule_once(lambda dt: app.backup_current_data(), 0)
+
+            canvas.after:
+                Color:
+                    rgba: app.backup_border
+                Line:
+                    rectangle: self.x + 1, self.y + 1, self.width - 2, self.height - 2
+                    width: 2
 
         MenuToolButton:
             text: "Restore Backup"
