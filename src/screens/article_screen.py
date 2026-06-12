@@ -1,5 +1,3 @@
-import webbrowser
-
 from kivy.uix.label import Label
 from kivy.uix.image import Image
 from kivy.uix.boxlayout import BoxLayout
@@ -24,6 +22,7 @@ from datetime import datetime
 from src.utils.runtime_paths import get_runtime_paths
 from src.utils.icon_utils import get_icon_path
 from src.ui.theme import COLOR_BLUE, COLOR_ORANGE, NOTE_BG, COLOR_WHITE
+from src.services.system_open_service import open_url as open_external_url
 
 
 class ClickableImage(ButtonBehavior, Image):
@@ -71,7 +70,8 @@ class ArticleScreen(Screen):
         self.manager.current = dest
 
     def open_url(self, url):
-        webbrowser.open(url)
+        open_external_url(url)
+
 
     def _get_screenshot_path(self, filename: str) -> str:
         if not filename:

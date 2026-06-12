@@ -1,4 +1,5 @@
 import os
+import html
 import subprocess
 import platform
 import shutil
@@ -19,8 +20,10 @@ def _run_async(cmd):
 
     Thread(target=runner, daemon=True).start()
 
+
 def is_wsl():
     return "microsoft" in platform.release().lower()
+
 
 
 def _wsl_to_windows_path(path):
@@ -29,6 +32,7 @@ def _wsl_to_windows_path(path):
         return result.decode().strip()
     except Exception:
         return path
+
 
 def open_path(path: str):
     if not os.path.exists(path):
@@ -49,33 +53,44 @@ def open_path(path: str):
         subprocess.Popen(['xdg-open', path])  # ✅ no thread
 
 
+
 def open_url(url: str):
     if not url:
         return
 
-    # ✅ FIXED LINE
+    # Decode HTML entities like &amp;
+    url = html.unescape(url.strip())
+
     if not url.startswith(("http://", "https://")):
         url = f"https://{url}"
 
     try:
         if is_wsl():
-            _run_async(['explorer.exe', url.replace('&', '^&')])
+            # WSL: open URL via Windows directly
+            _run_async([
+                'powershell.exe',
+                '-NoProfile',
+                '-Command',
+                'Start-Process',
+                url
+            ])
 
         elif platform.system() == "Windows":
-            _run_async(['explorer.exe', url])
+            os.startfile(url)
 
         elif platform.system() == "Darwin":
-            subprocess.Popen(['open', url])
-
-        elif platform.system() == "Linux":
             subprocess.Popen(
-                ['xdg-open', url],
+                ['open', url],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL
             )
 
         else:
-            webbrowser.open(url, new=2, autoraise=True)
+            subprocess.Popen(
+                ['xdg-open', url],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL
+            )
 
     except Exception as e:
         print(f"[OPEN] Failed to open URL: {url}")
