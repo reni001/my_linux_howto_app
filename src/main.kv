@@ -22,6 +22,13 @@
     color: app.COLOR_WHITE
     font_name: "NotoSans"
 
+    canvas.before:
+        Color:
+            rgba: self.background_color
+        RoundedRectangle:
+            pos: self.pos
+            size: self.size
+            radius: [8]
 
 # ------ Button Definitions -------
 
@@ -52,11 +59,15 @@
 # ----------------------------
 # MENU BUTTONS ONLY
 # ----------------------------
+
 <MenuButton@BaseButton>:
     size_hint_y: None
-    height: '55dp'
+    size_hint_x: 0.9    # ✅ key line
+    pos_hint: {"center_x": 0.5}  # ✅ center the button
+
+    height: '44dp'
     font_size: app.FONT_BUTTON
-    padding: [10, 5]
+    padding: [12, 4]
 
 <MenuNeutralButton@MenuButton>:
     background_color: app.COLOR_GREY_DARK if self.state == 'normal' else app.COLOR_GREY_LIGHT
@@ -79,21 +90,25 @@
 
 <MenuSectionLabel@Label>:
     size_hint_y: None
+    size_hint_x: 0.9               # ✅ same width as buttons
+    pos_hint: {"center_x": 0.5}   # ✅ center align
+
     height: dp(22)
     text_size: self.size
     halign: "left"
     valign: "middle"
+
     color: app.COLOR_TEXT_SOFT
-    font_size: app.FONT_TEXT * 0.8
+    font_size: app.FONT_TEXT * 0.75
 
 # ----------------------------
 # SPECIAL STATE BUTTONS
 # ----------------------------
-<UpdateButton@BaseButton>:
+<UpdateButton@MenuButton>:
     background_color: app.update_bg if self.state == 'normal' else app.COLOR_ORANGE_LIGHT_UI
     color: app.update_fg
 
-<SyncButton@BaseButton>:
+<SyncButton@MenuButton>:
     background_color: app.sync_bg if self.state == 'normal' else app.COLOR_ORANGE_DARK_UI
     color: app.sync_fg
 
@@ -256,10 +271,9 @@
 
     BoxLayout:
         orientation: 'vertical'
-        padding: '20dp'
+        padding: ['20dp', '15dp', '20dp', '15dp']
         spacing: '12dp'
-        size_hint_y: None
-        height: self.minimum_height
+        size_hint_y: 1   # ✅ CRITICAL
 
         canvas.before:
             Color:
@@ -322,118 +336,154 @@
                     valign: "middle"
                     text_size: self.size
 
-        MenuSectionLabel:
-            text: "ABOUT"
+        ScrollView:
+            size_hint_y: 1
+            do_scroll_x: False
+            do_scroll_y: True
 
-        MenuNeutralButton:
-            text: "About App"
-            on_release:
-                root.dismiss()
-                app.open_about_popup()
+            bar_width: dp(10)                 # ✅ thicker → easier to see
+            bar_color: 0.3, 0.3, 0.3, 0.9     # ✅ dark and visible
+            bar_inactive_color: 0.7, 0.7, 0.7, 0.4
 
-        MenuSectionLabel:
-            text: "TOOLS"
 
-        MenuToolButton:
-            text: "Clean Unused Icons & Images"
-            on_release:
-                root.dismiss()
-                Clock.schedule_once(lambda dt: app.confirm_clean_icons(), 0)
+            BoxLayout:
+                orientation: 'vertical'
+                size_hint_y: None
+                height: self.minimum_height
+                spacing: '12dp'
 
-        MenuToolButton:
-            text: "Manage Categories"
-            on_release:
-                root.dismiss()
-                Clock.schedule_once(lambda dt: app.open_category_dialog(), 0)
+                MenuSectionLabel:
+                    text: "ABOUT"
 
-        MenuToolButton:
-            text: "Manage Subcategories"
-            on_release:
-                root.dismiss()
-                Clock.schedule_once(lambda dt: app.open_subcategory_dialog(), 0)
+                MenuNeutralButton:
+                    text: "About App"
+                    on_release:
+                        root.dismiss()
+                        app.open_about_popup()
 
-        MenuBackupButton:
-            text: app.backup_text
-            on_release:
-                Clock.schedule_once(lambda dt: app.backup_current_data(), 0)
+                Widget:
+                    size_hint_y: None
+                    height: dp(3)
 
-            canvas.after:
-                Color:
-                    rgba: app.backup_border
-                Line:
-                    rectangle: self.x + 1, self.y + 1, self.width - 2, self.height - 2
-                    width: 2
+                MenuSectionLabel:
+                    text: "TOOLS"
 
-        MenuSectionLabel:
-            text: "DATA"
+                MenuToolButton:
+                    text: "Clean Unused Icons & Images"
+                    on_release:
+                        root.dismiss()
+                        Clock.schedule_once(lambda dt: app.confirm_clean_icons(), 0)
 
-        MenuToolButton:
-            text: "Restore Backup"
-            on_release:
-                root.dismiss()
-                Clock.schedule_once(lambda dt: app.show_restore_backup_dialog(), 0)
+                MenuToolButton:
+                    text: "Manage Categories"
+                    on_release:
+                        root.dismiss()
+                        Clock.schedule_once(lambda dt: app.open_category_dialog(), 0)
 
-        MenuSectionLabel:
-            text: "NAVIGATION"
+                MenuToolButton:
+                    text: "Manage Subcategories"
+                    on_release:
+                        root.dismiss()
+                        Clock.schedule_once(lambda dt: app.open_subcategory_dialog(), 0)
 
-        MenuNavButton:
-            text: "Open Database"
-            on_release:
-                root.dismiss()
-                Clock.schedule_once(lambda dt: app.open_database(), 0)
+                MenuBackupButton:
+                    text: app.backup_text
+                    on_release:
+                        Clock.schedule_once(lambda dt: app.backup_current_data(), 0)
 
-        MenuNavButton:
-            text: "Open Assets Folder"
-            on_release:
-                root.dismiss()
-                Clock.schedule_once(lambda dt: app.open_assets_folder(), 0)
+                    canvas.after:
+                        Color:
+                            rgba: app.backup_border
+                        Line:
+                            rectangle: self.x + 1, self.y + 1, self.width - 2, self.height - 2
+                            width: 2
 
-        MenuSectionLabel:
-            text: "CREATION"
+                Widget:
+                    size_hint_y: None
+                    height: dp(3)
 
-        MenuCreateButton:
-            text: "Add Topic"
-            on_release:
-                root.dismiss()
-                Clock.schedule_once(lambda dt: app.open_new_topic(), 0)
+                MenuSectionLabel:
+                    text: "DATA"
 
-        MenuSectionLabel:
-            text: "SYSTEM"
+                MenuToolButton:
+                    text: "Restore Backup"
+                    on_release:
+                        root.dismiss()
+                        Clock.schedule_once(lambda dt: app.show_restore_backup_dialog(), 0)
 
-        UpdateButton:
-            text: app.update_text
-            on_release:
-                Clock.schedule_once(lambda dt: app.update_app_from_git(), 0)
+                Widget:
+                    size_hint_y: None
+                    height: dp(3)
 
-            canvas.after:
-                Color:
-                    rgba: app.update_border
-                Line:
-                    rectangle: self.x + 1, self.y + 1, self.width - 2, self.height - 2
-                    width: 2
+                MenuSectionLabel:
+                    text: "NAVIGATION"
 
-        SyncButton:
-            id: sync_btn
-            disabled: not app.is_admin_mode()
-            opacity: 1 if app.is_admin_mode() else 0.5
-            text: app.sync_text
-            bold: True
-            on_release:
-                Clock.schedule_once(lambda dt: app.run_sync_script(), 0)
+                MenuNavButton:
+                    text: "Open Database"
+                    on_release:
+                        root.dismiss()
+                        Clock.schedule_once(lambda dt: app.open_database(), 0)
 
-            canvas.after:
-                Color:
-                    rgba: app.sync_border
-                Line:
-                    rounded_rectangle: self.x + 1, self.y + 1, self.width - 2, self.height - 2, 0
-                    width: 2
+                MenuNavButton:
+                    text: "Open Assets Folder"
+                    on_release:
+                        root.dismiss()
+                        Clock.schedule_once(lambda dt: app.open_assets_folder(), 0)
 
-        MenuDangerButton:
-            text: "Quit Application"
-            on_release:
-                root.dismiss()
-                Clock.schedule_once(lambda dt: app.stop(), 0)
-        Widget:
+                Widget:
+                    size_hint_y: None
+                    height: dp(3)
+
+                MenuSectionLabel:
+                    text: "CREATION"
+
+                MenuCreateButton:
+                    text: "Add Topic"
+                    on_release:
+                        root.dismiss()
+                        Clock.schedule_once(lambda dt: app.open_new_topic(), 0)
+
+                Widget:
+                    size_hint_y: None
+                    height: dp(3)
+
+                MenuSectionLabel:
+                    text: "SYSTEM"
+
+                UpdateButton:
+                    text: app.update_text
+                    on_release:
+                        Clock.schedule_once(lambda dt: app.update_app_from_git(), 0)
+
+                    canvas.after:
+                        Color:
+                            rgba: app.update_border
+                        Line:
+                            rectangle: self.x + 1, self.y + 1, self.width - 2, self.height - 2
+                            width: 2
+
+                SyncButton:
+                    id: sync_btn
+                    disabled: not app.is_admin_mode()
+                    opacity: 1 if app.is_admin_mode() else 0.5
+                    text: app.sync_text
+                    bold: True
+                    on_release:
+                        Clock.schedule_once(lambda dt: app.run_sync_script(), 0)
+
+                    canvas.after:
+                        Color:
+                            rgba: app.sync_border
+                        Line:
+                            rounded_rectangle: self.x + 1, self.y + 1, self.width - 2, self.height - 2, 0
+                            width: 2
+
+                MenuDangerButton:
+                    text: "Quit Application"
+                    on_release:
+                        root.dismiss()
+                        Clock.schedule_once(lambda dt: app.stop(), 0)
+        #Widget:
 
 <CategoryCard>:
     orientation: 'vertical'
