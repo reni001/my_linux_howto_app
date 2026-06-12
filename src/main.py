@@ -549,11 +549,6 @@ class LinuxHowToApp(App):
         try:
             menu_screen = self.sm.get_screen('menu')
 
-            #if not getattr(menu_screen, "_is_populated", False):
-            if not getattr(menu_screen, "_is_populated", False):
-                Clock.schedule_once(lambda dt: menu_screen.populate_menu(), 0)
-                menu_screen._is_populated = True
-
             # ✅ NEW: If user is currently on DetailScreen, reload it after data refresh
             try:
                 if self.sm.current == "details":
@@ -595,6 +590,12 @@ class LinuxHowToApp(App):
             except Exception as e:
                 print("DEBUG: article screen refresh failed:", e)
 
+            menu_screen = self.sm.get_screen("menu")
+            if getattr(self, "_data_changed", True):
+                menu_screen.force_reload_menu()
+                self._data_changed = False
+
+
         except Exception as e:
             print(f"[ERROR] Failed to open file: {e}")
             pass
@@ -630,9 +631,6 @@ class LinuxHowToApp(App):
 
         Window.bind(size=self.update_typography_scale)
         Clock.schedule_once(self.update_typography_scale, 0)
-
-        # ✅ FIX: apply window AFTER build
-        #Clock.schedule_once(lambda dt: apply_desktop_window_defaults(), 0)
 
     def txt(self, text: str) -> str:
         return f"[font=NotoSans]{text}[/font]"

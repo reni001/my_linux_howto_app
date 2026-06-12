@@ -40,6 +40,15 @@ class MenuScreen(Screen):
             Clock.schedule_once(self.check_data, 0.2)
             return
 
+        # ✅ prevent rebuilding menu
+        if getattr(self, "_menu_built", False):
+            return
+
+        self._menu_built = True
+        self.populate_menu()
+
+    def force_reload_menu(self):
+        self._menu_built = False
         self.populate_menu()
 
     def populate_menu(self, *args):
