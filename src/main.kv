@@ -2,6 +2,7 @@
 #:import dp kivy.metrics.dp
 #:import ButtonBehavior kivy.uix.behaviors.ButtonBehavior
 #:import Clock kivy.clock.Clock
+#:import Window kivy.core.window.Window
 
 <LazyImage@Image>:
 
@@ -75,6 +76,15 @@
 
 <MenuDangerButton@MenuButton>:
     background_color: app.COLOR_RED if self.state == 'normal' else app.COLOR_RED_DARK
+
+<MenuSectionLabel@Label>:
+    size_hint_y: None
+    height: dp(22)
+    text_size: self.size
+    halign: "left"
+    valign: "middle"
+    color: app.COLOR_TEXT_SOFT
+    font_size: app.FONT_TEXT * 0.8
 
 # ----------------------------
 # SPECIAL STATE BUTTONS
@@ -239,13 +249,18 @@
         PopMatrix
 
 <AppMenu>:
-    size_hint: (0.75, 0.8)  # Increased height for new button
+    size_hint: None, None
+    size: Window.width * 0.75, Window.height * 0.9
+
     background_color: [0, 0, 0, 0]
 
     BoxLayout:
         orientation: 'vertical'
         padding: '20dp'
         spacing: '12dp'
+        size_hint_y: None
+        height: self.minimum_height
+
         canvas.before:
             Color:
                 rgba: app.COLOR_WHITE
@@ -274,11 +289,14 @@
                 color: app.COLOR_BLUE
                 bold: True
                 font_size: app.FONT_MENU_TITLE
+
+                size_hint_x: 1   # ✅ takes available space
+
                 halign: "left"
                 valign: "middle"
                 text_size: self.size
+                shorten: True   # ✅ prevents overflow
 
-            # ✅ RIGHT: STATUS BLOCK (CLICKABLE + STABLE)
             ClickableStatus:
                 orientation: "horizontal"
                 size_hint_x: None
@@ -304,11 +322,17 @@
                     valign: "middle"
                     text_size: self.size
 
+        MenuSectionLabel:
+            text: "ABOUT"
+
         MenuNeutralButton:
             text: "About App"
             on_release:
                 root.dismiss()
                 app.open_about_popup()
+
+        MenuSectionLabel:
+            text: "TOOLS"
 
         MenuToolButton:
             text: "Clean Unused Icons & Images"
@@ -340,11 +364,17 @@
                     rectangle: self.x + 1, self.y + 1, self.width - 2, self.height - 2
                     width: 2
 
+        MenuSectionLabel:
+            text: "DATA"
+
         MenuToolButton:
             text: "Restore Backup"
             on_release:
                 root.dismiss()
                 Clock.schedule_once(lambda dt: app.show_restore_backup_dialog(), 0)
+
+        MenuSectionLabel:
+            text: "NAVIGATION"
 
         MenuNavButton:
             text: "Open Database"
@@ -358,11 +388,17 @@
                 root.dismiss()
                 Clock.schedule_once(lambda dt: app.open_assets_folder(), 0)
 
+        MenuSectionLabel:
+            text: "CREATION"
+
         MenuCreateButton:
             text: "Add Topic"
             on_release:
                 root.dismiss()
                 Clock.schedule_once(lambda dt: app.open_new_topic(), 0)
+
+        MenuSectionLabel:
+            text: "SYSTEM"
 
         UpdateButton:
             text: app.update_text
