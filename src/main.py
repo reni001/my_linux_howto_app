@@ -2,11 +2,6 @@
 # --- Standard library ---
 import requests
 import os
-
-# ✅ Reduce Kivy console noise
-os.environ["KIVY_NO_CONSOLELOG"] = "1"
-os.environ["KIVY_LOG_LEVEL"] = "warning"
-
 import platform
 import webbrowser
 import subprocess
@@ -20,6 +15,23 @@ import logging
 
 logging.getLogger("urllib3").setLevel(logging.WARNING)
 logging.getLogger("requests").setLevel(logging.WARNING)
+
+# ---- debugging -----
+# ✅ Reduce Kivy console noise
+#os.environ["KIVY_NO_CONSOLELOG"] = "1"
+#os.environ["KIVY_LOG_LEVEL"] = "warning"
+
+# ✅ ENABLE DEBUG
+os.environ.pop("KIVY_NO_CONSOLELOG", None)
+os.environ["KIVY_LOG_LEVEL"] = "debug"
+
+
+def global_exception_hook(exc_type, exc_value, exc_traceback):
+    print("\n💥 FULL CRASH TRACE:")
+    traceback.print_exception(exc_type, exc_value, exc_traceback)
+
+sys.excepthook = global_exception_hook
+
 
 # --- Project imports ---
 from src.utils.first_run import initialize_first_run
@@ -279,10 +291,16 @@ class LinuxHowToApp(App):
     backup_border = ListProperty([0, 0, 0, 0])
 
     # --- Update button visuals ---
-    update_text = StringProperty("Update Content")
+    update_text = StringProperty("Update Data")
     update_bg = ListProperty([1, 0.7, 0.3, 1])          # orange
     update_fg = ListProperty([0.1, 0.25, 0.45, 1])     # dark blue text
     update_border = ListProperty([0, 0, 0, 0])         # ✅ NEW
+
+    # --- Upgrade button visuals ---
+    upgrade_text = StringProperty("Upgrade App")
+    upgrade_bg = ListProperty([1, 0.7, 0.3, 1])          # orange
+    upgrade_fg = ListProperty([0.1, 0.25, 0.45, 1])     # dark blue text
+    upgrade_border = ListProperty([0, 0, 0, 0])         # ✅ NEW
 
     #--- Sync button visuals ---
     # --- Sync button state (MUST be Properties) ---
@@ -818,83 +836,124 @@ class LinuxHowToApp(App):
     def demote_topic(self, data):
         svc_demote_topic(self, data)
 
-    #---- update button behaviour -----
+    # ---- update data button behaviour -----
     def update_app_from_git(self, *args):
+        """
+        Backward-compatible wrapper.
+        Old KV/button references may still call this.
+        """
+        return self.update_data(*args)
 
-        # UI state
-        self.update_text = "Updating…"
+    def update_data(self, *args):
+        self.update_text = "Updating data..."
         self.update_bg = [0.9, 0.9, 0.9, 1]
         self.update_fg = [0.1, 0.25, 0.45, 1]
+        self.update_border = [0, 0, 0, 0]
 
         def run_update():
             try:
-                print(f"DEBUG: is_dev_mode = {is_dev_mode()}")
+                print("🔄 Updating data (assets + latest content)")
 
                 if is_dev_mode():
-                    print("🔄 DEV MODE: Updating application from Git…")
-
-                    subprocess.run(["git", "pull"], check=True)
-
+                    # In dev mode, copy local repo assets into runtime assets
                     paths = get_runtime_paths()
                     repo_root = Path(__file__).resolve().parent.parent
                     repo_assets = repo_root / "assets"
                     runtime_assets = paths["assets"]
 
-                    print(f"DEBUG repo_assets: {repo_assets}")
-                    print(f"DEBUG runtime_assets: {runtime_assets}")
-
                     if repo_assets.exists():
-                        import shutil
                         shutil.copytree(repo_assets, runtime_assets, dirs_exist_ok=True)
-
-                        print("✅ Runtime assets updated from Git")
-
-                        # verification
-                        copied_files = list((runtime_assets / "icons").glob("*"))
-                        print(f"DEBUG copied icons count: {len(copied_files)}")
-
-                    else:
-                        print("⚠ Repo assets folder not found!")
-
+                        print("✅ Dev assets copied into runtime")
                 else:
-                    print("🌍 PROD MODE: Updating via HTTP")
+                    # In packaged / normal mode, fetch new assets from GitHub zip
                     update_assets()
-                    update_cache()
+
+                # Refresh latest content from Firebase/cache
+                self.refresh_data_only()
 
                 Clock.schedule_once(self.update_success, 0)
 
             except Exception as e:
-                print(f"❌ Update failed: {e}")
+                print(f"❌ Data update failed: {e}")
                 traceback.print_exc()
                 Clock.schedule_once(self.update_failed, 0)
 
         Thread(target=run_update, daemon=True).start()
 
+
     def update_success(self, *args):
-        self.update_text = "Update successful ✓"
-        self.update_bg = self.COLOR_WHITE_SOFT   # soft highlight
-        self.update_fg = self.COLOR_GREEN        # text
-        self.update_border = self.COLOR_GREEN    # border
-        self.metadata = load_app_metadata()
+        self.update_text = "Data updated ✓"
+        self.update_bg = self.COLOR_WHITE_SOFT
+        self.update_fg = self.COLOR_GREEN
+        self.update_border = self.COLOR_GREEN
         self.refresh_ui_data()
 
         Clock.schedule_once(self.restore_update_button, 2)
 
+
     def update_failed(self, *args):
-        self.update_text = "Update failed ✗"
+        self.update_text = "Data update failed"
         self.update_bg = self.COLOR_WHITE_SOFT
         self.update_fg = self.COLOR_RED
-        self.update_border = self.COLOR_RED       # ✅ red border
-        self.metadata = load_app_metadata()
-        self.refresh_ui_data()
+        self.update_border = self.COLOR_RED
 
         Clock.schedule_once(self.restore_update_button, 3)
 
+
     def restore_update_button(self, *args):
-        self.update_text = "Update App & Icons"
+        self.update_text = "Update Data"
         self.update_bg = self.COLOR_ORANGE_LIGHT_UI
         self.update_fg = self.COLOR_BLUE_DARK
-        self.update_border = self.COLOR_TRANSPARENT           # ✅ reset
+        self.update_border = self.COLOR_TRANSPARENT
+
+
+    #---- upgrade App ------
+    def upgrade_app(self, *args):
+        self.upgrade_text = "Upgrading app..."
+        self.upgrade_bg = [0.9, 0.9, 0.9, 1]
+        self.upgrade_fg = [0.1, 0.25, 0.45, 1]
+        self.upgrade_border = [0, 0, 0, 0]
+
+        def run_upgrade():
+            try:
+                if not is_dev_mode():
+                    raise RuntimeError("App upgrade is only configured in development mode right now.")
+
+                print("🔄 Upgrading app source from Git...")
+
+                repo_root = Path(__file__).resolve().parent.parent
+                subprocess.run(["git", "-C", str(repo_root), "pull"], check=True)
+
+                Clock.schedule_once(self.upgrade_success, 0)
+
+            except Exception as e:
+                print(f"❌ App upgrade failed: {e}")
+                traceback.print_exc()
+                Clock.schedule_once(self.upgrade_failed, 0)
+
+        Thread(target=run_upgrade, daemon=True).start()
+
+    def upgrade_success(self, *args):
+        self.upgrade_text = "Upgrade ready - restart app"
+        self.upgrade_bg = self.COLOR_WHITE_SOFT
+        self.upgrade_fg = self.COLOR_GREEN
+        self.upgrade_border = self.COLOR_GREEN
+
+        Clock.schedule_once(self.restore_upgrade_button, 3)
+
+    def upgrade_failed(self, *args):
+        self.upgrade_text = "Upgrade unavailable"
+        self.upgrade_bg = self.COLOR_WHITE_SOFT
+        self.upgrade_fg = self.COLOR_RED
+        self.upgrade_border = self.COLOR_RED
+
+        Clock.schedule_once(self.restore_upgrade_button, 3)
+
+    def restore_upgrade_button(self, *args):
+        self.upgrade_text = "Upgrade App"
+        self.upgrade_bg = self.COLOR_ORANGE_LIGHT_UI
+        self.upgrade_fg = self.COLOR_BLUE_DARK
+        self.upgrade_border = self.COLOR_TRANSPARENT
 
     #---- syncronize button behaviour -----
     def sync_success(self, *args):

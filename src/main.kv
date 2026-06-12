@@ -96,7 +96,7 @@
 
     height: dp(22)
 
-    padding_x: dp(6)    # ✅ NEW → aligns with button text
+    padding: [dp(6), 0]    # ✅ NEW → aligns with button text
     text_size: self.size
 
     halign: "left"
@@ -126,8 +126,12 @@
     background_color: app.update_bg if self.state == 'normal' else app.COLOR_ORANGE_LIGHT_UI
     color: app.update_fg
 
+<UpgradeButton@MenuButton>:
+    background_color: app.upgrade_bg if self.state == 'normal' else app.COLOR_ORANGE_LIGHT_UI
+    color: app.upgrade_fg
+
 <SyncButton@MenuButton>:
-    background_color: app.sync_bg if self.state == 'normal' else app.COLOR_ORANGE_DARK_UI
+    background_color: app.sync_bg if self.state == 'normal' else app.COLOR_ORANGE_LIGHT_UI
     color: app.sync_fg
 
 # ----------------------------
@@ -468,11 +472,23 @@
                 UpdateButton:
                     text: app.update_text
                     on_release:
-                        Clock.schedule_once(lambda dt: app.update_app_from_git(), 0)
+                        Clock.schedule_once(lambda dt: app.update_data(), 0)
 
                     canvas.after:
                         Color:
                             rgba: app.update_border
+                        Line:
+                            rectangle: self.x + 1, self.y + 1, self.width - 2, self.height - 2
+                            width: 2
+
+                UpgradeButton:
+                    text: app.upgrade_text
+                    on_release:
+                        Clock.schedule_once(lambda dt: app.upgrade_app(), 0)
+
+                    canvas.after:
+                        Color:
+                            rgba: app.upgrade_border
                         Line:
                             rectangle: self.x + 1, self.y + 1, self.width - 2, self.height - 2
                             width: 2
