@@ -23,13 +23,21 @@ def is_wsl():
     return "microsoft" in platform.release().lower()
 
 
+def _wsl_to_windows_path(path):
+    try:
+        result = subprocess.check_output(['wslpath', '-w', path])
+        return result.decode().strip()
+    except Exception:
+        return path
+
 def open_path(path: str):
     if not os.path.exists(path):
         print(f"[OPEN] Path does not exist: {path}")
         return
 
     if is_wsl():
-        _run_async(['explorer.exe', path])
+        win_path = _wsl_to_windows_path(path)
+        _run_async(['explorer.exe', win_path])
 
     elif platform.system() == "Windows":
         _run_async(['explorer.exe', path])
@@ -51,7 +59,7 @@ def open_url(url: str):
 
     try:
         if is_wsl():
-            _run_async(['explorer.exe', url])
+            _run_async(['explorer.exe', url.replace('&', '^&')])
 
         elif platform.system() == "Windows":
             _run_async(['explorer.exe', url])
