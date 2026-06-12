@@ -415,6 +415,7 @@ class LinuxHowToApp(App):
         Safely apply local change + refresh.
         """
         action()
+        self._data_changed = True
         self.refresh_all()
 
     def save_local_topic(self, topic: dict, steps: list[dict]):
@@ -447,7 +448,6 @@ class LinuxHowToApp(App):
             confirm_color=self.COLOR_ORANGE,
             on_confirm=lambda: self.restore_backup(backup_path),
         )
-
 
     def reload_data(self):
         self.APP_DATA = fetch_database(force_reload=True)
@@ -627,7 +627,7 @@ class LinuxHowToApp(App):
 
     def _startup_sequence(self, dt):
         self.fetch_database()
-        Clock.schedule_once(lambda dt: self.refresh_ui_data(), 0.2)
+        Clock.schedule_once(lambda dt: setattr(self, "_data_changed", False), 0.2)
 
         Window.bind(size=self.update_typography_scale)
         Clock.schedule_once(self.update_typography_scale, 0)
@@ -668,8 +668,7 @@ class LinuxHowToApp(App):
                 screen.filter_results(q)
 
             elif current == "menu":
-                screen.ids.menu_container.clear_widgets()
-                screen.populate_menu()
+                screen.force_reload_menu()
 
         except Exception as e:
             print(f"DEBUG: refresh_current_screen failed: {e}")
@@ -915,7 +914,6 @@ class LinuxHowToApp(App):
     def open_subcategory_dialog(self):
         show_subcategory_dialog(self)
 
-
 class LazyImage(Image):
     def on_kv_post(self, base_widget):
         if self.source:
@@ -927,7 +925,6 @@ class LazyImage(Image):
                 lambda dt: setattr(self, "source", src),
                 0
             )
-
 
 class ClickableHeader(ButtonBehavior, BoxLayout):
     def __init__(self, **kwargs):
