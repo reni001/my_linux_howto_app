@@ -65,7 +65,8 @@ install_ubuntu() {
 install_fedora() {
     echo "[INFO] Installing Fedora dependencies..."
     sudo dnf install -y \
-        python3-devel gcc gcc-c++ make \
+        python3 python3-devel python3-pip python3-virtualenv \
+        gcc gcc-c++ make \
         SDL2 SDL2_image SDL2_ttf SDL2_mixer \
         mesa-libGL mesa-libGLES \
         gstreamer1 gstreamer1-plugins-base \
@@ -75,7 +76,7 @@ install_fedora() {
 install_arch() {
     echo "[INFO] Installing Arch dependencies..."
     sudo pacman -Sy --needed --noconfirm \
-        python base-devel \
+        python python-virtualenv base-devel \
         sdl2 sdl2_image sdl2_ttf sdl2_mixer \
         mesa gst-plugins-base gst-libav \
         mtdev libjpeg-turbo libpng pkgconf
@@ -97,6 +98,18 @@ case "$OS" in
         echo "[WARNING] Unsupported OS: $OS"
         ;;
 esac
+
+
+# ----------------------------------------
+# DETECT WSL ENVIRONMENT
+# ----------------------------------------
+
+IS_WSL=false
+
+if grep -qi microsoft /proc/version 2>/dev/null; then
+    IS_WSL=true
+    echo "[INFO] WSL environment detected"
+fi
 
 # ----------------------------------------
 # PYTHON DETECTION
@@ -246,6 +259,38 @@ fi
 chmod +x "$APP_DIR/run.sh"
 chmod +x "$APP_DIR/run.fish"
 
+# ----------------------------------------
+# GUI CHECK / WSL WARNING
+# ----------------------------------------
+
+if [ "$IS_WSL" = true ] && [ -z "$DISPLAY" ]; then
+    echo ""
+    echo "⚠️  GUI NOT CONFIGURED IN WSL"
+    echo ""
+    echo "Your application installed successfully, but GUI support is not active."
+    echo ""
+
+    echo "✅ FIX (Windows 11 - recommended):"
+    echo "Run in PowerShell (outside WSL):"
+    echo ""
+    echo "  wsl --update"
+    echo "  wsl --shutdown"
+    echo ""
+    echo "Then restart WSL and run the app again using:"
+    echo "  ./run.sh"
+    echo ""
+
+    echo "✅ FIX (Windows 10 or fallback):"
+    echo "1. Install VcXsrv (X server)"
+    echo "2. Start VcXsrv"
+    echo "3. In WSL run:"
+    echo ""
+    echo "   export DISPLAY=\$(grep nameserver /etc/resolv.conf | awk '{print \$2}'):0"
+    echo ""
+    echo "4. Run:"
+    echo "   ./run.sh"
+    echo ""
+fi
 
 # ----------------------------------------
 # TEST RUN
@@ -255,10 +300,14 @@ echo "[INFO] Running first test..."
 
 cd "$APP_DIR"
 
-if "$VENV_DIR/bin/python" -m src.main; then
-    echo "[INFO] ✅ App started successfully"
+if [ "$IS_WSL" = true ] && [ -z "$DISPLAY" ]; then
+    echo "[INFO] Skipping GUI test (no display in WSL)"
 else
-    echo "[WARNING] First run produced warnings"
+    if "$VENV_DIR/bin/python" -m src.main; then
+        echo "[INFO] ✅ App started successfully"
+    else
+        echo "[WARNING] First run produced warnings"
+    fi
 fi
 
 # ----------------------------------------

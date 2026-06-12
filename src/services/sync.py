@@ -25,6 +25,8 @@ FIREBASE_KEY = DATA_DIR / "serviceAccountKey.json"
 # Firebase init
 # ---------------------------
 def init_firebase():
+    print(f"[SYNC] Using Firebase key: {FIREBASE_KEY}")
+
     if not FIREBASE_KEY.exists():
         print("❌ Firebase key not found:", FIREBASE_KEY)
         sys.exit(1)
@@ -38,31 +40,39 @@ def init_firebase():
             raise KeyError("firebase.json must contain 'database_url' or 'databaseURL'")
 
         initialize_app(cred, {"databaseURL": db_url})
+        print(f"[SYNC] Firebase initialised with DB: {db_url}")
 
 
-# ✅ Promote user icons to official icons (for Git sync)
-user_icons = paths["assets"] / "user_icons"
-icons = paths["assets"] / "icons"
+# ---------------------------
+# Promote user icons to official icons
+# ---------------------------
+def promote_user_icons():
+    user_icons = paths["assets"] / "user_icons"
+    icons = paths["assets"] / "icons"
 
-if user_icons.exists():
-    for f in user_icons.glob("*"):
-        if not f.is_file():
-            continue
+    if user_icons.exists():
+        for f in user_icons.glob("*"):
+            if not f.is_file():
+                continue
 
-        dest = icons / f.name
+            dest = icons / f.name
 
-        # ✅ only copy if not already present
-        if not dest.exists():
-            shutil.copy2(f, dest)
+            if not dest.exists():
+                shutil.copy2(f, dest)
 
-    print("✅ User icons copied to icons/ for sync")
+        print("✅ User icons copied to icons/ for sync")
 
 
 # ---------------------------
 # Git helpers
 # ---------------------------
-def git(repo_root: Path, *args, check=True):
-    return subprocess.run(["git", "-C", str(repo_root), *args], check=check)
+def git(repo_root: Path, *args, check=True, capture_output=False):
+    return subprocess.run(
+        ["git", "-C", str(repo_root), *args],
+        check=check,
+        text=True,
+        capture_output=capture_output
+    )
 
 
 def is_git_repo(repo_root: Path) -> bool:
@@ -78,6 +88,31 @@ def is_git_repo(repo_root: Path) -> bool:
         return False
 
 
+def copy_runtime_to_repo(repo_root: Path):
+    """
+    Copy runtime cache + runtime assets into the repo so git can commit them.
+    """
+    repo_data = repo_root / "data"
+    repo_assets = repo_root / "assets"
+    runtime_assets = paths["assets"]
+
+    repo_data.mkdir(parents=True, exist_ok=True)
+
+    # ✅ Copy runtime cache into repo data/cache.json
+    if CACHE_FILE.exists():
+        shutil.copy2(CACHE_FILE, repo_data / "cache.json")
+        print("✅ cache.json copied into repo/data/")
+    else:
+        print("⚠️ Runtime cache.json not found, skipping repo cache copy")
+
+    # ✅ Copy runtime assets into repo assets/
+    if runtime_assets.exists():
+        shutil.copytree(runtime_assets, repo_assets, dirs_exist_ok=True)
+        print("✅ Runtime assets copied into repo/assets/")
+    else:
+        print("⚠️ Runtime assets not found, skipping asset copy")
+
+
 def git_sync(repo_root: Path, version: str):
     if not is_git_repo(repo_root):
         print("ℹ️ Not a git repo → skip Git sync")
@@ -85,13 +120,21 @@ def git_sync(repo_root: Path, version: str):
 
     print("🔄 Git: pulling…")
     try:
-        git(repo_root, "pull", "--rebase", "--autostash")
+        result = git(repo_root, "pull", "--rebase", "--autostash", capture_output=True)
+        if result.stdout:
+            print(result.stdout)
+        if result.stderr:
+            print(result.stderr)
     except Exception as e:
         print("⚠️ Git pull failed:", e)
         return
 
     print("➕ Git: adding content…")
-    git(repo_root, "add", "data/cache.json", "assets")
+    try:
+        git(repo_root, "add", "data", "assets")
+    except Exception as e:
+        print("⚠️ Git add failed:", e)
+        return
 
     result = subprocess.run(
         ["git", "-C", str(repo_root), "diff", "--cached", "--quiet"]
@@ -102,11 +145,19 @@ def git_sync(repo_root: Path, version: str):
         return
 
     print("✅ Git: committing…")
-    git(repo_root, "commit", "-m", f"content sync v{version}")
+    try:
+        git(repo_root, "commit", "-m", f"content sync v{version}")
+    except Exception as e:
+        print("⚠️ Git commit failed:", e)
+        return
 
     print("🚀 Git: pushing…")
     try:
-        git(repo_root, "push")
+        result = git(repo_root, "push", capture_output=True)
+        if result.stdout:
+            print(result.stdout)
+        if result.stderr:
+            print(result.stderr)
         print("✅ Git sync complete")
     except Exception as e:
         print("⚠️ Git push failed:", e)
@@ -116,7 +167,7 @@ def git_sync(repo_root: Path, version: str):
 # Main sync
 # ---------------------------
 def main():
-    print("=== SAFE SYNC (Firebase → JSON cache) ===")
+    print("=== SAFE SYNC (Firebase → JSON cache → repo) ===")
 
     print("☁ Downloading data from Firebase…")
     data = db.reference("/").get()
@@ -136,22 +187,20 @@ def main():
         max_keep=15
     )
 
-    # ✅ Save JSON cache
+    # ✅ Save runtime JSON cache
     CACHE_FILE.parent.mkdir(parents=True, exist_ok=True)
 
     with open(CACHE_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
 
-    print("✅ cache.json updated")
+    print("✅ runtime cache.json updated")
 
-    # ✅ Copy assets to repo
+    # ✅ Promote user icons first
+    promote_user_icons()
+
+    # ✅ Copy runtime files back into repo
     repo_root = Path(__file__).resolve().parents[2]
-    runtime_assets = paths["assets"]
-    repo_assets = repo_root / "assets"
-
-    if runtime_assets.exists():
-        shutil.copytree(runtime_assets, repo_assets, dirs_exist_ok=True)
-        print("📦 Assets copied")
+    copy_runtime_to_repo(repo_root)
 
     # ✅ Git sync
     version = str(data.get("metadata", {}).get("version", "unknown"))
