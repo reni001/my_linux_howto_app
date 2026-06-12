@@ -57,7 +57,8 @@ from src.services.data_service import (
 )
 from src.services.category_service import generate_categories_from_topics
 from src.services.subcategory_service import generate_from_topics
-
+from src.services.system_open_service import open_url
+from src.services.system_open_service import open_path
 from src.services.version_service import (
     load_local_version,
     write_local_version,
@@ -207,21 +208,6 @@ if not getattr(sys, "_app_initialized", False):
 
 KV = None
 KV_FILE = str(Path(__file__).parent / "main.kv")
-
-
-
-def open_url(url):
-    if not url: return
-    full_url = url.strip()
-    if not (full_url.startswith('http://') or full_url.startswith('https://')):
-        full_url = f"https://{full_url}"
-    try:
-        if platform.system() == "Linux":
-            subprocess.Popen(['xdg-open', full_url], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        else:
-            webbrowser.open(full_url, new=2, autoraise=True)
-    except:
-        webbrowser.open(full_url, new=2, autoraise=True)
 
 # --- CLASSES ---
 
@@ -548,7 +534,7 @@ class LinuxHowToApp(App):
             elif platform.system() == "Darwin":
                 subprocess.Popen(['open', target_file])
             else:
-                subprocess.Popen(['xdg-open', target_file])
+                open_path(target_file)
         except Exception:
             pass
 
@@ -565,7 +551,7 @@ class LinuxHowToApp(App):
             elif platform.system() == "Darwin":
                 subprocess.Popen(['open', target_dir])
             else:
-                subprocess.Popen(['xdg-open', target_dir])
+                open_path(target_dir)
         except Exception:
             pass
 

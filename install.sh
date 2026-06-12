@@ -230,7 +230,7 @@ mkdir -p "$DATA_DIR" "$ASSETS_DIR"
 cp "$APP_DIR/config/firebase.json" "$DATA_DIR/firebase.json"
 
 if command -v rsync &> /dev/null; then
-    rsync -av --delete "$APP_DIR/assets/" "$ASSETS_DIR/"
+    rsync -av "$APP_DIR/assets/" "$ASSETS_DIR/"
 else
     echo "[INFO] rsync not found → using cp fallback"
     cp -r "$APP_DIR/assets" "$ASSETS_DIR"
