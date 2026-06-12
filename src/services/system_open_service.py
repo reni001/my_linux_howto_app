@@ -2,6 +2,7 @@ import os
 import subprocess
 import platform
 import shutil
+import webbrowser
 from threading import Thread
 
 
@@ -66,8 +67,7 @@ def open_url(url: str):
             )
 
         else:
-            import webbrowser
-            webbrowser.open(url, new=2)
+            webbrowser.open(url, new=2, autoraise=True)
 
     except Exception as e:
         print(f"[OPEN] Failed to open URL: {url}")
