@@ -57,6 +57,12 @@ from src.services.data_service import (
 )
 from src.services.category_service import generate_categories_from_topics
 from src.services.subcategory_service import generate_from_topics
+from src.services.version_service import (
+    load_local_version,
+    get_remote_version,
+    is_upgrade_available,
+    write_local_version
+)
 
 # --- Topic / Editor logic ---
 from src.services.editor_service import is_admin_enabled, delete_topic_from_firebase
@@ -77,6 +83,7 @@ from src.services.topic_action_service import (
     promote_topic as svc_promote_topic,
     demote_topic as svc_demote_topic,
 )
+from src.services.update_content import update_assets, update_cache, upgrade_app_files
 
 # --- Icons ---
 from src.services.icon_service import (
@@ -271,6 +278,8 @@ class LinuxHowToApp(App):
 
     version_string = StringProperty("v0.0.0")
     connection_status = StringProperty("Checking...")
+    local_version = StringProperty("0.0.0")
+    remote_version = StringProperty("0.0.0")
 
     project_root = StringProperty("")
 
@@ -563,10 +572,9 @@ class LinuxHowToApp(App):
             Clock.schedule_once(lambda dt: self.refresh_ui_data(), 0.6)
             return
 
-        version = self.metadata.get("version", "0.0.0")
-        last_update = self.metadata.get("last update", "")
+        self.remote_version = get_remote_version(self.metadata)
 
-        self.version_string = f"v{version} | {last_update}"
+        self.version_string = f"v{self.local_version} | latest v{self.remote_version}"
 
 
         # Also trigger the standard menu population
@@ -619,10 +627,16 @@ class LinuxHowToApp(App):
                 menu_screen.force_reload_menu()
                 self._data_changed = False
 
-
         except Exception as e:
             print(f"[ERROR] Failed to open file: {e}")
             pass
+
+        if is_upgrade_available(self.local_version, self.remote_version):
+            self.upgrade_text = "Upgrade Available"
+
+        else:
+            self.upgrade_text = "Up to Date"
+
 
     def build(self):
         if KV_FILE not in Builder.files:
@@ -650,6 +664,8 @@ class LinuxHowToApp(App):
         return self.sm
 
     def _startup_sequence(self, dt):
+        self.local_version = load_local_version()
+
         self.fetch_database()
         Clock.schedule_once(lambda dt: setattr(self, "_data_changed", False), 0.2)
 
@@ -880,7 +896,6 @@ class LinuxHowToApp(App):
 
         Thread(target=run_update, daemon=True).start()
 
-
     def update_success(self, *args):
         self.update_text = "Data updated ✓"
         self.update_bg = self.COLOR_WHITE_SOFT
@@ -890,7 +905,6 @@ class LinuxHowToApp(App):
 
         Clock.schedule_once(self.restore_update_button, 2)
 
-
     def update_failed(self, *args):
         self.update_text = "Data update failed"
         self.update_bg = self.COLOR_WHITE_SOFT
@@ -899,13 +913,11 @@ class LinuxHowToApp(App):
 
         Clock.schedule_once(self.restore_update_button, 3)
 
-
     def restore_update_button(self, *args):
         self.update_text = "Update Data"
         self.update_bg = self.COLOR_ORANGE_LIGHT_UI
         self.update_fg = self.COLOR_BLUE_DARK
         self.update_border = self.COLOR_TRANSPARENT
-
 
     #---- upgrade App ------
     def upgrade_app(self, *args):
@@ -916,9 +928,6 @@ class LinuxHowToApp(App):
 
         def run_upgrade():
             try:
-                if not is_dev_mode():
-                    raise RuntimeError("App upgrade is only configured in development mode right now.")
-
                 print("🔄 Upgrading app source from Git...")
 
                 repo_root = Path(__file__).resolve().parent.parent
@@ -934,10 +943,16 @@ class LinuxHowToApp(App):
         Thread(target=run_upgrade, daemon=True).start()
 
     def upgrade_success(self, *args):
-        self.upgrade_text = "Upgrade ready - restart app"
+        # ✅ sync local version with remote
+        write_local_version(self.remote_version)
+        self.local_version = self.remote_version
+
+        self.upgrade_text = "Upgrade complete - restart app"
         self.upgrade_bg = self.COLOR_WHITE_SOFT
         self.upgrade_fg = self.COLOR_GREEN
         self.upgrade_border = self.COLOR_GREEN
+
+        self.refresh_ui_data()
 
         Clock.schedule_once(self.restore_upgrade_button, 3)
 
@@ -949,11 +964,19 @@ class LinuxHowToApp(App):
 
         Clock.schedule_once(self.restore_upgrade_button, 3)
 
+
     def restore_upgrade_button(self, *args):
-        self.upgrade_text = "Upgrade App"
-        self.upgrade_bg = self.COLOR_ORANGE_LIGHT_UI
-        self.upgrade_fg = self.COLOR_BLUE_DARK
+        # ✅ Reset to neutral style, app up to date
+        self.upgrade_bg = list(self.COLOR_GREY_SOFT)
+        self.upgrade_fg = list(self.COLOR_TEXT_DARK)
         self.upgrade_border = self.COLOR_TRANSPARENT
+
+        # ✅ Restore correct text based on version state
+        if is_upgrade_available(self.local_version, self.remote_version):
+            self.upgrade_text = "Upgrade Available"
+        else:
+            self.upgrade_text = "Up to Date"
+
 
     #---- syncronize button behaviour -----
     def sync_success(self, *args):
