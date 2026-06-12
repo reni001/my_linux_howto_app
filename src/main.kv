@@ -65,9 +65,9 @@
     size_hint_x: 0.9    # ✅ key line
     pos_hint: {"center_x": 0.5}  # ✅ center the button
 
-    height: '44dp'
+    height: '40dp'
     font_size: app.FONT_BUTTON
-    padding: [12, 4]
+    padding: [12, 5]
 
 <MenuNeutralButton@MenuButton>:
     background_color: app.COLOR_GREY_DARK if self.state == 'normal' else app.COLOR_GREY_LIGHT
@@ -88,18 +88,36 @@
 <MenuDangerButton@MenuButton>:
     background_color: app.COLOR_RED if self.state == 'normal' else app.COLOR_RED_DARK
 
+#------------------------
 <MenuSectionLabel@Label>:
     size_hint_y: None
     size_hint_x: 0.9               # ✅ same width as buttons
     pos_hint: {"center_x": 0.5}   # ✅ center align
 
     height: dp(22)
+
+    padding_x: dp(6)    # ✅ NEW → aligns with button text
     text_size: self.size
+
     halign: "left"
     valign: "middle"
 
     color: app.COLOR_TEXT_SOFT
     font_size: app.FONT_TEXT * 0.75
+
+
+<MenuDivider@Widget>:
+    size_hint_y: None
+    size_hint_x: 0.9
+    height: dp(6)
+    pos_hint: {"center_x": 0.5}
+
+    canvas.before:
+        Color:
+            rgba: app.COLOR_TEXT_SOFT
+        Line:
+            points: self.x, self.center_y, self.x + self.width, self.center_y
+            width: 1
 
 # ----------------------------
 # SPECIAL STATE BUTTONS
@@ -230,7 +248,6 @@
         on_release:
             root.right_action() if root.right_action else None
 
-
 <JumpToTopButton@ButtonBehavior+Image>:
     source: app.get_icon_path("top.png")
     size_hint: None, None
@@ -357,16 +374,16 @@
                 MenuSectionLabel:
                     text: "ABOUT"
 
+                #-----
                 MenuNeutralButton:
                     text: "About App"
                     on_release:
                         root.dismiss()
                         app.open_about_popup()
 
-                Widget:
-                    size_hint_y: None
-                    height: dp(3)
+                MenuDivider:
 
+                #-----
                 MenuSectionLabel:
                     text: "TOOLS"
 
@@ -388,10 +405,9 @@
                         root.dismiss()
                         Clock.schedule_once(lambda dt: app.open_subcategory_dialog(), 0)
 
-                Widget:
-                    size_hint_y: None
-                    height: dp(3)
+                MenuDivider:
 
+                # -----
                 MenuSectionLabel:
                     text: "Backup"
 
@@ -413,10 +429,9 @@
                         root.dismiss()
                         Clock.schedule_once(lambda dt: app.show_restore_backup_dialog(), 0)
 
-                Widget:
-                    size_hint_y: None
-                    height: dp(3)
+                MenuDivider:
 
+                # -----
                 MenuSectionLabel:
                     text: "NAVIGATION"
 
@@ -432,10 +447,9 @@
                         root.dismiss()
                         Clock.schedule_once(lambda dt: app.open_assets_folder(), 0)
 
-                Widget:
-                    size_hint_y: None
-                    height: dp(3)
+                MenuDivider:
 
+                # -----
                 MenuSectionLabel:
                     text: "CREATION"
 
@@ -445,10 +459,9 @@
                         root.dismiss()
                         Clock.schedule_once(lambda dt: app.open_new_topic(), 0)
 
-                Widget:
-                    size_hint_y: None
-                    height: dp(3)
+                MenuDivider:
 
+                # -----
                 MenuSectionLabel:
                     text: "SYSTEM"
 
