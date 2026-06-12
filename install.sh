@@ -57,12 +57,8 @@ install_ubuntu() {
         python3-venv python3-dev build-essential \
         libgl1-mesa-dev libgles2-mesa-dev \
         libgstreamer1.0-dev gstreamer1.0-plugins-base \
-        libmtdev-dev libjpeg-dev libpng-dev pkg-config
-
-    if ! command -v python3.9 &> /dev/null; then
-        echo "[INFO] Installing Python 3.9..."
-        sudo apt install -y python3.9 python3.9-venv python3.9-dev
-    fi
+        libmtdev-dev libjpeg-dev libpng-dev pkg-config \
+        || echo "[WARNING] dependency install failed"
 
 }
 
@@ -124,7 +120,9 @@ elif command -v python3.9 &> /dev/null; then
     PYTHON_BIN="python3.9"
     echo "[INFO] ✅ Using Python 3.9"
 
-elif command -v python3 &> /dev/null; then
+elif command -v python3 &> /dev/null && \
+     python3 -c "import sys; exit(0 if sys.version_info >= (3,9) else 1)"; then
+
     PY_VERSION=$(python3 -c 'import sys; print(".".join(map(str, sys.version_info[:2])))')
 
     echo "[INFO] Using system Python $PY_VERSION"
@@ -153,13 +151,40 @@ fi
 echo "[INFO] Using $PYTHON_BIN"
 
 # ----------------------------------------
+# ENSURE MINIMUM PYTHON VERSION
+# ----------------------------------------
+
+if [[ "$PYTHON_BIN" == "python3" ]]; then
+    PY_OK=$($PYTHON_BIN -c "import sys; print(int(sys.version_info >= (3,9)))")
+
+    if [ "$PY_OK" -ne 1 ]; then
+        echo "[INFO] Python version too old → installing Python 3.9..."
+
+        sudo apt update
+        sudo apt install -y python3.9 python3.9-venv python3.9-dev \
+            || {
+                echo "[ERROR] Could not install Python 3.9 automatically"
+                echo "Please install a compatible Python version (3.10–3.12 recommended)"
+                exit 1
+            }
+
+        PYTHON_BIN="python3.9"
+    fi
+fi
+
+# ----------------------------------------
 # CREATE VENV
 # ----------------------------------------
 
 echo "[INFO] Creating virtual environment..."
 
+
 if [ ! -d "$VENV_DIR" ]; then
-    $PYTHON_BIN -m venv "$VENV_DIR"
+    echo "[INFO] Creating venv using $PYTHON_BIN"
+    $PYTHON_BIN -m venv "$VENV_DIR" || {
+        echo "[ERROR] Failed to create virtual environment"
+        exit 1
+    }
 fi
 
 source "$VENV_DIR/bin/activate"
@@ -204,9 +229,9 @@ fi
 
 echo "Creating version file..."
 
-echo "2.2.0" > "$DATA_DIR/version.txt"
+echo "2.3.0" > "$DATA_DIR/version.txt"
 
-echo "[INFO] version.txt created with version 2.2.0"
+echo "[INFO] version.txt created with version 2.3.0"
 
 
 # ----------------------------------------
