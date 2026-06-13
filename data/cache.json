@@ -3658,6 +3658,76 @@
       "Topic_ID": "othe_inte_ssh_se",
       "_key": "-Ov226nOSJg_w3hLTqKW",
       "created_at": "2026-06-13T22:13:57.731644"
+    },
+    "-Ov261-mdoIOYK_Xxvzp": {
+      "Code_Snippet": "",
+      "Header_2": "",
+      "Headline": "Step 1: Generate a Personal Access Token",
+      "Instruction": "Log in to your Git hosting platform and open Developer settings.\n\nSelect Personal access tokens and click Generate new token.\n\nChoose a descriptive name, select required scopes (e.g., repo), and click Generate token.\n\nCopy the token and store it securely; it will be shown only once.",
+      "Notes": "",
+      "Screenshot": "",
+      "Step_ID": 623,
+      "Step_Order": 1,
+      "Topic_ID": "other_cloud_setting_up_g_7ec4",
+      "URLs": "",
+      "_key": "-Ov261-mdoIOYK_Xxvzp",
+      "created_at": "2026-06-13T22:31:01.563844"
+    },
+    "-Ov2612ro0sQgM83JchR": {
+      "Code_Snippet": "git config --global credential.helper store\ngit config --global credential.username <your_username>",
+      "Header_2": "",
+      "Headline": "Step 2: Configure Git to Use the Token Globally",
+      "Instruction": "Open a terminal and run: git config --global credential.helper store.\n\nRun: git config --global credential.username <your_username>.\n\nOn your next push or pull, enter your PAT when prompted for a password; Git will store it for future use.",
+      "Notes": "",
+      "Screenshot": "",
+      "Step_ID": 624,
+      "Step_Order": 2,
+      "Topic_ID": "other_cloud_setting_up_g_7ec4",
+      "URLs": "",
+      "_key": "-Ov2612ro0sQgM83JchR",
+      "created_at": "2026-06-13T22:31:01.771636"
+    },
+    "-Ov2615F1uYAYxbkm99a": {
+      "Code_Snippet": "cd /path/to/your/repo\ngit config credential.helper store\ngit config credential.username <your_username>",
+      "Header_2": "",
+      "Headline": "Step 3: Configure Git to Use the Token for a Single Repository",
+      "Instruction": "Navigate to your repository: cd /path/to/your/repo.\n\nRun: git config credential.helper store.\n\nRun: git config credential.username <your_username>.\n\nEnter your PAT when prompted during the next Git operation.",
+      "Notes": "",
+      "Screenshot": "",
+      "Step_ID": 625,
+      "Step_Order": 3,
+      "Topic_ID": "other_cloud_setting_up_g_7ec4",
+      "URLs": "",
+      "_key": "-Ov2615F1uYAYxbkm99a",
+      "created_at": "2026-06-13T22:31:01.943571"
+    },
+    "-Ov2617unU6kM_9vdY4D": {
+      "Code_Snippet": "export GIT_TOKEN=<your_token>\ngit -c http.extraheader=\"Authorization: token $GIT_TOKEN\" <git_command>.",
+      "Header_2": "",
+      "Headline": "git config credential.username <your_username>",
+      "Instruction": "Export your token: export GIT_TOKEN=<your_token>.\n\nRun Git commands with: git -c http.extraheader=\"Authorization: token $GIT_TOKEN\" <git_command>.",
+      "Notes": "",
+      "Screenshot": "",
+      "Step_ID": 626,
+      "Step_Order": 4,
+      "Topic_ID": "other_cloud_setting_up_g_7ec4",
+      "URLs": "",
+      "_key": "-Ov2617unU6kM_9vdY4D",
+      "created_at": "2026-06-13T22:31:02.126059"
+    },
+    "-Ov261AJxD1ett0ySbw8": {
+      "Code_Snippet": "git push origin main",
+      "Header_2": "",
+      "Headline": "Step 5: Test Your Configuration",
+      "Instruction": "Make a change in your repository and commit it.\n\nPush to the remote: git push origin main.\n\nIf configured correctly, the push should succeed without further authentication prompts.",
+      "Notes": "",
+      "Screenshot": "",
+      "Step_ID": 627,
+      "Step_Order": 5,
+      "Topic_ID": "other_cloud_setting_up_g_7ec4",
+      "URLs": "",
+      "_key": "-Ov261AJxD1ett0ySbw8",
+      "created_at": "2026-06-13T22:31:02.298368"
     }
   },
   "topics": {
@@ -4715,6 +4785,20 @@
       "Topic_Icon": "firebase.png",
       "URLs": "https://console.firebase.google.com/",
       "_key": "-OuwiaWUzXecM7acziVr"
+    },
+    "-Ov24n0qveoxPZaaIujv": {
+      "Cat_Icon": "other.png",
+      "Category": "Other",
+      "Date_Created": "2026-06-14T00:14:52",
+      "Date_Updated": "2026-06-14T00:31:01",
+      "Description": "When you see fatal: Authentication failed during a git push, it means Git cannot verify your identity with the remote repository. This often happens due to outdated credentials, GitHub’s removal of password-based HTTPS authentication, or mismatched authentication methods.\n GitHub no longer accept passwords for Git operations. Instead, they require a Personal Access Token (PAT).",
+      "Sub_Icon": "cloud2.png",
+      "Subcategory": "Cloud",
+      "Title": "Setting up git push using a token",
+      "Topic_ID": "other_cloud_setting_up_g_7ec4",
+      "Topic_Icon": "git.png",
+      "URLs": "https://www.geeksforgeeks.org/git/how-to-fix-git-authentication-failed-error/,",
+      "_key": "-Ov24n0qveoxPZaaIujv"
     }
   }
 }
