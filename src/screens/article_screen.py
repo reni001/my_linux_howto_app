@@ -15,6 +15,8 @@ from kivy.core.clipboard import Clipboard
 from kivy.graphics import Color, RoundedRectangle, Line
 from kivy.graphics.transformation import Matrix
 from kivy.app import App
+from kivy.utils import escape_markup
+import re
 
 from pathlib import Path
 from datetime import datetime
@@ -23,6 +25,7 @@ from src.utils.runtime_paths import get_runtime_paths
 from src.utils.icon_utils import get_icon_path
 from src.ui.theme import COLOR_BLUE, COLOR_ORANGE, NOTE_BG, COLOR_WHITE
 from src.services.system_open_service import open_url as open_external_url
+from src.utils.font_utils import get_font_path
 
 icon = get_icon_path
 
@@ -92,7 +95,7 @@ class StepCard(BoxLayout):
             self.bg_rect = RoundedRectangle(
                 pos=self.pos,
                 size=self.size,
-                radius=[app.FONT_TEXT * 0.6]
+                radius=[ui["SPACING_SMALL"]]
             )
 
         self.bind(pos=self._update_graphics, size=self._update_graphics)
@@ -173,6 +176,109 @@ class ArticleScreen(Screen):
         paths = get_runtime_paths()
         return str(paths["assets"] / "screenshots" / filename)
 
+    def _highlight_code_simple(self, code: str) -> str:
+        """
+        Lightweight syntax highlighting for shell / terminal style code blocks.
+        Uses Kivy markup only, no external dependency.
+        """
+        if not code:
+            return ""
+
+        # colours
+        C_DEFAULT = "ffb347"   # warm orange
+        C_COMMENT = "8a8f98"   # muted grey
+        C_PROMPT  = "6aa9ff"   # blue
+        C_CMD     = "ffd166"   # yellow/orange
+        C_OPT     = "7fd1ff"   # cyan
+        C_URL     = "66d9ef"   # bright cyan
+        C_STRING  = "a6e22e"   # green
+
+        known_cmds = {
+            "sudo", "apt", "apt-get", "pacman", "dnf", "yum", "zypper",
+            "systemctl", "journalctl", "chmod", "chown", "cp", "mv", "rm",
+            "ls", "cd", "mkdir", "rmdir", "pwd", "find", "grep", "sed", "awk",
+            "cat", "echo", "touch", "nano", "vim", "code",
+            "git", "python", "python3", "pip", "pip3",
+            "curl", "wget", "tar", "unzip", "zip",
+            "docker", "flatpak", "snap", "export", "source", "env",
+            "uname", "ip", "ifconfig", "ping", "ssh", "scp"
+        }
+
+        def colour(text, hex_colour):
+            return f"[color={hex_colour}]{text}[/color]"
+
+        def highlight_line(line: str) -> str:
+            stripped = line.lstrip()
+
+            # full-line comments
+            if stripped.startswith("#"):
+                return colour(escape_markup(line), C_COMMENT)
+
+            # URLs first
+            escaped = escape_markup(line)
+            escaped = re.sub(
+                r'(https?://[^\s]+)',
+                lambda m: colour(m.group(1), C_URL),
+                escaped
+            )
+
+            # quoted strings
+            escaped = re.sub(
+                r'(".*?"|\'.*?\')',
+                lambda m: colour(m.group(1), C_STRING),
+                escaped
+            )
+
+            prompt_prefix = ""
+            rest = escaped
+
+            # highlight shell prompts
+            if stripped.startswith("$ "):
+                prefix_index = escaped.find("$ ")
+                if prefix_index >= 0:
+                    prompt_prefix = escaped[:prefix_index] + colour("$", C_PROMPT) + " "
+                    rest = escaped[prefix_index + 2:]
+            elif stripped.startswith("# "):
+                prefix_index = escaped.find("# ")
+                if prefix_index >= 0:
+                    prompt_prefix = escaped[:prefix_index] + colour("#", C_PROMPT) + " "
+                    rest = escaped[prefix_index + 2:]
+            elif stripped.startswith("> "):
+                prefix_index = escaped.find("> ")
+                if prefix_index >= 0:
+                    prompt_prefix = escaped[:prefix_index] + colour(">", C_PROMPT) + " "
+                    rest = escaped[prefix_index + 2:]
+
+            tokens = rest.split(" ")
+            out = []
+
+            command_coloured = False
+            for token in tokens:
+                if not token:
+                    out.append("")
+                    continue
+
+                plain = re.sub(r'\[/?color=.*?\]|\[/color\]', '', token)
+
+                if plain in known_cmds and not command_coloured:
+                    out.append(colour(token, C_CMD))
+                    command_coloured = True
+                elif plain.startswith("-"):
+                    out.append(colour(token, C_OPT))
+                else:
+                    out.append(token)
+
+            highlighted = " ".join(out)
+
+            if not prompt_prefix and escaped == line:
+                # raw line without escaped markup path
+                escaped = escape_markup(line)
+
+            return prompt_prefix + highlighted if prompt_prefix else highlighted
+
+        lines = code.splitlines()
+        return "\n".join(highlight_line(line) for line in lines)
+
     def _build_code_block(self, code: str, app):
         ui = UI(app)
         if not code:
@@ -201,12 +307,29 @@ class ArticleScreen(Screen):
         code_box.bind(minimum_height=code_box.setter('height'))
         code_box.bind(pos=self._update_graphics, size=self._update_graphics)
 
+        try:
+            font_path = get_font_path("JetBrainsMono-Regular.ttf")
+        except:
+            font_path = "DejaVuSansMono.ttf"
+
+
+        # syntax-highlighted code text
+        highlighted_code = self._highlight_code_simple(code)
+
+        # font fallback
+        try:
+            font_path = get_font_path("JetBrainsMono-Regular.ttf")
+        except:
+            font_path = "DejaVuSansMono.ttf"
+
         code_lbl = Label(
-            text=code,
-            font_name='RobotoMono-Regular',
+            text=highlighted_code,
+            markup=True,
+            font_name=font_path,
             color=COLOR_ORANGE,
             font_size=app.FONT_CODE,
-            line_height=1.3,
+            line_height=1.4,
+            padding=(0, ui["SPACING_SMALL"]),
             size_hint_y=None,
             halign='left'
         )
@@ -224,7 +347,7 @@ class ArticleScreen(Screen):
         copy_btn = Button(
             text="Copy",
             size_hint=(None, None),
-            size=(ui["BUTTON_WIDTH"] * 0.25, ui["INPUT_HEIGHT"]),
+            size=(ui["BUTTON_WIDTH"] * 0.35, ui["INPUT_HEIGHT"]),
             font_size=app.FONT_BUTTON,
             background_color=[0.3, 0.3, 0.3, 1]
         )
@@ -279,6 +402,7 @@ class ArticleScreen(Screen):
         return widgets
 
     def _build_step_screenshot(self, step, safe_str, app):
+        ui = UI(app)
         screenshot = safe_str(step.get('Screenshot'))
         if not screenshot:
             return None
@@ -288,7 +412,7 @@ class ArticleScreen(Screen):
         img = ClickableImage(
             source=path,
             size_hint_y=None,
-            height=app.FONT_TEXT * 12,
+            height=ui["ICON_SIZE"] * 6,
             allow_stretch=True,
             keep_ratio=True
         )
@@ -409,7 +533,7 @@ class ArticleScreen(Screen):
         img = Image(
             source=icon(icon_name),
             size_hint_y=None,
-            height=ui["ICON_SIZE"] * 3
+            height=ui["ICON_SIZE"] * 5
         )
         widgets.append(img)
 
@@ -572,6 +696,9 @@ class ArticleScreen(Screen):
 
 
     def show_fullscreen_image(self, image_path):
+        app = App.get_running_app()
+        ui = UI(app)
+
         modal = ModalView(
             size_hint=(1, 1),
             auto_dismiss=True,
@@ -613,11 +740,11 @@ class ArticleScreen(Screen):
         close_btn = Button(
             text="X",
             size_hint=(None, None),
-            size=(dp(56), dp(56)),
+            size=(ui["ICON_SIZE"] * 1.8, ui["ICON_SIZE"] * 1.8),
             pos_hint={"right": 0.98, "top": 0.98},
             background_color=COLOR_ORANGE,
             color=COLOR_WHITE,
-            font_size="24sp",
+            font_size=app.FONT_TITLE,
             bold=True
         )
         close_btn.bind(on_release=lambda x: modal.dismiss())

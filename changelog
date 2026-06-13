@@ -1,153 +1,121 @@
-# Changelog
+VERSION 2.3.2 - UI System & Code Block Enhancement
 
----
-
-VERSION 2.3.5
 Features
 
-Cross‑platform system integration (major)
+- UI design system integration (major)
+- Introduced centralised UI scaling system using UI(app)
+- Replaced hardcoded dp and sp values with dynamic scaling
+- Unified design tokens: SPACING, SPACING_SMALL, SPACING_LARGE
+- Unified design tokens: ICON_SIZE, ICON_SMALL
+- Unified design tokens: INPUT_HEIGHT, BUTTON_WIDTH
+- Ensures consistent layout, readability and cross-platform behaviour
 
-- Centralised system_open_service for:
+- Modular UI component architecture
+- Refactored ArticleScreen into reusable UI builder methods
+- Added StepCard component for step rendering
+- Clear separation between UI composition, data rendering and styling
 
-  - Opening URLs
-  - Opening files (database)
-  - Opening asset folders
+- Custom code font support
+- Added support for bundled monospace fonts
+- Implemented fallback to system fonts (DejaVuSansMono)
+- Improves code readability and visual consistency
 
-- Full support for:
+- Syntax highlighting for code blocks
+- Implemented lightweight highlighting without external dependency
+- Highlights comments, shell prompts, commands, options and URLs
+- Uses Kivy markup system for rendering
 
-  - Linux (Arch, Ubuntu, etc.)
-  - Windows
-  - WSL (Windows Subsystem for Linux)
+
+VERSION 2.3.1 - Cross‑Platform System Integration
+
+Features
+
+- Cross‑platform system integration (major)
+- Centralised system_open_service for opening URLs, files and asset folders
+- Full support for Linux, Windows and WSL
 
 - WSL integration support
-
-  - Automatic detection of WSL environment
-  - File opening redirected to:
-    - Windows Explorer for folders
-    - Windows applications for files
-    - Windows browser for URLs
-
-  - Path conversion using wslpath
+- Automatic detection of WSL environment
+- Redirects file opening to Windows Explorer and applications
+- Uses Windows browser for URLs
+- Path conversion handled via wslpath
 
 - Modular architecture improvement
-
-  - External system calls removed from main.py
-  - Dedicated service layer (system_open_service.py)
-  - Cleaner separation of:
-    - UI (screens)
-    - Logic (services)
-    - System interactions
+- Removed external system calls from main.py
+- Introduced system_open_service layer
+- Clear separation of UI, logic and system interactions
 
 Improvements
 
+- Improved installer robustness
+- Refined OS detection (Debian, Arch, Fedora, WSL)
+- Improved Python version validation
+- Better error handling for dependencies
 
-Improved installer robustness
+- WSL install optimisation
+- Avoids unnecessary Linux GUI tools
+- Provides WSLg setup guidance
+- Skips GUI tests when not available
 
-OS detection refined (Debian, Arch, Fedora, WSL)
-Python version validation improved
-Better error handling for missing dependencies
+- Better URL handling
+- Adds https:// automatically
+- Decodes HTML entities
+- Ensures consistent behaviour across platforms
 
+- Improved error visibility
+- Added traceback output for subprocess calls
+- Eliminates silent failures
 
-
-WSL install optimisation
-
-Avoids installing unnecessary Linux GUI tools
-Clear instructions for enabling WSLg (wsl --update)
-Skips GUI test when not available
-
-
-
-Better URL handling
-
-Automatic correction of malformed URLs:
-
-adds https:// if missing
-decodes HTML entities (&amp; → &)
-
-
-Consistent behaviour across platforms
-
-
-
-Improved error visibility
-
-Added traceback output in async subprocess calls
-Eliminates silent failures during file/URL opening
-
-
-
-UI responsiveness
-
-Removed blocking subprocess calls that caused freezes
-Async execution only where required (WSL/Windows)
-
-
-
+- UI responsiveness
+- Removed blocking subprocess calls
+- Uses async only where required
 
 Fixes
 
-Fixed crash when clicking links:
+- Fixed crash when clicking links
+- Fixed missing open_url method in ArticleScreen
+- Fixed incorrect indentation of method
 
-Missing open_url method in ArticleScreen
-Incorrect indentation (method defined inside go_back)
+- Fixed runtime crashes
+- Fixed missing html import
+- Fixed broken URL parsing logic
 
-Fixed runtime crash:
+- Fixed WSL behaviour issues
+- Corrected path conversion with wslpath
+- Fixed incorrect Explorer opening
+- Fixed URL opening behaviour
 
-NameError: html not defined → added import
+- Fixed UI freeze issues
+- Removed blocking calls and improper threading
 
-Fixed broken URL parsing:
+- Fixed inconsistent behaviour
+- Unified handling of system open methods
 
-Corrupted startswith() logic in earlier version
-
-Fixed WSL path handling:
-
-Explorer opening wrong directory → resolved with wslpath -w
-
-Fixed URL opening in WSL:
-
-explorer.exe fallback replaced with proper handling
-
-Fixed UI freeze:
-
-Improper threading of webbrowser.open
-Blocking subprocess calls removed
-
-Fixed inconsistent behaviour:
-
-Mixed use of webbrowser, xdg-open, and manual calls unified
 
 VERSION 2.3.0 - Upgrade System & Version Tracking
 
 Features
 
-- Added full Upgrade App system (updates complete application from GitHub)
-- Introduced separation between Update Data and Upgrade App
+- Added full Upgrade App system (application updates from GitHub)
+- Separated Update Data and Upgrade App
 - Implemented local vs remote version tracking
-- Added version.txt to store installed application version
-- Installer now creates version.txt during first installation
+- Added version.txt for installed version storage
+- Installer creates version.txt on first install
 
 Improvements
 
-- Upgrade button now reflects state:
-  - "Upgrade Available"
-  - "Up to Date"
-- Unified button behaviour across system actions:
-  - Success → green on white
-  - Failure → red on white
-  - Idle → light neutral style
-- Improved system structure:
-  - version_service handles version logic
-  - update_content handles update logic
-- Improved consistency between update, upgrade, and sync workflows
+- Upgrade button reflects state (Upgrade Available / Up to Date)
+- Unified button behaviour (success, failure, idle)
+- Introduced version_service and update_content separation
+- Improved consistency between update and upgrade workflows
 
 Fixes
 
-- Fixed upgrade being restricted to development mode only
-- Fixed incorrect version display (previously showed 0.0.0)
-- Fixed missing version initialisation on new installations
-- Fixed missing AppImage detection causing runtime errors
+- Fixed upgrade restriction to development mode
+- Fixed incorrect version display
+- Fixed missing version initialisation
+- Fixed AppImage detection issues
 
----
 
 VERSION 2.2.0 - Architecture Refactor & Codebase Cleanup
 
@@ -156,321 +124,297 @@ Features
 - Extracted restore logic into restore_service
 - Extracted delete logic into topic_delete_service
 - Extracted promote/demote logic into topic_action_service
-- Extracted restore dialog into ui/dialogs/restore_dialog
+- Extracted restore dialog component
 
 Improvements
 
-- Clear separation of concerns:
-  - main.py → orchestration only
-  - services → behaviour and data logic
-  - ui → dialogs and presentation
+- Clear separation between main, services and UI
 - Reduced duplication in save/update/delete flows
-- Centralised local data handling using _apply_local_change()
-- Introduced refresh_all() for unified refresh handling
-- Improved maintainability and modularity
+- Centralised local change handling
+- Added unified refresh mechanism
 
 Fixes
 
-- Fixed recursion issue in refresh handling
-- Reduced risk of UI-triggered infinite loops
-- Improved data refresh reliability after edits
+- Fixed recursion issues in refresh handling
+- Reduced risk of infinite loops
+- Improved data refresh reliability
 
 
 VERSION 2.1.0 – Sync, Keys & Logging Refinement
 
 Features
 
-- Introduced Firebase push-key system for Topic _key (replaces numeric indexing)
-- Implemented improved Topic_ID generation using deterministic hash suffix for uniqueness
-- Added smart backup system (only stores used icons and screenshots)
-- Added fast restore system (restores only required assets instead of full asset folder)
-
+- Introduced Firebase push-key system for Topic _key
+- Improved Topic_ID generation
+- Added smart backup system
+- Added fast restore system
 
 Improvements
 
-- Significantly reduced terminal verbosity for cleaner runtime output
-- Introduced controlled debug strategy (preparation for central debug handling)
-- Optimised topic creation by removing expensive topic counting logic
-- Improved sync performance and scalability (safe for multi-device operation)
-
+- Reduced terminal verbosity
+- Introduced controlled debug strategy
+- Improved topic creation performance
+- Improved sync scalability
 
 Fixes
 
-- Fixed backup not being triggered during sync (data normalisation issue)
-- Fixed backup system returning zero assets due to incorrect structure handling
-- Removed excessive debug output ("DEBUG fixed item") causing terminal flooding
-- Fixed redundant logging outputs in runtime workflow
+- Fixed backup not triggering during sync
+- Fixed incorrect asset handling
+- Removed excessive debug logs
+- Fixed redundant logging output
 
-VERSION 2.0.0 Backup & Restore System
 
-FEATURES
+VERSION 2.0.0 - Backup & Restore System
 
-Full backup system (folder-based snapshot: data + assets)
-Restore system (recover backups as local content)
-Sync-integrated backup (automatic snapshot before Firebase overwrite)
-Backup browser in UI (list + select + restore)
-Restore into local workspace (no direct Firebase overwrite)
-Support for restoring multiple backups safely
-Unified backup format across delete + sync
+Features
 
-IMPROVEMENTS
+- Full backup system
+- Restore system
+- Sync-integrated backup
+- Backup browser UI
+- Safe restore workflow
 
-Consistent backup naming and structure
-Robust sorting of backups (latest first based on timestamp)
-Normalised backup data structure (topics + steps always lists)
-Improved restore reliability (no silent overwrite by Firebase)
-Icons and assets now included in backups
-UI restore dialog aligned with themed popup system
-Safer workflow: restore → review → promote
+Improvements
 
-FIXES
+- Consistent backup structure
+- Improved sorting of backups
+- Normalised data structures
+- Improved restore safety
+- Included icons and assets
+- Improved restore UI alignment
 
-Fixed restore being overwritten by Firebase on reload
-Fixed crash when restoring invalid step structure ('str' object has no attribute 'get')
-Fixed inconsistent backup formats between sync and delete
-Fixed missing icons after restore
-Fixed incomplete backup detection in restore dialog
-Fixed malformed restore function (syntax + execution issues)
-Fixed missing or partially loaded topics after restore
-Fixed sorting and visibility issues in backup list
+Fixes
+
+- Fixed restore overwrite issues
+- Fixed invalid data structure crash
+- Fixed missing assets
+- Fixed backup detection issues
+- Fixed restore logic inconsistencies
+
 
 VERSION 1.9.0 - Category System Integration
 
 Features
-- Added full category management system (create, edit, delete)
-- Introduced categories.json as configuration registry
-- Categories now auto-generated from topic data
-- Added category dialog UI (mirrors subcategory management)
-- Integrated Cat_Icon support across system
+
+- Full category management system
+- Introduced categories.json
+- Automatic category generation
+- Category dialog UI
+- Integrated icon support
 
 Improvements
-- Unified data architecture using app.APP_DATA (removed global state inconsistencies)
-- Improved startup flow with async-safe taxonomy generation
-- Synchronized category and subcategory generation logic
+
+- Unified data architecture
+- Improved startup flow
+- Synced category logic
 
 Fixes
-- Fixed race condition where taxonomy generation ran before Firebase data was loaded
-- Fixed inconsistent data access between services and UI
-- Corrected icon fallback behaviour when Cat_Icon missing
 
-VERSION 1.8.0 — Dialog System & Architecture Refactor
-
-Improvements
-Refactored main application architecture with clear separation between UI, dialogs, and services
-Reduced complexity in main.py by delegating UI logic to dedicated dialog components
-Improved maintainability through centralised dialog handling system
-Enhanced code readability with cleaner responsibility boundaries (App → Services → UI)
-Improved consistency of popup behaviour across the application
-Streamlined icon handling using unified icon service
-
-Features
-Introduced reusable dialog system:
-
-cleanup_dialog
-confirm_dialog
-promotion_dialog
-
-Added centralised cleanup dialog with preview, delete, and undo workflow
-Added reusable confirmation dialog component for destructive actions
-Added reusable promotion dialog for topic publishing workflow
-Integrated dedicated icon service for resolving, copying, and managing assets
-Modularised topic promotion/demotion logic into service layer
-Improved extensibility for future UI components and dialogs
-
-Fixes
-Fixed inconsistent popup behaviour caused by duplicate inline implementations
-Resolved cleanup dialog rendering inconsistencies
-Fixed icon handling duplication across multiple modules
-Fixed multiple sources of UI state inconsistencies in main.py
-Removed legacy popup code paths causing maintenance issues
-Improved stability of delete and promotion workflows
+- Fixed taxonomy race condition
+- Fixed inconsistent data access
+- Fixed icon fallback behaviour
 
 
-VERSION 1.7.0 — UI System & AppWindow Upgrade
-
-Improvements
-
-Introduced resizable application window with dynamic layout scaling
-Added top-aligned window positioning for improved desktop usability
-Stabilised window behaviour across Linux environments (Arch, Ubuntu)
-Improved overall UI consistency through unified popup styling
-Enhanced spacing, typography, and layout balance across screens
-Improved first-run experience with automatic runtime configuration setup
+VERSION 1.8.0 - Dialog System & Architecture Refactor
 
 Features
 
-Implemented reusable themed popup system across the application
-Added unified file picker component (used for icons, screenshots, configuration files)
-Introduced consistent popup design matching application theme
-Enabled Firebase read access without requiring service account key
-Added automatic Firebase configuration initialisation on first run
-Improved AppImage packaging workflow with fully working distribution build
-
-Fixes
-
-Fixed window resizing instability and recursive resize crash
-Fixed window positioning issues causing incorrect default placement
-Fixed inconsistent popup styling across different screens
-Fixed file picker UI (oversized buttons, small text, default styling)
-Fixed missing firebase.json causing empty data on first run
-Resolved AppImage runtime configuration path issues
-Fixed inconsistencies in cache and Firebase fallback behaviour
-VERSION 1.6.1 – App Info & Changelog Polish
-Improvements
-
-Improved App Info editor layout
-Added formatted changelog preview with icons and section styling
-Improved changelog readability and hierarchy
-Better popup styling consistency between preview and About window
-Improved Save button placement and visibility
-
-Fixes
-
-Fixed changelog editor layout issues
-Fixed duplicate changelog field issues
-Fixed scroll/layout problems in App Info editor
-Fixed popup changelog rendering mismatch
-Fixed icon spacing and alignment in changelog display
-
-
-VERSION 1.6.0 – Performance & Editor Improvements
+- Introduced reusable dialog system
+- Added cleanup, confirm, and promotion dialogs
+- Centralised dialog handling
+- Improved icon service
 
 Improvements
 
-Implemented step indexing (major performance boost)
-Reduced UI rebuilds during navigation
-Optimised screen refresh logic to avoid unnecessary reloads
-Improved app responsiveness when opening categories and topics
-Introduced lazy data loading at startup
+- Refactored architecture (UI / dialogs / services)
+- Reduced complexity in main.py
+- Improved popup consistency
+
+Fixes
+
+- Fixed inconsistent popup behaviour
+- Fixed dialog rendering issues
+- Fixed duplicated icon logic
+- Improved delete and promotion stability
+
+
+VERSION 1.7.0 - UI System & AppWindow Upgrade
 
 Features
 
-Added Date_Created and Date_Updated tracking
-Improved topic editor workflow
-Enhanced duplicate detection and merging logic
-
-Fixes
-
-Fixed menu not loading due to fetch scheduling bug
-Fixed recursive fetch_database call issue
-Fixed UI refresh inconsistencies after data updates
-
-
-VERSION 1.5.5 – Editor Stability & UX Improvements
+- Resizable window with dynamic scaling
+- Top-aligned window positioning
+- Reusable popup system
+- File picker component
+- Firebase initialisation automation
 
 Improvements
 
-Improved step editing (update vs add mode)
-Better step ordering and renumbering logic
-Cleaner UI feedback for step selection
-Improved icon handling and preview logic
+- Improved UI consistency
+- Enhanced layout and spacing
+- Improved startup experience
 
 Fixes
 
-Fixed step overwrite edge cases
-Fixed screenshot handling reliability
-Fixed inconsistent icon updates in header preview
+- Fixed resize crash issues
+- Fixed window positioning
+- Fixed popup inconsistencies
+- Fixed file picker problems
+- Fixed missing Firebase configuration
 
 
-VERSION 1.5.0 – Enhanced Topic Editing & Merge Logic
+VERSION 1.6.1 - App Info & Changelog Polish
+
+Improvements
+
+- Improved App Info editor layout
+- Added changelog preview formatting
+- Improved readability and hierarchy
+- Improved popup styling
+
+Fixes
+
+- Fixed editor layout issues
+- Fixed duplicate fields
+- Fixed scroll issues
+- Fixed popup rendering mismatch
+
+
+VERSION 1.6.0 - Performance & Editor Improvements
 
 Features
 
-Introduced topic merge workflow with preview popup
-Added merge strategies (Add / Replace / Skip)
-Added duplicate detection across topics
-Improved local vs official topic handling
+- Added Date_Created and Date_Updated
+- Improved topic editor workflow
+- Enhanced duplicate detection
 
 Improvements
 
-Improved data consistency during edits
-Improved topic update logic (local + Firebase)
-Better handling of icons during merge
+- Implemented step indexing
+- Reduced UI rebuilds
+- Improved responsiveness
+- Introduced lazy loading
 
 Fixes
 
-Fixed duplicate topic edge cases
-Improved merge reliability
+- Fixed menu loading bug
+- Fixed recursive fetch issue
+- Fixed UI refresh inconsistencies
 
 
-VERSION 1.4.0 – Local Mode & Sync Workflow
+VERSION 1.5.5 - Editor Stability & UX Improvements
+
+Improvements
+
+- Improved step editing workflow
+- Improved ordering logic
+- Improved UI feedback
+- Improved icon handling
+
+Fixes
+
+- Fixed step overwrite issues
+- Fixed screenshot handling
+- Fixed icon update inconsistencies
+
+
+VERSION 1.5.0 - Enhanced Topic Editing & Merge Logic
 
 Features
 
-Added USER vs ADMIN mode separation
-Introduced local storage (user_data.json)
-Added user-specific icons (user_icons/)
-Implemented “Promote to Official” workflow
+- Topic merge workflow
+- Merge strategies
+- Duplicate detection
+- Local vs official handling
 
 Improvements
 
-Improved sync process (safe commit before pull)
-Update process now non-destructive (no file deletion)
+- Improved data consistency
+- Improved update logic
+- Improved icon handling
 
 Fixes
 
-Resolved icon loading inconsistencies
-Prevented Git overwrite issues
-Improved asset handling reliability
+- Fixed duplicate edge cases
+- Improved merge stability
 
 
-VERSION 1.3.0 – Sync System Redesign
-
-🔄 Sync & Update
-
-Reworked Git sync to avoid data loss (commit before pull)
-Update process made non-destructive (no asset deletion)
-
-Improvements
-
-Removed Excel dependency (no pandas)
-Simplified system to JSON + Firebase
-Improved icon resolution (user_icons fallback)
-Cleaned duplicated sync logic
-
-Fixes
-
-Fixed icon preview errors
-Fixed missing icon warnings
-Fixed unintended Git overwrites
-
-
-VERSION 1.1.0 – Editor & UI Improvements
+VERSION 1.4.0 - Local Mode & Sync Workflow
 
 Features
 
-New Topic Editor with step management
-Admin/User mode with UI restrictions
-Dynamic topic icons
+- USER vs ADMIN modes
+- Local storage system
+- User icons support
+- Promote workflow
 
 Improvements
 
-Improved Topic_ID generation
-Improved duplicate handling
-Improved UI layout
+- Improved sync safety
+- Non-destructive updates
 
 Fixes
 
-Fixed Firebase step saving issues
-Fixed edit behaviour inconsistencies
+- Fixed icon loading issues
+- Prevented Git overwrite issues
 
 
-VERSION 1.0.1 – Sync Stability
+VERSION 1.3.0 - Sync System Redesign
+
+Features
+
+- Safer Git sync workflow
+- Non-destructive updates
 
 Improvements
 
-Added automatic version increment during sync
-Improved Firebase sync reliability
-Improved GitHub auto-sync (pull --rebase)
+- Removed Excel dependency
+- Simplified data structure
+- Improved icon resolution
 
 Fixes
 
-Fixed version bump loop issue
-Fixed Excel corruption during sync
-Fixed metadata path handling
+- Fixed icon preview errors
+- Fixed missing icon issues
+- Fixed Git overwrite issues
 
 
-VERSION 1.0.0 – Initial Release
+VERSION 1.1.0 - Editor & UI Improvements
+
+Features
+
+- Topic editor with step management
+- Admin/User mode
+- Dynamic icons
+
+Improvements
+
+- Improved Topic_ID generation
+- Improved duplicate handling
+- Improved layout
+
+Fixes
+
+- Fixed Firebase saving issues
+- Fixed edit behaviour
+
+
+VERSION 1.0.1 - Sync Stability
+
+Improvements
+
+- Automatic version increment
+- Improved Firebase sync
+- Improved GitHub sync
+
+Fixes
+
+- Fixed version loop issue
+- Fixed Excel corruption
+- Fixed metadata handling
+
+
+VERSION 1.0.0 - Initial Release
 
 Features
 
@@ -478,7 +422,7 @@ Features
 - Excel-based content system
 - Firebase integration
 - Search functionality
-- Expandable content sections
+- Expandable content
 - Code snippet support
 - Local caching
 
@@ -490,4 +434,3 @@ Features
 - Early UI prototypes
 - Initial sync pipeline
 - Experimental data structures
-
