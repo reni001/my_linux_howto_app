@@ -2279,48 +2279,6 @@
       "_key": "-OuZPXZtWQ7YquluhNR8",
       "created_at": "2026-06-07T23:28:01.310191"
     },
-    "-OuZPcojbvZ9VXXWasZN": {
-      "Code_Snippet": "sudo apt-get install -y python-smbus\nsudo apt-get install -y i2c-tools\nsudo raspi-config --> enable I2C\nsudo reboot",
-      "Header_2": "1. Enable the I2C function on the Raspberry Pi.",
-      "Headline": "OLED 0.92 I2C ",
-      "Instruction": "Install python-smbus, i2c-tools and enable i2c in the raspi-config",
-      "Notes": "OLED from Solvay SSD1306 0.96",
-      "Step_ID": 443,
-      "Step_Order": 1,
-      "Topic_ID": "rasp_hard_oled_s",
-      "URL": "https://zhuanlan.zhihu.com/p/86375710",
-      "_key": "-OuZPcojbvZ9VXXWasZN",
-      "created_at": "2026-06-07T23:28:26.895914"
-    },
-    "-OuZPcrHxkz6eGqCN3Ow": {
-      "Code_Snippet": "sudo python -m pip install --upgrade pip setuptools wheel\nsudo python3 -m pip install --upgrade pip setuptools wheel",
-      "Header_2": "2. Install the Adafruit-SSD1306 library",
-      "Instruction": "The Adafruit-SSD1306 library is a Python-based OLED library that can be used for screens controlled by 128*64 and 128*32 pixel SSD1306 chips.\n\nsudo python -m pip install --upgrade pip setuptools wheel\nsudo python3 -m pip install --upgrade pip setuptools wheel\n\nIf this step fails, it's most likely a pip issue. In this case, we can try uninstalling and reinstalling pip to resolve the problem!\n\nsudo apt-get remove python-pip python3-pip\nsudo apt-get install python-pip python3-pip\n\nThen rerun the code above, and it should be done!",
-      "Step_ID": 444,
-      "Step_Order": 2,
-      "Topic_ID": "rasp_hard_oled_s",
-      "_key": "-OuZPcrHxkz6eGqCN3Ow",
-      "created_at": "2026-06-07T23:28:27.057193"
-    },
-    "-OuZPctuWZybANu-2CT0": {
-      "Header_2": "Examples",
-      "Instruction": "Download examples on: git clone https://github.com/adafruit/Adafruit-Python_SSD1306.git",
-      "Step_ID": 445,
-      "Step_Order": 4,
-      "Topic_ID": "rasp_hard_oled_s",
-      "URL": "https://github.com/adafruit/Adafruit_SSD1306",
-      "_key": "-OuZPctuWZybANu-2CT0",
-      "created_at": "2026-06-07T23:28:27.228393"
-    },
-    "-OuZPcwzFb7Cfy7XcVsH": {
-      "Code_Snippet": "sudo apt-get install python-pil python3-pil\nsudo pip install Adafruit-SSD1306",
-      "Instruction": "Install the PIL library; some image processing programs use this.\nsudo apt-get install python-pil python3-pil\n\nInstall the Adafruit-SSD1306 library using pip\nsudo pip install Adafruit-SSD1306",
-      "Step_ID": 446,
-      "Step_Order": 3,
-      "Topic_ID": "rasp_hard_oled_s",
-      "_key": "-OuZPcwzFb7Cfy7XcVsH",
-      "created_at": "2026-06-07T23:28:27.416937"
-    },
     "-OuZPe3t7q_d1AvDR42_": {
       "Code_Snippet": "sudo nano /boot/config.txt",
       "Header_2": "Method 1: Automatic Shutdown (Easiest)",
@@ -3728,6 +3686,46 @@
       "URLs": "",
       "_key": "-Ov261AJxD1ett0ySbw8",
       "created_at": "2026-06-13T22:31:02.298368"
+    },
+    "-Ov28hO_XE8V_mPEwcAR": {
+      "Code_Snippet": "sudo apt-get install -y python-smbus\nsudo apt-get install -y i2c-tools\nsudo raspi-config --> enable I2C\nsudo reboot",
+      "Header_2": "1. Enable the I2C function on the Raspberry Pi.",
+      "Headline": "OLED 0.92 I2C ",
+      "Instruction": "Install python-smbus, i2c-tools and enable i2c in the raspi-config",
+      "Notes": "OLED from Solvay SSD1306 0.96",
+      "Step_ID": 628,
+      "Step_Order": 1,
+      "Topic_ID": "rasp_hard_oled_s",
+      "_key": "-Ov28hO_XE8V_mPEwcAR",
+      "created_at": "2026-06-13T22:42:44.047877"
+    },
+    "-Ov28hRNm8H6hHFdjHV2": {
+      "Code_Snippet": "sudo python -m pip install --upgrade pip setuptools wheel\nsudo python3 -m pip install --upgrade pip setuptools wheel",
+      "Header_2": "2. Install the Adafruit-SSD1306 library",
+      "Instruction": "The Adafruit-SSD1306 library is a Python-based OLED library that can be used for screens controlled by 128*64 and 128*32 pixel SSD1306 chips.\n\nsudo python -m pip install --upgrade pip setuptools wheel\nsudo python3 -m pip install --upgrade pip setuptools wheel\n\nIf this step fails, it's most likely a pip issue. In this case, we can try uninstalling and reinstalling pip to resolve the problem!\n\nsudo apt-get remove python-pip python3-pip\nsudo apt-get install python-pip python3-pip\n\nThen rerun the code above, and it should be done!",
+      "Step_ID": 629,
+      "Step_Order": 2,
+      "Topic_ID": "rasp_hard_oled_s",
+      "_key": "-Ov28hRNm8H6hHFdjHV2",
+      "created_at": "2026-06-13T22:42:44.238838"
+    },
+    "-Ov28hUKHqiBSfuwBUAk": {
+      "Code_Snippet": "sudo apt-get install python-pil python3-pil\nsudo pip install Adafruit-SSD1306",
+      "Instruction": "Install the PIL library; some image processing programs use this.\nsudo apt-get install python-pil python3-pil\n\nInstall the Adafruit-SSD1306 library using pip\nsudo pip install Adafruit-SSD1306",
+      "Step_ID": 630,
+      "Step_Order": 3,
+      "Topic_ID": "rasp_hard_oled_s",
+      "_key": "-Ov28hUKHqiBSfuwBUAk",
+      "created_at": "2026-06-13T22:42:44.439781"
+    },
+    "-Ov28hX-KjkGAEiETpEF": {
+      "Header_2": "Examples",
+      "Instruction": "Download examples on: git clone https://github.com/adafruit/Adafruit-Python_SSD1306.git",
+      "Step_ID": 631,
+      "Step_Order": 4,
+      "Topic_ID": "rasp_hard_oled_s",
+      "_key": "-Ov28hX-KjkGAEiETpEF",
+      "created_at": "2026-06-13T22:42:44.626051"
     }
   },
   "topics": {
@@ -4467,15 +4465,14 @@
     "52": {
       "Cat_Icon": "raspi-pi.png",
       "Category": "Raspberry Pi",
-      "Created_By": "renate.schwiedernoch@outlook.de",
       "Date_Created": "2026-01-25T00:00:00",
-      "Date_Updated": "2026-01-25T00:00:00",
+      "Date_Updated": "2026-06-14T00:42:43",
       "Description": "In many use cases, a dedicated display isn't necessary for a Raspberry Pi . While you can access information on the Raspberry Pi via a phone or computer, this isn't always convenient. Below, we introduce a small OLED screen (SSD1306 chip driver) that can be directly plugged into the Raspberry Pi's GPIO port.",
       "Sub_Icon": "hardware.png",
       "Subcategory": "Hardware",
       "Title": "OLED SSD1306 0.96",
       "Topic_ID": "rasp_hard_oled_s",
-      "Topic_Icon": "",
+      "Topic_Icon": "paperlike.png",
       "URLs": "https://hallard.me/adafruit-ssd1306-oled-display-driver-for-raspberry-pi/, https://zhuanlan.zhihu.com/p/86375710",
       "_key": "52"
     },
