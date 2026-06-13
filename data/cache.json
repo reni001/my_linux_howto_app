@@ -1,11 +1,11 @@
 {
   "metadata": {
     "app_name": "Linux HowTo",
-    "changelog": "VERSION 2.3.1\nFeatures\n\nCross‑platform system integration (major)\n\n- Centralised system_open_service for:\n  - Opening URLs\n  - Opening files (database)\n  - Opening asset folders\n\n- Full support for:\n  - Linux (Arch, Ubuntu, etc.)\n  - Windows\n  - WSL (Windows Subsystem for Linux)\n\n- WSL integration support\n  - Automatic detection of WSL environment\n  - File opening redirected to:\n    - Windows Explorer for folders\n    - Windows applications for files\n    - Windows browser for URLs\n\n  - Path conversion using wslpath\n\n- Modular architecture improvement\n  - External system calls removed from main.py\n  - Dedicated service layer (system_open_service.py)\n  - Cleaner separation of:\n    - UI (screens)\n    - Logic (services)\n    - System interactions\n\nImprovements\n\n- Improved installer robustness\n  - OS detection refined (Debian, Arch, Fedora, WSL)\n  - Python version validation improved\n  - Better error handling for missing dependencies\n\n- WSL install optimisation\n  - Avoids installing unnecessary Linux GUI tools\n  - Clear instructions for enabling WSLg (wsl --update)\n  - Skips GUI test when not available\n\n- Consistent behaviour across platforms\n\n- Improved error visibility\n  - Added traceback output in async subprocess calls\n  - Eliminates silent failures during file/URL opening\n\n- UI responsiveness\n  - Removed blocking subprocess calls that caused freezes\n  - Async execution only where required (WSL/Windows)\n\nFixes\n\n- Fixed crash when clicking links:\n  - Missing open_url method in ArticleScreen\n  - Incorrect indentation (method defined inside go_back)\n\n- Fixed runtime crash:\n  - NameError: html not defined → added import\n\n- Fixed broken URL parsing:\n  - Corrupted startswith() logic in earlier version\n\n- Fixed WSL path handling:\n  -  Explorer opening wrong directory → resolved with wslpath -w\n\n- Fixed URL opening in WSL:\n  - explorer.exe fallback replaced with proper handling\n\n- Fixed UI freeze:\n  - Improper threading of webbrowser.open\n  - Blocking subprocess calls removed\n\n- Fixed inconsistent behaviour:\n  - Mixed use of webbrowser, xdg-open, and manual calls unified\n\nVERSION 2.3.0 - Upgrade System & Version Tracking\n\nFeatures\n\n- Added full Upgrade App system (updates complete application from GitHub)\n- Introduced separation between Update Data and Upgrade App\n- Implemented local vs remote version tracking\n- Added version.txt to store installed application version\n- Installer now creates version.txt during first installation\n\nImprovements\n\n- Upgrade button now reflects state:\n  - \"Upgrade Available\"\n  - \"Up to Date\"\n- Unified button behaviour across system actions:\n  - Success → green on white\n  - Failure → red on white\n  - Idle → light neutral style\n- Improved system structure:\n  - version_service handles version logic\n  - update_content handles update logic\n- Improved consistency between update, upgrade, and sync workflows\n\nFixes\n\n- Fixed upgrade being restricted to development mode only\n- Fixed incorrect version display (previously showed 0.0.0)\n- Fixed missing version initialisation on new installations\n- Fixed missing AppImage detection causing runtime errors\n\n---\n\nVERSION 2.2.0 - Architecture Refactor & Codebase Cleanup\n\nFeatures\n\n- Extracted restore logic into restore_service\n- Extracted delete logic into topic_delete_service\n- Extracted promote/demote logic into topic_action_service\n- Extracted restore dialog into ui/dialogs/restore_dialog\n\nImprovements\n\n- Clear separation of concerns:\n  - main.py → orchestration only\n  - services → behaviour and data logic\n  - ui → dialogs and presentation\n- Reduced duplication in save/update/delete flows\n- Centralised local data handling using _apply_local_change()\n- Introduced refresh_all() for unified refresh handling\n- Improved maintainability and modularity\n\nFixes\n\n- Fixed recursion issue in refresh handling\n- Reduced risk of UI-triggered infinite loops\n- Improved data refresh reliability after edits\n\n\nVERSION 2.1.0 – Sync, Keys & Logging Refinement\n\nFeatures\n\n- Introduced Firebase push-key system for Topic _key (replaces numeric indexing)\n- Implemented improved Topic_ID generation using deterministic hash suffix for uniqueness\n- Added smart backup system (only stores used icons and screenshots)\n- Added fast restore system (restores only required assets instead of full asset folder)\n\n\nImprovements\n\n- Significantly reduced terminal verbosity for cleaner runtime output\n- Introduced controlled debug strategy (preparation for central debug handling)\n- Optimised topic creation by removing expensive topic counting logic\n- Improved sync performance and scalability (safe for multi-device operation)\n\n\nFixes\n\n- Fixed backup not being triggered during sync (data normalisation issue)\n- Fixed backup system returning zero assets due to incorrect structure handling\n- Removed excessive debug output (\"DEBUG fixed item\") causing terminal flooding\n- Fixed redundant logging outputs in runtime workflow\n\nVERSION 2.0.0 Backup & Restore System\n\nFEATURES\n\nFull backup system (folder-based snapshot: data + assets)\nRestore system (recover backups as local content)\nSync-integrated backup (automatic snapshot before Firebase overwrite)\nBackup browser in UI (list + select + restore)\nRestore into local workspace (no direct Firebase overwrite)\nSupport for restoring multiple backups safely\nUnified backup format across delete + sync\n\nIMPROVEMENTS\n\nConsistent backup naming and structure\nRobust sorting of backups (latest first based on timestamp)\nNormalised backup data structure (topics + steps always lists)\nImproved restore reliability (no silent overwrite by Firebase)\nIcons and assets now included in backups\nUI restore dialog aligned with themed popup system\nSafer workflow: restore → review → promote\n\nFIXES\n\nFixed restore being overwritten by Firebase on reload\nFixed crash when restoring invalid step structure ('str' object has no attribute 'get')\nFixed inconsistent backup formats between sync and delete\nFixed missing icons after restore\nFixed incomplete backup detection in restore dialog\nFixed malformed restore function (syntax + execution issues)\nFixed missing or partially loaded topics after restore\nFixed sorting and visibility issues in backup list\n\nVERSION 1.9.0 - Category System Integration\n\nFeatures\n- Added full category management system (create, edit, delete)\n- Introduced categories.json as configuration registry\n- Categories now auto-generated from topic data\n- Added category dialog UI (mirrors subcategory management)\n- Integrated Cat_Icon support across system\n\nImprovements\n- Unified data architecture using app.APP_DATA (removed global state inconsistencies)\n- Improved startup flow with async-safe taxonomy generation\n- Synchronized category and subcategory generation logic\n\nFixes\n- Fixed race condition where taxonomy generation ran before Firebase data was loaded\n- Fixed inconsistent data access between services and UI\n- Corrected icon fallback behaviour when Cat_Icon missing\n\nVERSION 1.8.0 — Dialog System & Architecture Refactor\n\nImprovements\nRefactored main application architecture with clear separation between UI, dialogs, and services\nReduced complexity in main.py by delegating UI logic to dedicated dialog components\nImproved maintainability through centralised dialog handling system\nEnhanced code readability with cleaner responsibility boundaries (App → Services → UI)\nImproved consistency of popup behaviour across the application\nStreamlined icon handling using unified icon service\n\nFeatures\nIntroduced reusable dialog system:\n\ncleanup_dialog\nconfirm_dialog\npromotion_dialog\n\nAdded centralised cleanup dialog with preview, delete, and undo workflow\nAdded reusable confirmation dialog component for destructive actions\nAdded reusable promotion dialog for topic publishing workflow\nIntegrated dedicated icon service for resolving, copying, and managing assets\nModularised topic promotion/demotion logic into service layer\nImproved extensibility for future UI components and dialogs\n\nFixes\nFixed inconsistent popup behaviour caused by duplicate inline implementations\nResolved cleanup dialog rendering inconsistencies\nFixed icon handling duplication across multiple modules\nFixed multiple sources of UI state inconsistencies in main.py\nRemoved legacy popup code paths causing maintenance issues\nImproved stability of delete and promotion workflows\n\n\nVERSION 1.7.0 — UI System & AppWindow Upgrade\n\nImprovements\n\nIntroduced resizable application window with dynamic layout scaling\nAdded top-aligned window positioning for improved desktop usability\nStabilised window behaviour across Linux environments (Arch, Ubuntu)\nImproved overall UI consistency through unified popup styling\nEnhanced spacing, typography, and layout balance across screens\nImproved first-run experience with automatic runtime configuration setup\n\nFeatures\n\nImplemented reusable themed popup system across the application\nAdded unified file picker component (used for icons, screenshots, configuration files)\nIntroduced consistent popup design matching application theme\nEnabled Firebase read access without requiring service account key\nAdded automatic Firebase configuration initialisation on first run\nImproved AppImage packaging workflow with fully working distribution build\n\nFixes\n\nFixed window resizing instability and recursive resize crash\nFixed window positioning issues causing incorrect default placement\nFixed inconsistent popup styling across different screens\nFixed file picker UI (oversized buttons, small text, default styling)\nFixed missing firebase.json causing empty data on first run\nResolved AppImage runtime configuration path issues\nFixed inconsistencies in cache and Firebase fallback behaviour\nVERSION 1.6.1 – App Info & Changelog Polish\nImprovements\n\nImproved App Info editor layout\nAdded formatted changelog preview with icons and section styling\nImproved changelog readability and hierarchy\nBetter popup styling consistency between preview and About window\nImproved Save button placement and visibility\n\nFixes\n\nFixed changelog editor layout issues\nFixed duplicate changelog field issues\nFixed scroll/layout problems in App Info editor\nFixed popup changelog rendering mismatch\nFixed icon spacing and alignment in changelog display\n\n\nVERSION 1.6.0 – Performance & Editor Improvements\n\nImprovements\n\nImplemented step indexing (major performance boost)\nReduced UI rebuilds during navigation\nOptimised screen refresh logic to avoid unnecessary reloads\nImproved app responsiveness when opening categories and topics\nIntroduced lazy data loading at startup\n\nFeatures\n\nAdded Date_Created and Date_Updated tracking\nImproved topic editor workflow\nEnhanced duplicate detection and merging logic\n\nFixes\n\nFixed menu not loading due to fetch scheduling bug\nFixed recursive fetch_database call issue\nFixed UI refresh inconsistencies after data updates\n\n\nVERSION 1.5.5 – Editor Stability & UX Improvements\n\nImprovements\n\nImproved step editing (update vs add mode)\nBetter step ordering and renumbering logic\nCleaner UI feedback for step selection\nImproved icon handling and preview logic\n\nFixes\n\nFixed step overwrite edge cases\nFixed screenshot handling reliability\nFixed inconsistent icon updates in header preview\n\n\nVERSION 1.5.0 – Enhanced Topic Editing & Merge Logic\n\nFeatures\n\nIntroduced topic merge workflow with preview popup\nAdded merge strategies (Add / Replace / Skip)\nAdded duplicate detection across topics\nImproved local vs official topic handling\n\nImprovements\n\nImproved data consistency during edits\nImproved topic update logic (local + Firebase)\nBetter handling of icons during merge\n\nFixes\n\nFixed duplicate topic edge cases\nImproved merge reliability\n\n\nVERSION 1.4.0 – Local Mode & Sync Workflow\n\nFeatures\n\nAdded USER vs ADMIN mode separation\nIntroduced local storage (user_data.json)\nAdded user-specific icons (user_icons/)\nImplemented “Promote to Official” workflow\n\nImprovements\n\nImproved sync process (safe commit before pull)\nUpdate process now non-destructive (no file deletion)\n\nFixes\n\nResolved icon loading inconsistencies\nPrevented Git overwrite issues\nImproved asset handling reliability\n\n\nVERSION 1.3.0 – Sync System Redesign\n\n🔄 Sync & Update\n\nReworked Git sync to avoid data loss (commit before pull)\nUpdate process made non-destructive (no asset deletion)\n\nImprovements\n\nRemoved Excel dependency (no pandas)\nSimplified system to JSON + Firebase\nImproved icon resolution (user_icons fallback)\nCleaned duplicated sync logic\n\nFixes\n\nFixed icon preview errors\nFixed missing icon warnings\nFixed unintended Git overwrites\n\n\nVERSION 1.1.0 – Editor & UI Improvements\n\nFeatures\n\nNew Topic Editor with step management\nAdmin/User mode with UI restrictions\nDynamic topic icons\n\nImprovements\n\nImproved Topic_ID generation\nImproved duplicate handling\nImproved UI layout\n\nFixes\n\nFixed Firebase step saving issues\nFixed edit behaviour inconsistencies\n\n\nVERSION 1.0.1 – Sync Stability\n\nImprovements\n\nAdded automatic version increment during sync\nImproved Firebase sync reliability\nImproved GitHub auto-sync (pull --rebase)\n\nFixes\n\nFixed version bump loop issue\nFixed Excel corruption during sync\nFixed metadata path handling\n\n\nVERSION 1.0.0 – Initial Release\n\nFeatures\n\n- Kivy multi-screen UI\n- Excel-based content system\n- Firebase integration\n- Search functionality\n- Expandable content sections\n- Code snippet support\n- Local caching\n\n\nDEV VERSION\n\nFeatures\n\n- Early UI prototypes\n- Initial sync pipeline\n- Experimental data structures",
+    "changelog": "VERSION 2.3.2 - UI System & Code Block Enhancement\n\nFeatures\n\n- UI design system integration (major)\n- Introduced centralised UI scaling system using UI(app)\n- Replaced hardcoded dp and sp values with dynamic scaling\n- Unified design tokens: SPACING, SPACING_SMALL, SPACING_LARGE\n- Unified design tokens: ICON_SIZE, ICON_SMALL\n- Unified design tokens: INPUT_HEIGHT, BUTTON_WIDTH\n- Ensures consistent layout, readability and cross-platform behaviour\n\n- Modular UI component architecture\n- Refactored ArticleScreen into reusable UI builder methods\n- Added StepCard component for step rendering\n- Clear separation between UI composition, data rendering and styling\n\n- Custom code font support\n- Added support for bundled monospace fonts\n- Implemented fallback to system fonts (DejaVuSansMono)\n- Improves code readability and visual consistency\n\n- Syntax highlighting for code blocks\n- Implemented lightweight highlighting without external dependency\n- Highlights comments, shell prompts, commands, options and URLs\n- Uses Kivy markup system for rendering\n\n\nVERSION 2.3.1 - Cross‑Platform System Integration\n\nFeatures\n\n- Cross‑platform system integration (major)\n- Centralised system_open_service for opening URLs, files and asset folders\n- Full support for Linux, Windows and WSL\n\n- WSL integration support\n- Automatic detection of WSL environment\n- Redirects file opening to Windows Explorer and applications\n- Uses Windows browser for URLs\n- Path conversion handled via wslpath\n\n- Modular architecture improvement\n- Removed external system calls from main.py\n- Introduced system_open_service layer\n- Clear separation of UI, logic and system interactions\n\nImprovements\n\n- Improved installer robustness\n- Refined OS detection (Debian, Arch, Fedora, WSL)\n- Improved Python version validation\n- Better error handling for dependencies\n\n- WSL install optimisation\n- Avoids unnecessary Linux GUI tools\n- Provides WSLg setup guidance\n- Skips GUI tests when not available\n\n- Better URL handling\n- Adds https:// automatically\n- Decodes HTML entities\n- Ensures consistent behaviour across platforms\n\n- Improved error visibility\n- Added traceback output for subprocess calls\n- Eliminates silent failures\n\n- UI responsiveness\n- Removed blocking subprocess calls\n- Uses async only where required\n\nFixes\n\n- Fixed crash when clicking links\n- Fixed missing open_url method in ArticleScreen\n- Fixed incorrect indentation of method\n\n- Fixed runtime crashes\n- Fixed missing html import\n- Fixed broken URL parsing logic\n\n- Fixed WSL behaviour issues\n- Corrected path conversion with wslpath\n- Fixed incorrect Explorer opening\n- Fixed URL opening behaviour\n\n- Fixed UI freeze issues\n- Removed blocking calls and improper threading\n\n- Fixed inconsistent behaviour\n- Unified handling of system open methods\n\n\nVERSION 2.3.0 - Upgrade System & Version Tracking\n\nFeatures\n\n- Added full Upgrade App system (application updates from GitHub)\n- Separated Update Data and Upgrade App\n- Implemented local vs remote version tracking\n- Added version.txt for installed version storage\n- Installer creates version.txt on first install\n\nImprovements\n\n- Upgrade button reflects state (Upgrade Available / Up to Date)\n- Unified button behaviour (success, failure, idle)\n- Introduced version_service and update_content separation\n- Improved consistency between update and upgrade workflows\n\nFixes\n\n- Fixed upgrade restriction to development mode\n- Fixed incorrect version display\n- Fixed missing version initialisation\n- Fixed AppImage detection issues\n\n\nVERSION 2.2.0 - Architecture Refactor & Codebase Cleanup\n\nFeatures\n\n- Extracted restore logic into restore_service\n- Extracted delete logic into topic_delete_service\n- Extracted promote/demote logic into topic_action_service\n- Extracted restore dialog component\n\nImprovements\n\n- Clear separation between main, services and UI\n- Reduced duplication in save/update/delete flows\n- Centralised local change handling\n- Added unified refresh mechanism\n\nFixes\n\n- Fixed recursion issues in refresh handling\n- Reduced risk of infinite loops\n- Improved data refresh reliability\n\n\nVERSION 2.1.0 – Sync, Keys & Logging Refinement\n\nFeatures\n\n- Introduced Firebase push-key system for Topic _key\n- Improved Topic_ID generation\n- Added smart backup system\n- Added fast restore system\n\nImprovements\n\n- Reduced terminal verbosity\n- Introduced controlled debug strategy\n- Improved topic creation performance\n- Improved sync scalability\n\nFixes\n\n- Fixed backup not triggering during sync\n- Fixed incorrect asset handling\n- Removed excessive debug logs\n- Fixed redundant logging output\n\n\nVERSION 2.0.0 - Backup & Restore System\n\nFeatures\n\n- Full backup system\n- Restore system\n- Sync-integrated backup\n- Backup browser UI\n- Safe restore workflow\n\nImprovements\n\n- Consistent backup structure\n- Improved sorting of backups\n- Normalised data structures\n- Improved restore safety\n- Included icons and assets\n- Improved restore UI alignment\n\nFixes\n\n- Fixed restore overwrite issues\n- Fixed invalid data structure crash\n- Fixed missing assets\n- Fixed backup detection issues\n- Fixed restore logic inconsistencies\n\n\nVERSION 1.9.0 - Category System Integration\n\nFeatures\n\n- Full category management system\n- Introduced categories.json\n- Automatic category generation\n- Category dialog UI\n- Integrated icon support\n\nImprovements\n\n- Unified data architecture\n- Improved startup flow\n- Synced category logic\n\nFixes\n\n- Fixed taxonomy race condition\n- Fixed inconsistent data access\n- Fixed icon fallback behaviour\n\n\nVERSION 1.8.0 - Dialog System & Architecture Refactor\n\nFeatures\n\n- Introduced reusable dialog system\n- Added cleanup, confirm, and promotion dialogs\n- Centralised dialog handling\n- Improved icon service\n\nImprovements\n\n- Refactored architecture (UI / dialogs / services)\n- Reduced complexity in main.py\n- Improved popup consistency\n\nFixes\n\n- Fixed inconsistent popup behaviour\n- Fixed dialog rendering issues\n- Fixed duplicated icon logic\n- Improved delete and promotion stability\n\n\nVERSION 1.7.0 - UI System & AppWindow Upgrade\n\nFeatures\n\n- Resizable window with dynamic scaling\n- Top-aligned window positioning\n- Reusable popup system\n- File picker component\n- Firebase initialisation automation\n\nImprovements\n\n- Improved UI consistency\n- Enhanced layout and spacing\n- Improved startup experience\n\nFixes\n\n- Fixed resize crash issues\n- Fixed window positioning\n- Fixed popup inconsistencies\n- Fixed file picker problems\n- Fixed missing Firebase configuration\n\n\nVERSION 1.6.1 - App Info & Changelog Polish\n\nImprovements\n\n- Improved App Info editor layout\n- Added changelog preview formatting\n- Improved readability and hierarchy\n- Improved popup styling\n\nFixes\n\n- Fixed editor layout issues\n- Fixed duplicate fields\n- Fixed scroll issues\n- Fixed popup rendering mismatch\n\n\nVERSION 1.6.0 - Performance & Editor Improvements\n\nFeatures\n\n- Added Date_Created and Date_Updated\n- Improved topic editor workflow\n- Enhanced duplicate detection\n\nImprovements\n\n- Implemented step indexing\n- Reduced UI rebuilds\n- Improved responsiveness\n- Introduced lazy loading\n\nFixes\n\n- Fixed menu loading bug\n- Fixed recursive fetch issue\n- Fixed UI refresh inconsistencies\n\n\nVERSION 1.5.5 - Editor Stability & UX Improvements\n\nImprovements\n\n- Improved step editing workflow\n- Improved ordering logic\n- Improved UI feedback\n- Improved icon handling\n\nFixes\n\n- Fixed step overwrite issues\n- Fixed screenshot handling\n- Fixed icon update inconsistencies\n\n\nVERSION 1.5.0 - Enhanced Topic Editing & Merge Logic\n\nFeatures\n\n- Topic merge workflow\n- Merge strategies\n- Duplicate detection\n- Local vs official handling\n\nImprovements\n\n- Improved data consistency\n- Improved update logic\n- Improved icon handling\n\nFixes\n\n- Fixed duplicate edge cases\n- Improved merge stability\n\n\nVERSION 1.4.0 - Local Mode & Sync Workflow\n\nFeatures\n\n- USER vs ADMIN modes\n- Local storage system\n- User icons support\n- Promote workflow\n\nImprovements\n\n- Improved sync safety\n- Non-destructive updates\n\nFixes\n\n- Fixed icon loading issues\n- Prevented Git overwrite issues\n\n\nVERSION 1.3.0 - Sync System Redesign\n\nFeatures\n\n- Safer Git sync workflow\n- Non-destructive updates\n\nImprovements\n\n- Removed Excel dependency\n- Simplified data structure\n- Improved icon resolution\n\nFixes\n\n- Fixed icon preview errors\n- Fixed missing icon issues\n- Fixed Git overwrite issues\n\n\nVERSION 1.1.0 - Editor & UI Improvements\n\nFeatures\n\n- Topic editor with step management\n- Admin/User mode\n- Dynamic icons\n\nImprovements\n\n- Improved Topic_ID generation\n- Improved duplicate handling\n- Improved layout\n\nFixes\n\n- Fixed Firebase saving issues\n- Fixed edit behaviour\n\n\nVERSION 1.0.1 - Sync Stability\n\nImprovements\n\n- Automatic version increment\n- Improved Firebase sync\n- Improved GitHub sync\n\nFixes\n\n- Fixed version loop issue\n- Fixed Excel corruption\n- Fixed metadata handling\n\n\nVERSION 1.0.0 - Initial Release\n\nFeatures\n\n- Kivy multi-screen UI\n- Excel-based content system\n- Firebase integration\n- Search functionality\n- Expandable content\n- Code snippet support\n- Local caching\n\n\nDEV VERSION\n\nFeatures\n\n- Early UI prototypes\n- Initial sync pipeline\n- Experimental data structures",
     "description": "Linux How To is a personal documentation hub for Linux commands and scripts. It is making collecting howtos easy.",
     "developer": "Renate Schwiedernoch",
     "last update": "07.06.2026",
-    "version": "2.3.1"
+    "version": "2.3.2"
   },
   "steps": {
     "-OuZMCQ1io4kMoG42DP9": {
@@ -1185,182 +1185,6 @@
       "Topic_ID": "othe_clou_suyncr",
       "_key": "-OuZNWtnkZOgzj3DJWP9",
       "created_at": "2026-06-07T23:19:14.252981"
-    },
-    "-OuZNXvneY7331soxZiw": {
-      "Headline": "What we are doing (conceptually)",
-      "Instruction": "Once this is done, GitHub access will be password‑less and identical everywhere.\nHere is the common logic + exact steps per OS.\n\nFor each machine (Windows, Arch, Ubuntu VM):\n   1. Generate one SSH key\n   2. Add the public key to your GitHub account\n   3. Test the connection\n   4. Ensure your repo uses the SSH remote, not HTTPS\n\nEach machine has its own key → this is best practice. As example we do it for arch linux, windows and an ubuntu VM",
-      "Step_ID": 289,
-      "Step_Order": 1,
-      "Topic_ID": "othe_inte_ssh_se",
-      "_key": "-OuZNXvneY7331soxZiw",
-      "created_at": "2026-06-07T23:19:18.480595"
-    },
-    "-OuZNXyhfX2KTZT3-mXE": {
-      "Headline": "Check: GitHub side (once)",
-      "Instruction": "Log in to GitHub and keep this page open:\n👉 GitHub → Settings → SSH and GPG keys → New SSH key\nYou’ll paste keys there later.",
-      "Step_ID": 290,
-      "Step_Order": 2,
-      "Topic_ID": "othe_inte_ssh_se",
-      "_key": "-OuZNXyhfX2KTZT3-mXE",
-      "created_at": "2026-06-07T23:19:18.660777"
-    },
-    "-OuZNY0FnIK4JpoPVzSl": {
-      "Code_Snippet": "ssh-keygen -t ed25519 -C \"arch-linux\"\n``",
-      "Header_2": "Arch Linux",
-      "Instruction": "1. Generate the key",
-      "Step_ID": 291,
-      "Step_Order": 3,
-      "Topic_ID": "othe_inte_ssh_se",
-      "_key": "-OuZNY0FnIK4JpoPVzSl",
-      "created_at": "2026-06-07T23:19:18.831906"
-    },
-    "-OuZNY3U_yh01ZOes6N6": {
-      "Instruction": "Press Enter for default location\n~/.ssh/id_ed25519\n\nOptional passphrase → recommended (you can use ssh-agent later)",
-      "Step_ID": 292,
-      "Step_Order": 4,
-      "Topic_ID": "othe_inte_ssh_se",
-      "_key": "-OuZNY3U_yh01ZOes6N6",
-      "created_at": "2026-06-07T23:19:19.011252"
-    },
-    "-OuZNY688MWSWjCVTYyi": {
-      "Code_Snippet": "eval \"$(ssh-agent -s)\"\nssh-add ~/.ssh/id_ed25519",
-      "Instruction": "2. Start ssh-agent",
-      "Step_ID": 293,
-      "Step_Order": 5,
-      "Topic_ID": "othe_inte_ssh_se",
-      "_key": "-OuZNY688MWSWjCVTYyi",
-      "created_at": "2026-06-07T23:19:19.203358"
-    },
-    "-OuZNY99FtbEOIOcYOEy": {
-      "Code_Snippet": "cat ~/.ssh/id_ed25519.pub",
-      "Instruction": "3. Copy public key\nCopy the entire line (ssh-ed25519 AAAA...).",
-      "Step_ID": 294,
-      "Step_Order": 6,
-      "Topic_ID": "othe_inte_ssh_se",
-      "_key": "-OuZNY99FtbEOIOcYOEy",
-      "created_at": "2026-06-07T23:19:19.397128"
-    },
-    "-OuZNYBpCu933Yn-y-9s": {
-      "Instruction": "4. Add to GitHub\nTitle: Arch Linux\nKey type: Authentication key\nPaste key → Save",
-      "Step_ID": 295,
-      "Step_Order": 7,
-      "Topic_ID": "othe_inte_ssh_se",
-      "_key": "-OuZNYBpCu933Yn-y-9s",
-      "created_at": "2026-06-07T23:19:19.571995"
-    },
-    "-OuZNYEHdGryYdGJ3vKw": {
-      "Code_Snippet": "ssh -T git@github.com",
-      "Instruction": "5. Test\n✅ Expected:\nHi (git user name>! You've successfully authenticated...",
-      "Step_ID": 296,
-      "Step_Order": 8,
-      "Topic_ID": "othe_inte_ssh_se",
-      "_key": "-OuZNYEHdGryYdGJ3vKw",
-      "created_at": "2026-06-07T23:19:19.732486"
-    },
-    "-OuZNYHIHDm2O-D5jEI4": {
-      "Code_Snippet": "ssh-keygen -t ed25519 -C \"ubuntu-vm\"\neval \"$(ssh-agent -s)\"\nssh-add ~/.ssh/id_ed25519\ncat ~/.ssh/id_ed25519.pub\nssh -T git@github.com\n``",
-      "Header_2": "Ubuntu",
-      "Instruction": "Repeat exactly the same steps, just use a different label\n\nGitHub key title:\nUbuntu VM",
-      "Step_ID": 297,
-      "Step_Order": 9,
-      "Topic_ID": "othe_inte_ssh_se",
-      "_key": "-OuZNYHIHDm2O-D5jEI4",
-      "created_at": "2026-06-07T23:19:19.919572"
-    },
-    "-OuZNYKB2o3nn40x2fCP": {
-      "Header_2": "Windows (Git Bash)",
-      "Instruction": "1. Open Git Bash",
-      "Notes": "Use Git Bash, not PowerShell.",
-      "Step_ID": 298,
-      "Step_Order": 10,
-      "Topic_ID": "othe_inte_ssh_se",
-      "_key": "-OuZNYKB2o3nn40x2fCP",
-      "created_at": "2026-06-07T23:19:20.102739"
-    },
-    "-OuZNYMsMqFuYQrTlfZf": {
-      "Code_Snippet": "ssh-keygen -t ed25519 -C \"windows-pc\"",
-      "Instruction": "2. Generate key\n\nDefault location:\n/c/Users/<you>/.ssh/id_ed25519",
-      "Step_ID": 299,
-      "Step_Order": 11,
-      "Topic_ID": "othe_inte_ssh_se",
-      "_key": "-OuZNYMsMqFuYQrTlfZf",
-      "created_at": "2026-06-07T23:19:20.282661"
-    },
-    "-OuZNYPiUOa9fBDjiBcs": {
-      "Code_Snippet": "eval \"$(ssh-agent -s)\"\nssh-add ~/.ssh/id_ed25519",
-      "Instruction": "3. Start ssh-agent",
-      "Step_ID": 300,
-      "Step_Order": 12,
-      "Topic_ID": "othe_inte_ssh_se",
-      "_key": "-OuZNYPiUOa9fBDjiBcs",
-      "created_at": "2026-06-07T23:19:20.462508"
-    },
-    "-OuZNYSOjK104FDnOlIl": {
-      "Code_Snippet": "cat ~/.ssh/id_ed25519.pub",
-      "Instruction": "4. Copy public key\n\nPaste into GitHub:\n\nTitle: Windows PC\nType: Authentication key",
-      "Step_ID": 301,
-      "Step_Order": 13,
-      "Topic_ID": "othe_inte_ssh_se",
-      "_key": "-OuZNYSOjK104FDnOlIl",
-      "created_at": "2026-06-07T23:19:20.619928"
-    },
-    "-OuZNYV8TBkPeWud88bw": {
-      "Code_Snippet": "ssh -T git@github.com",
-      "Instruction": "5. Test\n✅ Expected:\nHi (git user name>! You've successfully authenticated...",
-      "Step_ID": 302,
-      "Step_Order": 14,
-      "Topic_ID": "othe_inte_ssh_se",
-      "_key": "-OuZNYV8TBkPeWud88bw",
-      "created_at": "2026-06-07T23:19:20.799831"
-    },
-    "-OuZNYY97pKp1C66jJvL": {
-      "Code_Snippet": "git remote -v",
-      "Headline": "Ensure your repositories use SSH (IMPORTANT)",
-      "Instruction": "On each machine, inside the repo:\ngo inside the repro folder with cd /<path>/<folder name>",
-      "Step_ID": 303,
-      "Step_Order": 15,
-      "Topic_ID": "othe_inte_ssh_se",
-      "_key": "-OuZNYY97pKp1C66jJvL",
-      "created_at": "2026-06-07T23:19:20.986301"
-    },
-    "-OuZNYa2ZMHfzT5XBmTL": {
-      "Code_Snippet": "git remote set-url origin git@github.com:reni001/my_linux_howto_app.git",
-      "Instruction": "If you see HTTPS, fix it and check again.\n\n✅ Should show:\norigin  git@github.com:reni001/my_linux_howto_app.git (fetch)\norigin  git@github.com:reni001/my_linux_howto_app.git (push)",
-      "Step_ID": 304,
-      "Step_Order": 16,
-      "Topic_ID": "othe_inte_ssh_se",
-      "_key": "-OuZNYa2ZMHfzT5XBmTL",
-      "created_at": "2026-06-07T23:19:21.172216"
-    },
-    "-OuZNYd1fCQ8H-9mROp9": {
-      "Code_Snippet": "git pull\ngit status\ngit push",
-      "Headline": "Final verification (do this once)",
-      "Instruction": "On each machine:\nNo password prompts ✅\nNo browser popups ✅\nSame behavior everywhere ✅",
-      "Step_ID": 305,
-      "Step_Order": 17,
-      "Topic_ID": "othe_inte_ssh_se",
-      "_key": "-OuZNYd1fCQ8H-9mROp9",
-      "created_at": "2026-06-07T23:19:21.385336"
-    },
-    "-OuZNYfnSdK0Db0_L1tn": {
-      "Code_Snippet": "if [ -z \"$SSH_AUTH_SOCK\" ]; then\n  eval \"$(ssh-agent -s)\" >/dev/null\n  ssh-add ~/.ssh/id_ed25519 >/dev/null 2>&1\nfi",
-      "Header_2": "✅ Persist ssh-agent (Linux)",
-      "Headline": "Recommended extras (optional but smart)",
-      "Instruction": "Add to ~/.bashrc:",
-      "Step_ID": 306,
-      "Step_Order": 18,
-      "Topic_ID": "othe_inte_ssh_se",
-      "_key": "-OuZNYfnSdK0Db0_L1tn",
-      "created_at": "2026-06-07T23:19:21.549499"
-    },
-    "-OuZNYiZgk2NryJemHn5": {
-      "Header_2": "✅ Windows",
-      "Instruction": "Git for Windows auto-starts ssh-agent — nothing else needed.",
-      "Step_ID": 307,
-      "Step_Order": 19,
-      "Topic_ID": "othe_inte_ssh_se",
-      "_key": "-OuZNYiZgk2NryJemHn5",
-      "created_at": "2026-06-07T23:19:21.731138"
     },
     "-OuZNZhBkQC_cqthPJu4": {
       "Step_ID": 308,
@@ -3498,34 +3322,6 @@
       "_key": "-Ouvsl7uYuV6V6JPXz1m",
       "created_at": "2026-06-12T12:51:21.243824"
     },
-    "-OuwlSvkYz69_PC64VKV": {
-      "Code_Snippet": "",
-      "Header_2": "Perform following steps directly from the Firebase Console:",
-      "Headline": "Instruction on how to get the key:",
-      "Instruction": "1. In the Firebase Console, click the Gear icon (Project settings) next to Project Overview in the left-hand navigation pane.\n\n2. Select Project settings from the dropdown menu.\n\n3. Click on the Service accounts tab at the top of the page.\n\n4. Under the Firebase Admin SDK section, click the Generate new private key button at the bottom.\n\n5. Read the warning popup and click Generate key.\n\n6. Your browser will automatically download the JSON file containing your new private key.\n\nOnce downloaded, you can rename this file to serviceAccountKey.json (or any name you prefer) and place it in your local environment. Be sure to keep this file secure and never commit it to public version control systems like GitHub, as it grants full administrative access to your Firebase services.",
-      "Notes": "",
-      "Screenshot": "firebaseServiceAccountKey-01.png",
-      "Step_ID": 560,
-      "Step_Order": 1,
-      "Topic_ID": "other_cloud_creating_a_s_7a0d",
-      "URLs": "",
-      "_key": "-OuwlSvkYz69_PC64VKV",
-      "created_at": "2026-06-12T16:59:06.089764"
-    },
-    "-OuwlSz21GSw_ihoZ8Ck": {
-      "Code_Snippet": "",
-      "Header_2": "",
-      "Headline": "",
-      "Instruction": "Firebase Admin SDK",
-      "Notes": "",
-      "Screenshot": "firebaseServiceAccountKey-02.png",
-      "Step_ID": 561,
-      "Step_Order": 2,
-      "Topic_ID": "other_cloud_creating_a_s_7a0d",
-      "URLs": "",
-      "_key": "-OuwlSz21GSw_ihoZ8Ck",
-      "created_at": "2026-06-12T16:59:06.321223"
-    },
     "-Ov0iz-TiV7l8BBRdcMa": {
       "Code_Snippet": "./autogen.sh\n./configure\nmake\n\n",
       "Headline": "Installation instructions",
@@ -3578,81 +3374,290 @@
       "_key": "-Ov0izC3QG8fOH31F5cp",
       "created_at": "2026-06-13T16:06:20.720255"
     },
-    "-Ov0kypyc2XR9z2CT6J6": {
+    "-Ov1EBpHUh87etIOoAVH": {
+      "Code_Snippet": "",
+      "Header_2": "",
+      "Headline": "What we are doing (conceptually)",
+      "Instruction": "Once this is done, GitHub access will be password‑less and identical everywhere.\nHere is the common logic + exact steps per OS.\n\nFor each machine (Windows, Arch, Ubuntu VM):\n   1. Generate one SSH key\n   2. Add the public key to your GitHub account\n   3. Test the connection\n   4. Ensure your repo uses the SSH remote, not HTTPS\n\nEach machine has its own key → this is best practice. As example we do it for arch linux, windows and an ubuntu VM",
+      "Notes": "",
+      "Screenshot": "",
+      "Step_ID": 575,
+      "Step_Order": 1,
+      "Topic_ID": "othe_inte_ssh_se",
+      "URLs": "",
+      "_key": "-Ov1EBpHUh87etIOoAVH",
+      "created_at": "2026-06-13T18:27:05.139188"
+    },
+    "-Ov1EBrxZIp415zcpcZ5": {
+      "Headline": "Check: GitHub side (once)",
+      "Instruction": "Log in to GitHub and keep this page open:\n👉 GitHub → Settings → SSH and GPG keys → New SSH key\nYou’ll paste keys there later.",
+      "Step_ID": 576,
+      "Step_Order": 2,
+      "Topic_ID": "othe_inte_ssh_se",
+      "_key": "-Ov1EBrxZIp415zcpcZ5",
+      "created_at": "2026-06-13T18:27:05.305112"
+    },
+    "-Ov1EBuqmForgZibQsVq": {
+      "Code_Snippet": "ssh-keygen -t ed25519 -C \"arch-linux\"\n``",
+      "Header_2": "Arch Linux",
+      "Instruction": "1. Generate the key",
+      "Step_ID": 577,
+      "Step_Order": 3,
+      "Topic_ID": "othe_inte_ssh_se",
+      "_key": "-Ov1EBuqmForgZibQsVq",
+      "created_at": "2026-06-13T18:27:05.493294"
+    },
+    "-Ov1EBy-msDZPoTVJm-U": {
+      "Instruction": "Press Enter for default location\n~/.ssh/id_ed25519\n\nOptional passphrase → recommended (you can use ssh-agent later)",
+      "Step_ID": 578,
+      "Step_Order": 4,
+      "Topic_ID": "othe_inte_ssh_se",
+      "_key": "-Ov1EBy-msDZPoTVJm-U",
+      "created_at": "2026-06-13T18:27:05.694236"
+    },
+    "-Ov1EC-ui-ntXVH41554": {
+      "Code_Snippet": "eval \"$(ssh-agent -s)\"\nssh-add ~/.ssh/id_ed25519",
+      "Instruction": "2. Start ssh-agent",
+      "Step_ID": 579,
+      "Step_Order": 5,
+      "Topic_ID": "othe_inte_ssh_se",
+      "_key": "-Ov1EC-ui-ntXVH41554",
+      "created_at": "2026-06-13T18:27:05.878908"
+    },
+    "-Ov1EC2m1HSf9QTlxXDk": {
+      "Code_Snippet": "cat ~/.ssh/id_ed25519.pub",
+      "Instruction": "3. Copy public key\nCopy the entire line (ssh-ed25519 AAAA...).",
+      "Step_ID": 580,
+      "Step_Order": 6,
+      "Topic_ID": "othe_inte_ssh_se",
+      "_key": "-Ov1EC2m1HSf9QTlxXDk",
+      "created_at": "2026-06-13T18:27:06.056984"
+    },
+    "-Ov1EC637QeuaJ1JKo1Z": {
+      "Instruction": "4. Add to GitHub\nTitle: Arch Linux\nKey type: Authentication key\nPaste key → Save",
+      "Step_ID": 581,
+      "Step_Order": 7,
+      "Topic_ID": "othe_inte_ssh_se",
+      "_key": "-Ov1EC637QeuaJ1JKo1Z",
+      "created_at": "2026-06-13T18:27:06.267403"
+    },
+    "-Ov1EC9aJKpCr5S4aprp": {
+      "Code_Snippet": "ssh -T git@github.com",
+      "Instruction": "5. Test\n✅ Expected:\nHi (git user name>! You've successfully authenticated...",
+      "Step_ID": 582,
+      "Step_Order": 8,
+      "Topic_ID": "othe_inte_ssh_se",
+      "_key": "-Ov1EC9aJKpCr5S4aprp",
+      "created_at": "2026-06-13T18:27:06.490121"
+    },
+    "-Ov1ECCvcjccdIjKVr2a": {
+      "Code_Snippet": "ssh-keygen -t ed25519 -C \"ubuntu-vm\"\neval \"$(ssh-agent -s)\"\nssh-add ~/.ssh/id_ed25519\ncat ~/.ssh/id_ed25519.pub\nssh -T git@github.com\n``",
+      "Header_2": "Ubuntu",
+      "Instruction": "Repeat exactly the same steps, just use a different label\n\nGitHub key title:\nUbuntu VM",
+      "Step_ID": 583,
+      "Step_Order": 9,
+      "Topic_ID": "othe_inte_ssh_se",
+      "_key": "-Ov1ECCvcjccdIjKVr2a",
+      "created_at": "2026-06-13T18:27:06.715365"
+    },
+    "-Ov1ECG9TcMkOnQqdSg-": {
+      "Header_2": "Windows (Git Bash)",
+      "Instruction": "1. Open Git Bash",
+      "Notes": "Use Git Bash, not PowerShell.",
+      "Step_ID": 584,
+      "Step_Order": 10,
+      "Topic_ID": "othe_inte_ssh_se",
+      "_key": "-Ov1ECG9TcMkOnQqdSg-",
+      "created_at": "2026-06-13T18:27:06.925956"
+    },
+    "-Ov1ECJ4Ep_yjwXYEko_": {
+      "Code_Snippet": "ssh-keygen -t ed25519 -C \"windows-pc\"",
+      "Instruction": "2. Generate key\n\nDefault location:\n/c/Users/<you>/.ssh/id_ed25519",
+      "Step_ID": 585,
+      "Step_Order": 11,
+      "Topic_ID": "othe_inte_ssh_se",
+      "_key": "-Ov1ECJ4Ep_yjwXYEko_",
+      "created_at": "2026-06-13T18:27:07.098495"
+    },
+    "-Ov1ECLufbVYZESXPFr6": {
+      "Code_Snippet": "eval \"$(ssh-agent -s)\"\nssh-add ~/.ssh/id_ed25519",
+      "Instruction": "3. Start ssh-agent",
+      "Step_ID": 586,
+      "Step_Order": 12,
+      "Topic_ID": "othe_inte_ssh_se",
+      "_key": "-Ov1ECLufbVYZESXPFr6",
+      "created_at": "2026-06-13T18:27:07.283351"
+    },
+    "-Ov1ECPIH4QxSbYio9WP": {
+      "Code_Snippet": "cat ~/.ssh/id_ed25519.pub",
+      "Instruction": "4. Copy public key\n\nPaste into GitHub:\n\nTitle: Windows PC\nType: Authentication key",
+      "Step_ID": 587,
+      "Step_Order": 13,
+      "Topic_ID": "othe_inte_ssh_se",
+      "_key": "-Ov1ECPIH4QxSbYio9WP",
+      "created_at": "2026-06-13T18:27:07.508154"
+    },
+    "-Ov1ECSnORKB12Oi_7AB": {
+      "Code_Snippet": "ssh -T git@github.com",
+      "Instruction": "5. Test\n✅ Expected:\nHi (git user name>! You've successfully authenticated...",
+      "Step_ID": 588,
+      "Step_Order": 14,
+      "Topic_ID": "othe_inte_ssh_se",
+      "_key": "-Ov1ECSnORKB12Oi_7AB",
+      "created_at": "2026-06-13T18:27:07.732441"
+    },
+    "-Ov1ECViU0bpUuuS1BFH": {
+      "Code_Snippet": "git remote -v",
+      "Headline": "Ensure your repositories use SSH (IMPORTANT)",
+      "Instruction": "On each machine, inside the repo:\ngo inside the repro folder with cd /<path>/<folder name>",
+      "Step_ID": 589,
+      "Step_Order": 15,
+      "Topic_ID": "othe_inte_ssh_se",
+      "_key": "-Ov1ECViU0bpUuuS1BFH",
+      "created_at": "2026-06-13T18:27:07.913230"
+    },
+    "-Ov1ECYdEUnqS4m_iBVZ": {
+      "Code_Snippet": "git remote set-url origin git@github.com:reni001/my_linux_howto_app.git",
+      "Instruction": "If you see HTTPS, fix it and check again.\n\n✅ Should show:\norigin  git@github.com:reni001/my_linux_howto_app.git (fetch)\norigin  git@github.com:reni001/my_linux_howto_app.git (push)",
+      "Step_ID": 590,
+      "Step_Order": 16,
+      "Topic_ID": "othe_inte_ssh_se",
+      "_key": "-Ov1ECYdEUnqS4m_iBVZ",
+      "created_at": "2026-06-13T18:27:08.103477"
+    },
+    "-Ov1ECaShMjgILa0accz": {
+      "Code_Snippet": "git pull\ngit status\ngit push",
+      "Headline": "Final verification (do this once)",
+      "Instruction": "On each machine:\nNo password prompts ✅\nNo browser popups ✅\nSame behavior everywhere ✅",
+      "Step_ID": 591,
+      "Step_Order": 17,
+      "Topic_ID": "othe_inte_ssh_se",
+      "_key": "-Ov1ECaShMjgILa0accz",
+      "created_at": "2026-06-13T18:27:08.288678"
+    },
+    "-Ov1ECd6tXpvUgj7V4oW": {
+      "Code_Snippet": "if [ -z \"$SSH_AUTH_SOCK\" ]; then\n  eval \"$(ssh-agent -s)\" >/dev/null\n  ssh-add ~/.ssh/id_ed25519 >/dev/null 2>&1\nfi",
+      "Header_2": "✅ Persist ssh-agent (Linux)",
+      "Headline": "Recommended extras (optional but smart)",
+      "Instruction": "Add to ~/.bashrc:",
+      "Step_ID": 592,
+      "Step_Order": 18,
+      "Topic_ID": "othe_inte_ssh_se",
+      "_key": "-Ov1ECd6tXpvUgj7V4oW",
+      "created_at": "2026-06-13T18:27:08.455050"
+    },
+    "-Ov1ECfm_MAncYLLtf60": {
+      "Header_2": "✅ Windows",
+      "Instruction": "Git for Windows auto-starts ssh-agent — nothing else needed.",
+      "Step_ID": 593,
+      "Step_Order": 19,
+      "Topic_ID": "othe_inte_ssh_se",
+      "_key": "-Ov1ECfm_MAncYLLtf60",
+      "created_at": "2026-06-13T18:27:08.624619"
+    },
+    "-Ov1EKxJ4UXnUHQdYB3G": {
+      "Code_Snippet": "",
+      "Header_2": "Perform following steps directly from the Firebase Console:",
+      "Headline": "Instruction on how to get the key:",
+      "Instruction": "1. In the Firebase Console, click the Gear icon (Project settings) next to Project Overview in the left-hand navigation pane.\n\n2. Select Project settings from the dropdown menu.\n\n3. Click on the Service accounts tab at the top of the page.\n\n4. Under the Firebase Admin SDK section, click the Generate new private key button at the bottom.\n\n5. Read the warning popup and click Generate key.\n\n6. Your browser will automatically download the JSON file containing your new private key.\n\nOnce downloaded, you can rename this file to serviceAccountKey.json (or any name you prefer) and place it in your local environment. Be sure to keep this file secure and never commit it to public version control systems like GitHub, as it grants full administrative access to your Firebase services.",
+      "Notes": "",
+      "Screenshot": "firebaseServiceAccountKey-01.png",
+      "Step_ID": 594,
+      "Step_Order": 1,
+      "Topic_ID": "other_cloud_creating_a_s_7a0d",
+      "URLs": "https://console.firebase.google.com/",
+      "_key": "-Ov1EKxJ4UXnUHQdYB3G",
+      "created_at": "2026-06-13T18:27:42.512861"
+    },
+    "-Ov1EL-W_j7fmHfgBisT": {
+      "Code_Snippet": "",
+      "Header_2": "",
+      "Headline": "",
+      "Instruction": "Firebase Admin SDK",
+      "Notes": "",
+      "Screenshot": "firebaseServiceAccountKey-02.png",
+      "Step_ID": 595,
+      "Step_Order": 2,
+      "Topic_ID": "other_cloud_creating_a_s_7a0d",
+      "URLs": "",
+      "_key": "-Ov1EL-W_j7fmHfgBisT",
+      "created_at": "2026-06-13T18:27:42.719109"
+    },
+    "-Ov1uWA80U7j0TS-9BsG": {
       "Code_Snippet": "",
       "Header_2": "",
       "Headline": "Step 1: Access a Terminal (TTY)",
       "Instruction": "1. Restart your computer.\n\n2. When the GRUB boot menu appears, use the arrow keys to select your most recent kernel but do not press enter.\n\n3. Press e on your keyboard to edit the boot options.\n\n4. Look for the line that starts with linux or linuxefi.\n\n5. Go to the very end of that line and type exactly: nomodeset\n\n6. Press Ctrl + X or F10 to boot.\n\n7. If your screen turns black or you are stuck on a command-line login, press Ctrl + Alt + F3 (or F4, F5) to access a clean TTY terminal screen.\n\n8. Log in using your username and password.",
       "Notes": "",
       "Screenshot": "fedo_os_r_corrup-01.png",
-      "Step_ID": 567,
+      "Step_ID": 596,
       "Step_Order": 1,
       "Topic_ID": "fedo_os_r_corrup",
       "URLs": "",
-      "_key": "-Ov0kypyc2XR9z2CT6J6",
-      "created_at": "2026-06-13T16:15:03.523205"
+      "_key": "-Ov1uWA80U7j0TS-9BsG",
+      "created_at": "2026-06-13T21:36:22.214407"
     },
-    "-Ov0kytGRNAd8O7D1qcJ": {
+    "-Ov1uWDK4iSz9B1UmQTQ": {
       "Code_Snippet": "sudo dnf clean all",
       "Header_2": "",
       "Headline": "Step 2: Repair the System",
       "Instruction": "Clean package cache:",
       "Notes": "",
-      "Step_ID": 568,
+      "Step_ID": 597,
       "Step_Order": 2,
       "Topic_ID": "fedo_os_r_corrup",
-      "_key": "-Ov0kytGRNAd8O7D1qcJ",
-      "created_at": "2026-06-13T16:15:03.735831"
+      "_key": "-Ov1uWDK4iSz9B1UmQTQ",
+      "created_at": "2026-06-13T21:36:22.432393"
     },
-    "-Ov0kywarcAEdy2g4ha1": {
+    "-Ov1uWG7oJZeBDh0hwzZ": {
       "Code_Snippet": "sudo dnf distro-sync --refresh",
       "Header_2": "",
       "Headline": "",
       "Instruction": "Synchronize distribution packages:",
       "Notes": "",
-      "Step_ID": 569,
+      "Step_ID": 598,
       "Step_Order": 3,
       "Topic_ID": "fedo_os_r_corrup",
-      "_key": "-Ov0kywarcAEdy2g4ha1",
-      "created_at": "2026-06-13T16:15:03.929688"
+      "_key": "-Ov1uWG7oJZeBDh0hwzZ",
+      "created_at": "2026-06-13T21:36:22.634077"
     },
-    "-Ov0kyze7JmXX9BPyv5-": {
+    "-Ov1uWJ9ezH5QmyKAe3Q": {
       "Code_Snippet": "sudo dracut --force --all",
       "Header_2": "",
       "Headline": "",
       "Instruction": "Rebuild the boot images (Crucial step if the kernel was interrupted):",
       "Notes": "",
-      "Step_ID": 570,
+      "Step_ID": 599,
       "Step_Order": 4,
       "Topic_ID": "fedo_os_r_corrup",
-      "_key": "-Ov0kyze7JmXX9BPyv5-",
-      "created_at": "2026-06-13T16:15:04.140039"
+      "_key": "-Ov1uWJ9ezH5QmyKAe3Q",
+      "created_at": "2026-06-13T21:36:22.844807"
     },
-    "-Ov0kz1lSP2zmNWDwMLo": {
+    "-Ov1uWM6pR_OVcikRckc": {
       "Code_Snippet": "nobara-driver-tui",
       "Header_2": "",
       "Headline": "Step 3: Rebuild Display Drivers & Reboot",
       "Instruction": "Because the update was interrupted, specialized hardware drivers (like Nvidia/AMD) might be unlinked\n 1. Rebuild your graphics drivers:",
       "Notes": "",
-      "Step_ID": 571,
+      "Step_ID": 600,
       "Step_Order": 5,
       "Topic_ID": "fedo_os_r_corrup",
-      "_key": "-Ov0kz1lSP2zmNWDwMLo",
-      "created_at": "2026-06-13T16:15:04.348664"
+      "_key": "-Ov1uWM6pR_OVcikRckc",
+      "created_at": "2026-06-13T21:36:23.061007"
     },
-    "-Ov0kz4t-WpwULyUmd_k": {
+    "-Ov1uWOpgFQFAf7m8pzx": {
       "Code_Snippet": "sudo reboot",
       "Header_2": "",
       "Headline": "",
       "Instruction": "2. Wait a few minutes for the process to finish, then restart your system:",
       "Notes": "Important Note: For future updates, avoid using standard sudo dnf update. Nobara uses heavily customized packages, and running this command can cause dependency conflicts. Instead, always use the built-in GUI updater or run nobara-sync via the terminal. If you need further troubleshooting, consult the Nobara Project Update Troubleshooting Guide.",
       "Screenshot": "",
-      "Step_ID": 572,
+      "Step_ID": 601,
       "Step_Order": 6,
       "Topic_ID": "fedo_os_r_corrup",
       "URLs": "https://wiki.nobaraproject.org/general-usage/troubleshooting/updating-troubleshooting",
-      "_key": "-Ov0kz4t-WpwULyUmd_k",
-      "created_at": "2026-06-13T16:15:04.545173"
+      "_key": "-Ov1uWOpgFQFAf7m8pzx",
+      "created_at": "2026-06-13T21:36:23.242120"
     }
   },
   "topics": {
@@ -4046,15 +4051,15 @@
     "28": {
       "Cat_Icon": "other.png",
       "Category": "Other",
-      "Created_By": "renate.schwiedernoch@outlook.de",
       "Date_Created": "202605-11",
-      "Date_Updated": "202605-11",
+      "Date_Updated": "2026-06-13T20:27:04",
       "Description": "🔐  use of SSH authentication for git synchronisation will eliminate the need of a password each time.",
       "Sub_Icon": "wifi2.png",
       "Subcategory": "Internet",
       "Title": "SSH setup for github",
       "Topic_ID": "othe_inte_ssh_se",
       "Topic_Icon": "",
+      "URLs": "",
       "_key": "28"
     },
     "29": {
@@ -4673,13 +4678,13 @@
       "Cat_Icon": "fedora.png",
       "Category": "Fedora",
       "Date_Created": "2026-06-05T15:11:56",
-      "Date_Updated": "2026-06-13T18:15:02",
+      "Date_Updated": "2026-06-13T23:36:21",
       "Description": "Your update was likely interrupted by the crash, leaving your system with broken packages and incomplete boot configurations. You can fix this by accessing a TTY terminal, cleaning the package cache, and running the distro-sync repair command.\nHere is how to fet the system back up and running:",
       "Sub_Icon": "os.png",
       "Subcategory": "Os related",
       "Title": "Corrupt Nobara: Updating Error",
       "Topic_ID": "fedo_os_r_corrup",
-      "Topic_Icon": "",
+      "Topic_Icon": "corrupt_nobara.png",
       "URLs": "https://wiki.nobaraproject.org/general-usage/troubleshooting/updating-troubleshooting, https://wiki.nobaraproject.org/general-usage/troubleshooting/updating-troubleshooting",
       "_key": "71"
     },
@@ -4701,7 +4706,7 @@
       "Cat_Icon": "other.png",
       "Category": "Other",
       "Date_Created": "2026-06-12T18:46:33",
-      "Date_Updated": "2026-06-12T18:59:05",
+      "Date_Updated": "2026-06-13T20:27:42",
       "Description": "To get a service account key JSON file (often referred to as serviceAccountKey.json) for your Firebase project, you will need to generate a new one.\nFor security reasons, Google does not store your private keys once they are generated. This means you cannot re-download an existing key file if you have lost it. However, you can generate a new key at any time, and multiple active keys can coexist without conflict.",
       "Sub_Icon": "cloud2.png",
       "Subcategory": "Cloud",
