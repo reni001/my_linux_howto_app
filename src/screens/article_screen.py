@@ -71,10 +71,8 @@ class StepCard(BoxLayout):
 
         self.padding = app.FONT_TEXT * 1.0
         self.spacing = app.FONT_TEXT * 0.6
-
         self.bind(minimum_height=self.setter('height'))
 
-        # ✅ background
         with self.canvas.before:
             Color(1, 1, 1, 1)
             self.bg_rect = RoundedRectangle(
@@ -93,6 +91,60 @@ class StepCard(BoxLayout):
                 return default
             return str(val).strip()
 
+        # --- STEP HEADLINE ---
+        h1 = safe_str(step.get('Headline'))
+        if h1:
+            lbl = Label(
+                text=h1,
+                color=COLOR_BLUE,
+                bold=True,
+                font_size=app.FONT_SUBCATEGORY * 1.3,
+                size_hint_y=None,
+                halign='left'
+            )
+            lbl.bind(
+                size=lambda s, w: setattr(s, 'text_size', (w[0], None)),
+                texture_size=lambda inst, val: setattr(inst, 'height', val[1])
+            )
+            self.add_widget(lbl)
+
+        # --- STEP HEADER_2 ---
+        h2 = safe_str(step.get('Header_2'))
+        if h2:
+            h2_lbl = Label(
+                text=h2,
+                color=COLOR_ORANGE,
+                bold=True,
+                font_size=app.FONT_SUBCATEGORY * 1.1,
+                size_hint_y=None,
+                halign='left'
+            )
+            h2_lbl.bind(
+                size=lambda s, w: setattr(s, 'text_size', (w[0], None)),
+                texture_size=lambda inst, val: setattr(inst, 'height', val[1])
+            )
+            self.add_widget(h2_lbl)
+
+        # --- STEP INSTRUCTION ---
+        ins = safe_str(step.get('Instruction'))
+        if ins:
+            ins_lbl = Label(
+                text=ins,
+                color=[0.2, 0.2, 0.2, 1],
+                font_size=app.FONT_TEXT * 1.2,
+                size_hint_y=None,
+                halign='left'
+            )
+            ins_lbl.bind(
+                size=lambda s, w: setattr(s, 'text_size', (w[0], None)),
+                texture_size=lambda inst, val: setattr(inst, 'height', val[1])
+            )
+            self.add_widget(ins_lbl)
+
+    def _update_graphics(self, *args):
+        self.bg_rect.pos = self.pos
+        self.bg_rect.size = self.size
+
 class ArticleScreen(Screen):
     def go_back(self):
         dest = getattr(self.manager, 'last_screen', 'details')
@@ -101,53 +153,269 @@ class ArticleScreen(Screen):
     def open_url(self, url):
         open_external_url(url)
 
-
     def _get_screenshot_path(self, filename: str) -> str:
         if not filename:
             return ""
         paths = get_runtime_paths()
         return str(paths["assets"] / "screenshots" / filename)
 
+    def _build_code_block(self, code: str, app):
+        if not code:
+            return None
 
-    def setup_article(self, data):
-        if not data:
-            return
-
-        # ✅ STORE CURRENT TOPIC
-        self.current_topic_id = data.get("Topic_ID")
-        self.current_topic_key = data.get("_key")
-
-        self.ids.content_box.clear_widgets()
-        app = App.get_running_app()
-        self.ids.content_box.spacing = app.FONT_TEXT * 0.8   # = SPACING
-        topic_id = data.get('Topic_ID')
-
-        def safe_str(val, default=""):
-            if val is None or str(val).lower() == 'nan': return default
-            return str(val).strip()
-
-        # --- 1. TOP ICON ---
-        self.ids.content_box.add_widget(Image(
-            source=icon(safe_str(data.get('Topic_Icon'))),
-            size_hint_y=None,
-            height=app.FONT_TEXT * 8
-        ))
-
-        # --- 2. TOPIC TITLE ---
-        title_lbl = Label(
-            text=safe_str(data.get('Title')),
-            color=COLOR_BLUE,
-            font_size=app.FONT_TITLE * 1.5,
-            bold=True,
-            size_hint_y=None,
-            halign='center'
+        code_anchor = AnchorLayout(
+            anchor_x='right',
+            anchor_y='top',
+            size_hint_y=None
         )
 
-        title_lbl.bind(size=lambda s, w: setattr(s, 'text_size', (w[0], None)),
-                       texture_size=lambda inst, val: setattr(inst, 'height', val[1]))
-        self.ids.content_box.add_widget(title_lbl)
+        code_box = BoxLayout(
+            orientation='vertical',
+            size_hint_y=None,
+            padding=[dp(12), dp(12), dp(80), dp(12)]
+        )
 
-        # --- META (CREATED / UPDATED) ---
+        with code_box.canvas.before:
+            Color(rgba=[0.15, 0.15, 0.15, 1])
+            code_box.bg_rect = RoundedRectangle(
+                pos=code_box.pos,
+                size=code_box.size,
+                radius=[dp(6)]
+            )
+
+        code_box.bind(minimum_height=code_box.setter('height'))
+        code_box.bind(pos=self._update_graphics, size=self._update_graphics)
+
+        code_lbl = Label(
+            text=code,
+            font_name='RobotoMono-Regular',
+            color=COLOR_ORANGE,
+            font_size=app.FONT_CODE,
+            line_height=1.3,
+            size_hint_y=None,
+            halign='left'
+        )
+
+        code_lbl.bind(
+            size=lambda s, w: setattr(s, 'text_size', (w[0], None)),
+            texture_size=lambda inst, val: setattr(inst, 'height', val[1])
+        )
+
+        code_box.add_widget(code_lbl)
+        code_anchor.add_widget(code_box)
+
+        code_box.bind(height=code_anchor.setter('height'))
+
+        copy_btn = Button(
+            text="Copy",
+            size_hint=(None, None),
+            size=(dp(90), dp(45)),
+            font_size=app.FONT_BUTTON,
+            background_color=[0.3, 0.3, 0.3, 1]
+        )
+
+        copy_btn.bind(on_release=lambda x, c=code: self.copy_to_clipboard(x, c))
+        code_anchor.add_widget(copy_btn)
+
+        return code_anchor
+
+    def _build_step_urls(self, raw_urls: str):
+        if not raw_urls:
+            return []
+
+        widgets = []
+
+        url_list = [u.strip() for u in raw_urls.split(',') if u.strip()]
+
+        for link in url_list:
+            url_box = BoxLayout(
+                orientation='horizontal',
+                size_hint_y=None,
+                height=dp(30),
+                spacing=dp(10)
+            )
+
+            url_box.add_widget(
+                Image(
+                    source=icon("link2.png"),
+                    size_hint_x=None,
+                    width=dp(20)
+                )
+            )
+
+            url_btn = Button(
+                text=link,
+                color=[0.1, 0.4, 0.8, 1],
+                background_color=[0, 0, 0, 0],
+                font_size='17sp',
+                halign='left',
+                shorten=True,
+                shorten_from='right',
+                size_hint_x=1
+            )
+
+            url_btn.bind(size=lambda s, w: setattr(s, 'text_size', (w[0], None)))
+            url_btn.bind(on_release=lambda x, u=link: self.open_url(u))
+
+            url_box.add_widget(url_btn)
+
+            widgets.append(url_box)
+
+        return widgets
+
+    def _build_step_screenshot(self, step, safe_str):
+        screenshot = safe_str(step.get('Screenshot'))
+        if not screenshot:
+            return None
+
+        path = self._get_screenshot_path(screenshot)
+
+        img = ClickableImage(
+            source=path,
+            size_hint_y=None,
+            height=dp(300),
+            allow_stretch=True,
+            keep_ratio=True
+        )
+
+        img.bind(on_release=lambda x, p=path: self.show_fullscreen_image(p))
+        return img
+
+    def _build_note_box(self, note: str, app):
+        if not note:
+            return None
+
+        note_container = BoxLayout(
+            orientation='horizontal',
+            size_hint_y=None,
+            spacing=dp(12),
+            padding=dp(12)
+        )
+
+        with note_container.canvas.before:
+            Color(rgba=NOTE_BG)
+            note_container.bg_rect = RoundedRectangle(
+                pos=note_container.pos,
+                size=note_container.size,
+                radius=[dp(6)]
+            )
+
+        note_container.bind(minimum_height=note_container.setter('height'))
+        note_container.bind(pos=self._update_graphics, size=self._update_graphics)
+
+        note_container.add_widget(
+            Image(
+                source=icon("note.png"),
+                size_hint=(None, None),
+                size=(dp(32), dp(32)),
+                pos_hint={'top': 1}
+            )
+        )
+
+        markup_text = "[b][color=ff8b02]NOTE:[/color][/b]\n" + note
+
+        note_lbl = Label(
+            text=markup_text,
+            markup=True,
+            color=[0.2, 0.2, 0.2, 1],
+            font_size='20sp',
+            italic=True,
+            size_hint_y=None,
+            halign='left',
+            valign='top'
+        )
+
+        note_lbl.bind(
+            size=lambda s, w: setattr(s, 'text_size', (w[0], None)),
+            texture_size=lambda inst, val: setattr(inst, 'height', val[1])
+        )
+
+        note_container.add_widget(note_lbl)
+
+        return note_container
+
+    def _build_topic_urls(self, raw_urls: str, app):
+        if not raw_urls:
+            return []
+
+        widgets = []
+
+        url_list = [u.strip() for u in raw_urls.split(',') if u.strip()]
+
+        for link in url_list:
+            url_box = BoxLayout(
+                orientation='horizontal',
+                size_hint_y=None,
+                height=dp(30),
+                spacing=dp(10)
+            )
+
+            url_box.add_widget(
+                Image(
+                    source=icon("link2.png"),
+                    size_hint_x=None,
+                    width=dp(20)
+                )
+            )
+
+            url_btn = Button(
+                text=link,
+                color=[0.1, 0.4, 0.8, 1],
+                background_color=[0, 0, 0, 0],
+                font_size=app.FONT_TEXT * 1.1,
+                halign='left',
+                shorten=True,
+                shorten_from='right',
+                size_hint_x=1
+            )
+
+            url_btn.bind(size=lambda s, w: setattr(s, 'text_size', (w[0], None)))
+            url_btn.bind(on_release=lambda x, u=link: self.open_url(u))
+
+            url_box.add_widget(url_btn)
+
+            widgets.append(url_box)
+
+        return widgets
+
+    def _build_topic_header(self, data, app, safe_str):
+        widgets = []
+
+        # --- ICON ---
+        icon_name = safe_str(data.get('Topic_Icon'))
+
+        # ✅ fallback to default icon
+        if not icon_name:
+            icon_name = "default.png"
+
+        img = Image(
+            source=icon(icon_name),
+            size_hint_y=None,
+            height=app.FONT_TEXT * 8
+        )
+        widgets.append(img)
+
+
+        # --- TITLE ---
+        title = safe_str(data.get('Title'))
+        if title:
+            title_lbl = Label(
+                text=title,
+                color=COLOR_BLUE,
+                font_size=app.FONT_TITLE * 1.5,
+                bold=True,
+                size_hint_y=None,
+                halign='center'
+            )
+
+            title_lbl.bind(
+                size=lambda s, w: setattr(s, 'text_size', (w[0], None)),
+                texture_size=lambda inst, val: setattr(inst, 'height', val[1])
+            )
+
+            widgets.append(title_lbl)
+
+        # --- META ---
         date_created = safe_str(data.get('Date_Created'))
         date_updated = safe_str(data.get('Date_Updated'))
 
@@ -171,17 +439,19 @@ class ArticleScreen(Screen):
             meta_lbl = Label(
                 text="   |   ".join(meta_parts),
                 color=[0.5, 0.5, 0.5, 1],
-                font_size='14sp',
+                font_size=app.FONT_TEXT * 0.9,
                 size_hint_y=None,
                 halign='center'
             )
+
             meta_lbl.bind(
                 size=lambda s, w: setattr(s, 'text_size', (w[0], None)),
                 texture_size=lambda inst, val: setattr(inst, 'height', val[1])
             )
-            self.ids.content_box.add_widget(meta_lbl)
 
-        # --- 3. TOPIC DESCRIPTION ---
+            widgets.append(meta_lbl)
+
+        # --- DESCRIPTION ---
         desc_text = safe_str(data.get('Description'))
         if desc_text:
             desc_lbl = Label(
@@ -192,38 +462,48 @@ class ArticleScreen(Screen):
                 size_hint_y=None,
                 halign='left'
             )
-            desc_lbl.bind(size=lambda s, w: setattr(s, 'text_size', (w[0], None)),
-                          texture_size=lambda inst, val: setattr(inst, 'height', val[1]))
-            self.ids.content_box.add_widget(desc_lbl)
+
+            desc_lbl.bind(
+                size=lambda s, w: setattr(s, 'text_size', (w[0], None)),
+                texture_size=lambda inst, val: setattr(inst, 'height', val[1])
+            )
+
+            widgets.append(desc_lbl)
+
+        return widgets
+
+    def setup_article(self, data):
+        if not data:
+            return
+
+        # ✅ STORE CURRENT TOPIC
+        self.current_topic_id = data.get("Topic_ID")
+        self.current_topic_key = data.get("_key")
+
+        self.ids.content_box.clear_widgets()
+        app = App.get_running_app()
+        self.ids.content_box.spacing = app.FONT_TEXT * 0.8   # = SPACING
+        topic_id = data.get('Topic_ID')
+
+        def safe_str(val, default=""):
+            if val is None or str(val).lower() == 'nan': return default
+            return str(val).strip()
+
+        # --- TOP HEADER ---
+        header_widgets = self._build_topic_header(data, app, safe_str)
+
+        for w in header_widgets:
+            self.ids.content_box.add_widget(w)
 
         # --- 4. TOPIC URLS ---
         raw_topic_urls = safe_str(data.get('URLs'))
-        if raw_topic_urls:
-            url_list = [u.strip() for u in raw_topic_urls.split(',') if u.strip()]
 
-            for link in url_list:
-                url_box = BoxLayout(orientation='horizontal', size_hint_y=None, height=dp(30), spacing=dp(10))
-                url_box.add_widget(
-                    Image(
-                        source=icon("link2.png"),
-                        size_hint_x=None,
-                        width=dp(20)
-                    )
-                )
-                url_btn = Button(text=link, color=[0.1, 0.4, 0.8, 1], background_color=[0,0,0,0],
-                font_size='18sp',
-                underline=True,
-                halign='left',
-                shorten=True,
-                shorten_from='right',
-                size_hint_x=1)
+        url_widgets = self._build_topic_urls(raw_topic_urls, app)
 
-                url_btn.bind(size=lambda s, w: setattr(s, 'text_size', (w[0], None)))
-                url_btn.bind(on_release=lambda x, u=link: self.open_url(u))
-                url_box.add_widget(url_btn)
-                self.ids.content_box.add_widget(url_box)
+        for w in url_widgets:
+            self.ids.content_box.add_widget(w)
 
-        # --- 5. STEPS (The Loop where Header_2 lives) ---
+        # --- STEPS ---
 
         app = App.get_running_app()
         all_steps = app.APP_DATA.get('steps', [])
@@ -231,164 +511,31 @@ class ArticleScreen(Screen):
         topic_steps.sort(key=lambda x: int(x.get('Step_Order', 999)))
 
         for step in topic_steps:
-            card = BoxLayout(orientation='vertical', size_hint_y=None,                padding=app.FONT_TEXT * 1.0, spacing=app.FONT_TEXT * 0.6)
-            card.bind(minimum_height=card.setter('height'))
-            with card.canvas.before:
-                Color(rgba=[1, 1, 1, 1])
-                card.bg_rect = RoundedRectangle(pos=card.pos, size=card.size, radius=[app.FONT_TEXT * 0.6])
-            card.bind(pos=self._update_graphics, size=self._update_graphics)
+            card = StepCard(step)
 
-            # --- STEP HEADLINE ---
-            h1 = safe_str(step.get('Headline'))
-            if h1:
-                lbl = Label(text=h1, color=COLOR_BLUE, bold=True, font_size=app.FONT_SUBCATEGORY * 1.3, size_hint_y=None, halign='left')
-                lbl.bind(size=lambda s, w: setattr(s, 'text_size', (w[0], None)), texture_size=lambda inst, val: setattr(inst, 'height', val[1]))
-                card.add_widget(lbl)
-
-            # --- STEP HEADER_2 (Sub Headline) ---
-            h2 = safe_str(step.get('Header_2'))
-            if h2:
-                # Styled as Orange, Bold, slightly smaller than Headline
-                h2_lbl = Label(text=h2, color=COLOR_ORANGE, bold=True, font_size=app.FONT_SUBCATEGORY * 1.1, size_hint_y=None, halign='left')
-                h2_lbl.bind(size=lambda s, w: setattr(s, 'text_size', (w[0], None)), texture_size=lambda inst, val: setattr(inst, 'height', val[1]))
-                card.add_widget(h2_lbl)
-
-            # --- STEP INSTRUCTION ---
-            ins = safe_str(step.get('Instruction'))
-            if ins:
-                lbl = Label(text=ins, color=[0.2, 0.2, 0.2, 1], font_size=app.FONT_TEXT * 1.2, size_hint_y=None, halign='left')
-                lbl.bind(size=lambda s, w: setattr(s, 'text_size', (w[0], None)), texture_size=lambda inst, val: setattr(inst, 'height', val[1]))
-                card.add_widget(lbl)
-
-            # --- CODE SNIPPET (Stable Logic) ---
+            # --- CODE SNIPPET ---
             code = safe_str(step.get('Code_Snippet'))
-            if code:
-                app = App.get_running_app()   # ✅ ADD THIS
-
-                code_anchor = AnchorLayout(anchor_x='right', anchor_y='top', size_hint_y=None)
-
-                code_box = BoxLayout(
-                    orientation='vertical',
-                    size_hint_y=None,
-                    padding=[dp(12), dp(12), dp(80), dp(12)]
-                )
-
-                with code_box.canvas.before:
-                    Color(rgba=[0.15, 0.15, 0.15, 1])
-                    code_box.bg_rect = RoundedRectangle(
-                        pos=code_box.pos,
-                        size=code_box.size,
-                        radius=[dp(6),]
-                    )
-
-                code_box.bind(minimum_height=code_box.setter('height'))
-                code_box.bind(pos=self._update_graphics, size=self._update_graphics)
-
-                code_lbl = Label(
-                    text=code,
-                    font_name='RobotoMono-Regular',
-                    color=COLOR_ORANGE,
-                    font_size=app.FONT_CODE,   # ✅ HERE
-                    line_height = 1.3,
-                    size_hint_y=None,
-                    halign='left'
-                )
-
-                code_lbl.bind(
-                    size=lambda s, w: setattr(s, 'text_size', (w[0], None)),
-                    texture_size=lambda inst, val: setattr(inst, 'height', val[1])
-                )
-
-                code_box.add_widget(code_lbl)
-                code_anchor.add_widget(code_box)
-
-                code_box.bind(height=code_anchor.setter('height'))
-
-                copy_btn = Button(
-                    text="Copy",
-                    size_hint=(None, None),
-                    size=(dp(90), dp(45)),
-                    font_size=app.FONT_BUTTON,   # ✅ ADD THIS
-                    background_color=[0.3, 0.3, 0.3, 1]
-                )
-
-                copy_btn.bind(on_release=lambda x, c=code: self.copy_to_clipboard(x, c))
-                code_anchor.add_widget(copy_btn)
-
-                card.add_widget(code_anchor)
+            code_widget = self._build_code_block(code, app)
+            if code_widget:
+                card.add_widget(code_widget)
 
             # --- STEP SCREENSHOT ---
-            screenshot = safe_str(step.get('Screenshot'))
-            if screenshot:
-                path = self._get_screenshot_path(screenshot)
-
-                img = ClickableImage(
-                    source=path,
-                    size_hint_y=None,
-                    height=dp(300),
-                    allow_stretch=True,
-                    keep_ratio=True
-                )
-
-                img.bind(on_release=lambda x, p=path: self.show_fullscreen_image(p))
-
-                card.add_widget(img)
+            screenshot_widget = self._build_step_screenshot(step, safe_str)
+            if screenshot_widget:
+                card.add_widget(screenshot_widget)
 
             # --- STEP URLS ---
             raw_step_urls = safe_str(step.get('URLs'))
-            if raw_step_urls:
-                step_url_list = [u.strip() for u in raw_step_urls.split(',') if u.strip()]
-                for link in step_url_list:
-                    url_box = BoxLayout(
-                        orientation='horizontal',
-                        size_hint_y=None,
-                        height=dp(30),
-                        spacing=dp(10)
-                    )
+            url_widgets = self._build_step_urls(raw_step_urls)
 
-                    url_box.add_widget(
-                        Image(
-                            source=icon("link2.png"),
-                            size_hint_x=None,
-                            width=dp(20)
-                        )
-                    )
+            for w in url_widgets:
+                card.add_widget(w)
 
-                    url_btn = Button(
-                        text=link,
-                        color=[0.1, 0.4, 0.8, 1],
-                        background_color=[0, 0, 0, 0],
-                        font_size='17sp',
-                        halign='left',
-                        shorten=True,
-                        shorten_from='right',
-                        size_hint_x=1
-                    )
-                    url_btn.bind(size=lambda s, w: setattr(s, 'text_size', (w[0], None)))
-                    url_btn.bind(on_release=lambda x, u=link: self.open_url(u))
-
-                    url_box.add_widget(url_btn)
-                    card.add_widget(url_box)
-
-            # --- NOTES (Stable Logic) ---
+            # --- NOTES ---
             note = safe_str(step.get('Notes'))
-            if note:
-                note_container = BoxLayout(orientation='horizontal', size_hint_y=None, spacing=dp(12), padding=dp(12))
-                with note_container.canvas.before:
-                    Color(rgba=NOTE_BG)
-                    note_container.bg_rect = RoundedRectangle(pos=note_container.pos, size=note_container.size, radius=[dp(6),])
-                note_container.bind(minimum_height=note_container.setter('height'))
-                note_container.bind(pos=self._update_graphics, size=self._update_graphics)
-                note_container.add_widget(
-                    Image(source=icon("note.png"),
-                        size_hint=(None, None),
-                        size=(dp(32), dp(32)), pos_hint={'top': 1})
-                )
-                markup_text = "[b][color=ff8b02]NOTE:[/color][/b]\n" + note
-                n_lbl = Label(text=markup_text, markup=True, color=[0.2, 0.2, 0.2, 1], font_size='20sp', italic=True, size_hint_y=None, halign='left', valign='top')
-                n_lbl.bind(size=lambda s, w: setattr(s, 'text_size', (w[0], None)), texture_size=lambda inst, val: setattr(inst, 'height', val[1]))
-                note_container.add_widget(n_lbl)
-                card.add_widget(note_container)
+            note_widget = self._build_note_box(note, app)
+            if note_widget:
+                card.add_widget(note_widget)
 
             self.ids.content_box.add_widget(card)
 
