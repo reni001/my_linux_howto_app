@@ -3374,215 +3374,6 @@
       "_key": "-Ov0izC3QG8fOH31F5cp",
       "created_at": "2026-06-13T16:06:20.720255"
     },
-    "-Ov1EBpHUh87etIOoAVH": {
-      "Code_Snippet": "",
-      "Header_2": "",
-      "Headline": "What we are doing (conceptually)",
-      "Instruction": "Once this is done, GitHub access will be password‑less and identical everywhere.\nHere is the common logic + exact steps per OS.\n\nFor each machine (Windows, Arch, Ubuntu VM):\n   1. Generate one SSH key\n   2. Add the public key to your GitHub account\n   3. Test the connection\n   4. Ensure your repo uses the SSH remote, not HTTPS\n\nEach machine has its own key → this is best practice. As example we do it for arch linux, windows and an ubuntu VM",
-      "Notes": "",
-      "Screenshot": "",
-      "Step_ID": 575,
-      "Step_Order": 1,
-      "Topic_ID": "othe_inte_ssh_se",
-      "URLs": "",
-      "_key": "-Ov1EBpHUh87etIOoAVH",
-      "created_at": "2026-06-13T18:27:05.139188"
-    },
-    "-Ov1EBrxZIp415zcpcZ5": {
-      "Headline": "Check: GitHub side (once)",
-      "Instruction": "Log in to GitHub and keep this page open:\n👉 GitHub → Settings → SSH and GPG keys → New SSH key\nYou’ll paste keys there later.",
-      "Step_ID": 576,
-      "Step_Order": 2,
-      "Topic_ID": "othe_inte_ssh_se",
-      "_key": "-Ov1EBrxZIp415zcpcZ5",
-      "created_at": "2026-06-13T18:27:05.305112"
-    },
-    "-Ov1EBuqmForgZibQsVq": {
-      "Code_Snippet": "ssh-keygen -t ed25519 -C \"arch-linux\"\n``",
-      "Header_2": "Arch Linux",
-      "Instruction": "1. Generate the key",
-      "Step_ID": 577,
-      "Step_Order": 3,
-      "Topic_ID": "othe_inte_ssh_se",
-      "_key": "-Ov1EBuqmForgZibQsVq",
-      "created_at": "2026-06-13T18:27:05.493294"
-    },
-    "-Ov1EBy-msDZPoTVJm-U": {
-      "Instruction": "Press Enter for default location\n~/.ssh/id_ed25519\n\nOptional passphrase → recommended (you can use ssh-agent later)",
-      "Step_ID": 578,
-      "Step_Order": 4,
-      "Topic_ID": "othe_inte_ssh_se",
-      "_key": "-Ov1EBy-msDZPoTVJm-U",
-      "created_at": "2026-06-13T18:27:05.694236"
-    },
-    "-Ov1EC-ui-ntXVH41554": {
-      "Code_Snippet": "eval \"$(ssh-agent -s)\"\nssh-add ~/.ssh/id_ed25519",
-      "Instruction": "2. Start ssh-agent",
-      "Step_ID": 579,
-      "Step_Order": 5,
-      "Topic_ID": "othe_inte_ssh_se",
-      "_key": "-Ov1EC-ui-ntXVH41554",
-      "created_at": "2026-06-13T18:27:05.878908"
-    },
-    "-Ov1EC2m1HSf9QTlxXDk": {
-      "Code_Snippet": "cat ~/.ssh/id_ed25519.pub",
-      "Instruction": "3. Copy public key\nCopy the entire line (ssh-ed25519 AAAA...).",
-      "Step_ID": 580,
-      "Step_Order": 6,
-      "Topic_ID": "othe_inte_ssh_se",
-      "_key": "-Ov1EC2m1HSf9QTlxXDk",
-      "created_at": "2026-06-13T18:27:06.056984"
-    },
-    "-Ov1EC637QeuaJ1JKo1Z": {
-      "Instruction": "4. Add to GitHub\nTitle: Arch Linux\nKey type: Authentication key\nPaste key → Save",
-      "Step_ID": 581,
-      "Step_Order": 7,
-      "Topic_ID": "othe_inte_ssh_se",
-      "_key": "-Ov1EC637QeuaJ1JKo1Z",
-      "created_at": "2026-06-13T18:27:06.267403"
-    },
-    "-Ov1EC9aJKpCr5S4aprp": {
-      "Code_Snippet": "ssh -T git@github.com",
-      "Instruction": "5. Test\n✅ Expected:\nHi (git user name>! You've successfully authenticated...",
-      "Step_ID": 582,
-      "Step_Order": 8,
-      "Topic_ID": "othe_inte_ssh_se",
-      "_key": "-Ov1EC9aJKpCr5S4aprp",
-      "created_at": "2026-06-13T18:27:06.490121"
-    },
-    "-Ov1ECCvcjccdIjKVr2a": {
-      "Code_Snippet": "ssh-keygen -t ed25519 -C \"ubuntu-vm\"\neval \"$(ssh-agent -s)\"\nssh-add ~/.ssh/id_ed25519\ncat ~/.ssh/id_ed25519.pub\nssh -T git@github.com\n``",
-      "Header_2": "Ubuntu",
-      "Instruction": "Repeat exactly the same steps, just use a different label\n\nGitHub key title:\nUbuntu VM",
-      "Step_ID": 583,
-      "Step_Order": 9,
-      "Topic_ID": "othe_inte_ssh_se",
-      "_key": "-Ov1ECCvcjccdIjKVr2a",
-      "created_at": "2026-06-13T18:27:06.715365"
-    },
-    "-Ov1ECG9TcMkOnQqdSg-": {
-      "Header_2": "Windows (Git Bash)",
-      "Instruction": "1. Open Git Bash",
-      "Notes": "Use Git Bash, not PowerShell.",
-      "Step_ID": 584,
-      "Step_Order": 10,
-      "Topic_ID": "othe_inte_ssh_se",
-      "_key": "-Ov1ECG9TcMkOnQqdSg-",
-      "created_at": "2026-06-13T18:27:06.925956"
-    },
-    "-Ov1ECJ4Ep_yjwXYEko_": {
-      "Code_Snippet": "ssh-keygen -t ed25519 -C \"windows-pc\"",
-      "Instruction": "2. Generate key\n\nDefault location:\n/c/Users/<you>/.ssh/id_ed25519",
-      "Step_ID": 585,
-      "Step_Order": 11,
-      "Topic_ID": "othe_inte_ssh_se",
-      "_key": "-Ov1ECJ4Ep_yjwXYEko_",
-      "created_at": "2026-06-13T18:27:07.098495"
-    },
-    "-Ov1ECLufbVYZESXPFr6": {
-      "Code_Snippet": "eval \"$(ssh-agent -s)\"\nssh-add ~/.ssh/id_ed25519",
-      "Instruction": "3. Start ssh-agent",
-      "Step_ID": 586,
-      "Step_Order": 12,
-      "Topic_ID": "othe_inte_ssh_se",
-      "_key": "-Ov1ECLufbVYZESXPFr6",
-      "created_at": "2026-06-13T18:27:07.283351"
-    },
-    "-Ov1ECPIH4QxSbYio9WP": {
-      "Code_Snippet": "cat ~/.ssh/id_ed25519.pub",
-      "Instruction": "4. Copy public key\n\nPaste into GitHub:\n\nTitle: Windows PC\nType: Authentication key",
-      "Step_ID": 587,
-      "Step_Order": 13,
-      "Topic_ID": "othe_inte_ssh_se",
-      "_key": "-Ov1ECPIH4QxSbYio9WP",
-      "created_at": "2026-06-13T18:27:07.508154"
-    },
-    "-Ov1ECSnORKB12Oi_7AB": {
-      "Code_Snippet": "ssh -T git@github.com",
-      "Instruction": "5. Test\n✅ Expected:\nHi (git user name>! You've successfully authenticated...",
-      "Step_ID": 588,
-      "Step_Order": 14,
-      "Topic_ID": "othe_inte_ssh_se",
-      "_key": "-Ov1ECSnORKB12Oi_7AB",
-      "created_at": "2026-06-13T18:27:07.732441"
-    },
-    "-Ov1ECViU0bpUuuS1BFH": {
-      "Code_Snippet": "git remote -v",
-      "Headline": "Ensure your repositories use SSH (IMPORTANT)",
-      "Instruction": "On each machine, inside the repo:\ngo inside the repro folder with cd /<path>/<folder name>",
-      "Step_ID": 589,
-      "Step_Order": 15,
-      "Topic_ID": "othe_inte_ssh_se",
-      "_key": "-Ov1ECViU0bpUuuS1BFH",
-      "created_at": "2026-06-13T18:27:07.913230"
-    },
-    "-Ov1ECYdEUnqS4m_iBVZ": {
-      "Code_Snippet": "git remote set-url origin git@github.com:reni001/my_linux_howto_app.git",
-      "Instruction": "If you see HTTPS, fix it and check again.\n\n✅ Should show:\norigin  git@github.com:reni001/my_linux_howto_app.git (fetch)\norigin  git@github.com:reni001/my_linux_howto_app.git (push)",
-      "Step_ID": 590,
-      "Step_Order": 16,
-      "Topic_ID": "othe_inte_ssh_se",
-      "_key": "-Ov1ECYdEUnqS4m_iBVZ",
-      "created_at": "2026-06-13T18:27:08.103477"
-    },
-    "-Ov1ECaShMjgILa0accz": {
-      "Code_Snippet": "git pull\ngit status\ngit push",
-      "Headline": "Final verification (do this once)",
-      "Instruction": "On each machine:\nNo password prompts ✅\nNo browser popups ✅\nSame behavior everywhere ✅",
-      "Step_ID": 591,
-      "Step_Order": 17,
-      "Topic_ID": "othe_inte_ssh_se",
-      "_key": "-Ov1ECaShMjgILa0accz",
-      "created_at": "2026-06-13T18:27:08.288678"
-    },
-    "-Ov1ECd6tXpvUgj7V4oW": {
-      "Code_Snippet": "if [ -z \"$SSH_AUTH_SOCK\" ]; then\n  eval \"$(ssh-agent -s)\" >/dev/null\n  ssh-add ~/.ssh/id_ed25519 >/dev/null 2>&1\nfi",
-      "Header_2": "✅ Persist ssh-agent (Linux)",
-      "Headline": "Recommended extras (optional but smart)",
-      "Instruction": "Add to ~/.bashrc:",
-      "Step_ID": 592,
-      "Step_Order": 18,
-      "Topic_ID": "othe_inte_ssh_se",
-      "_key": "-Ov1ECd6tXpvUgj7V4oW",
-      "created_at": "2026-06-13T18:27:08.455050"
-    },
-    "-Ov1ECfm_MAncYLLtf60": {
-      "Header_2": "✅ Windows",
-      "Instruction": "Git for Windows auto-starts ssh-agent — nothing else needed.",
-      "Step_ID": 593,
-      "Step_Order": 19,
-      "Topic_ID": "othe_inte_ssh_se",
-      "_key": "-Ov1ECfm_MAncYLLtf60",
-      "created_at": "2026-06-13T18:27:08.624619"
-    },
-    "-Ov1EKxJ4UXnUHQdYB3G": {
-      "Code_Snippet": "",
-      "Header_2": "Perform following steps directly from the Firebase Console:",
-      "Headline": "Instruction on how to get the key:",
-      "Instruction": "1. In the Firebase Console, click the Gear icon (Project settings) next to Project Overview in the left-hand navigation pane.\n\n2. Select Project settings from the dropdown menu.\n\n3. Click on the Service accounts tab at the top of the page.\n\n4. Under the Firebase Admin SDK section, click the Generate new private key button at the bottom.\n\n5. Read the warning popup and click Generate key.\n\n6. Your browser will automatically download the JSON file containing your new private key.\n\nOnce downloaded, you can rename this file to serviceAccountKey.json (or any name you prefer) and place it in your local environment. Be sure to keep this file secure and never commit it to public version control systems like GitHub, as it grants full administrative access to your Firebase services.",
-      "Notes": "",
-      "Screenshot": "firebaseServiceAccountKey-01.png",
-      "Step_ID": 594,
-      "Step_Order": 1,
-      "Topic_ID": "other_cloud_creating_a_s_7a0d",
-      "URLs": "https://console.firebase.google.com/",
-      "_key": "-Ov1EKxJ4UXnUHQdYB3G",
-      "created_at": "2026-06-13T18:27:42.512861"
-    },
-    "-Ov1EL-W_j7fmHfgBisT": {
-      "Code_Snippet": "",
-      "Header_2": "",
-      "Headline": "",
-      "Instruction": "Firebase Admin SDK",
-      "Notes": "",
-      "Screenshot": "firebaseServiceAccountKey-02.png",
-      "Step_ID": 595,
-      "Step_Order": 2,
-      "Topic_ID": "other_cloud_creating_a_s_7a0d",
-      "URLs": "",
-      "_key": "-Ov1EL-W_j7fmHfgBisT",
-      "created_at": "2026-06-13T18:27:42.719109"
-    },
     "-Ov1uWA80U7j0TS-9BsG": {
       "Code_Snippet": "",
       "Header_2": "",
@@ -3658,6 +3449,215 @@
       "URLs": "https://wiki.nobaraproject.org/general-usage/troubleshooting/updating-troubleshooting",
       "_key": "-Ov1uWOpgFQFAf7m8pzx",
       "created_at": "2026-06-13T21:36:23.242120"
+    },
+    "-Ov205VZ3mHjcCktIyv7": {
+      "Code_Snippet": "",
+      "Header_2": "Perform following steps directly from the Firebase Console:",
+      "Headline": "Instruction on how to get the key:",
+      "Instruction": "1. In the Firebase Console, click the Gear icon (Project settings) next to Project Overview in the left-hand navigation pane.\n\n2. Select Project settings from the dropdown menu.\n\n3. Click on the Service accounts tab at the top of the page.\n\n4. Under the Firebase Admin SDK section, click the Generate new private key button at the bottom.\n\n5. Read the warning popup and click Generate key.\n\n6. Your browser will automatically download the JSON file containing your new private key.\n\nOnce downloaded, you can rename this file to serviceAccountKey.json (or any name you prefer) and place it in your local environment. Be sure to keep this file secure and never commit it to public version control systems like GitHub, as it grants full administrative access to your Firebase services.",
+      "Notes": "",
+      "Screenshot": "firebaseServiceAccountKey-01.png",
+      "Step_ID": 602,
+      "Step_Order": 1,
+      "Topic_ID": "other_cloud_creating_a_s_7a0d",
+      "URLs": "https://console.firebase.google.com/",
+      "_key": "-Ov205VZ3mHjcCktIyv7",
+      "created_at": "2026-06-13T22:05:08.549409"
+    },
+    "-Ov205YQOBd826bYXCnY": {
+      "Code_Snippet": "",
+      "Header_2": "",
+      "Headline": "",
+      "Instruction": "Firebase Admin SDK",
+      "Notes": "",
+      "Screenshot": "firebaseServiceAccountKey-02.png",
+      "Step_ID": 603,
+      "Step_Order": 2,
+      "Topic_ID": "other_cloud_creating_a_s_7a0d",
+      "URLs": "",
+      "_key": "-Ov205YQOBd826bYXCnY",
+      "created_at": "2026-06-13T22:05:08.742509"
+    },
+    "-Ov2263dUMuCE2w3B2l5": {
+      "Code_Snippet": "",
+      "Header_2": "",
+      "Headline": "What we are doing (conceptually)",
+      "Instruction": "Once this is done, GitHub access will be password‑less and identical everywhere.\nHere is the common logic + exact steps per OS.\n\nFor each machine (Windows, Arch, Ubuntu VM):\n   1. Generate one SSH key\n   2. Add the public key to your GitHub account\n   3. Test the connection\n   4. Ensure your repo uses the SSH remote, not HTTPS\n\nEach machine has its own key → this is best practice. As example we do it for arch linux, windows and an ubuntu VM",
+      "Notes": "",
+      "Screenshot": "",
+      "Step_ID": 604,
+      "Step_Order": 1,
+      "Topic_ID": "othe_inte_ssh_se",
+      "URLs": "",
+      "_key": "-Ov2263dUMuCE2w3B2l5",
+      "created_at": "2026-06-13T22:13:54.429757"
+    },
+    "-Ov2266Hkiv_8dwLkdFE": {
+      "Headline": "Check: GitHub side (once)",
+      "Instruction": "Log in to GitHub and keep this page open:\n👉 GitHub → Settings → SSH and GPG keys → New SSH key\nYou’ll paste keys there later.",
+      "Step_ID": 605,
+      "Step_Order": 2,
+      "Topic_ID": "othe_inte_ssh_se",
+      "_key": "-Ov2266Hkiv_8dwLkdFE",
+      "created_at": "2026-06-13T22:13:54.620172"
+    },
+    "-Ov2268lKkXkbtc-XRch": {
+      "Code_Snippet": "ssh-keygen -t ed25519 -C \"arch-linux\"\n``",
+      "Header_2": "Arch Linux",
+      "Instruction": "1. Generate the key",
+      "Step_ID": 606,
+      "Step_Order": 3,
+      "Topic_ID": "othe_inte_ssh_se",
+      "_key": "-Ov2268lKkXkbtc-XRch",
+      "created_at": "2026-06-13T22:13:54.796825"
+    },
+    "-Ov226BKe_yGE2t_f1wX": {
+      "Instruction": "Press Enter for default location\n~/.ssh/id_ed25519\n\nOptional passphrase → recommended (you can use ssh-agent later)",
+      "Step_ID": 607,
+      "Step_Order": 4,
+      "Topic_ID": "othe_inte_ssh_se",
+      "_key": "-Ov226BKe_yGE2t_f1wX",
+      "created_at": "2026-06-13T22:13:54.972396"
+    },
+    "-Ov226DwkKZMNVgS-SQD": {
+      "Code_Snippet": "eval \"$(ssh-agent -s)\"\nssh-add ~/.ssh/id_ed25519",
+      "Instruction": "2. Start ssh-agent",
+      "Step_ID": 608,
+      "Step_Order": 5,
+      "Topic_ID": "othe_inte_ssh_se",
+      "_key": "-Ov226DwkKZMNVgS-SQD",
+      "created_at": "2026-06-13T22:13:55.161125"
+    },
+    "-Ov226GrVSEbN7p51Ron": {
+      "Code_Snippet": "cat ~/.ssh/id_ed25519.pub",
+      "Instruction": "3. Copy public key\nCopy the entire line (ssh-ed25519 AAAA...).",
+      "Step_ID": 609,
+      "Step_Order": 6,
+      "Topic_ID": "othe_inte_ssh_se",
+      "_key": "-Ov226GrVSEbN7p51Ron",
+      "created_at": "2026-06-13T22:13:55.367907"
+    },
+    "-Ov226Jh0kMUgTo_p4nI": {
+      "Instruction": "4. Add to GitHub\nTitle: Arch Linux\nKey type: Authentication key\nPaste key → Save",
+      "Step_ID": 610,
+      "Step_Order": 7,
+      "Topic_ID": "othe_inte_ssh_se",
+      "_key": "-Ov226Jh0kMUgTo_p4nI",
+      "created_at": "2026-06-13T22:13:55.573516"
+    },
+    "-Ov226M7yGbUXzH1r_C_": {
+      "Code_Snippet": "ssh -T git@github.com",
+      "Instruction": "5. Test\n✅ Expected:\nHi (git user name>! You've successfully authenticated...",
+      "Step_ID": 611,
+      "Step_Order": 8,
+      "Topic_ID": "othe_inte_ssh_se",
+      "_key": "-Ov226M7yGbUXzH1r_C_",
+      "created_at": "2026-06-13T22:13:55.741698"
+    },
+    "-Ov226OqeqGKsJlDQ3qZ": {
+      "Code_Snippet": "ssh-keygen -t ed25519 -C \"ubuntu-vm\"\neval \"$(ssh-agent -s)\"\nssh-add ~/.ssh/id_ed25519\ncat ~/.ssh/id_ed25519.pub\nssh -T git@github.com\n``",
+      "Header_2": "Ubuntu",
+      "Instruction": "Repeat exactly the same steps, just use a different label\n\nGitHub key title:\nUbuntu VM",
+      "Step_ID": 612,
+      "Step_Order": 9,
+      "Topic_ID": "othe_inte_ssh_se",
+      "_key": "-Ov226OqeqGKsJlDQ3qZ",
+      "created_at": "2026-06-13T22:13:55.927949"
+    },
+    "-Ov226REWgHTuc0n5RRd": {
+      "Header_2": "Windows (Git Bash)",
+      "Instruction": "1. Open Git Bash",
+      "Notes": "Use Git Bash, not PowerShell.",
+      "Step_ID": 613,
+      "Step_Order": 10,
+      "Topic_ID": "othe_inte_ssh_se",
+      "_key": "-Ov226REWgHTuc0n5RRd",
+      "created_at": "2026-06-13T22:13:56.101897"
+    },
+    "-Ov226Tk96DVUIMR8k8m": {
+      "Code_Snippet": "ssh-keygen -t ed25519 -C \"windows-pc\"",
+      "Instruction": "2. Generate key\n\nDefault location:\n/c/Users/<you>/.ssh/id_ed25519",
+      "Step_ID": 614,
+      "Step_Order": 11,
+      "Topic_ID": "othe_inte_ssh_se",
+      "_key": "-Ov226Tk96DVUIMR8k8m",
+      "created_at": "2026-06-13T22:13:56.276627"
+    },
+    "-Ov226W5Kc9j0Zm2sc-z": {
+      "Code_Snippet": "eval \"$(ssh-agent -s)\"\nssh-add ~/.ssh/id_ed25519",
+      "Instruction": "3. Start ssh-agent",
+      "Step_ID": 615,
+      "Step_Order": 12,
+      "Topic_ID": "othe_inte_ssh_se",
+      "_key": "-Ov226W5Kc9j0Zm2sc-z",
+      "created_at": "2026-06-13T22:13:56.442017"
+    },
+    "-Ov226YhfrW2oxrWND2W": {
+      "Code_Snippet": "cat ~/.ssh/id_ed25519.pub",
+      "Instruction": "4. Copy public key\n\nPaste into GitHub:\n\nTitle: Windows PC\nType: Authentication key",
+      "Step_ID": 616,
+      "Step_Order": 13,
+      "Topic_ID": "othe_inte_ssh_se",
+      "_key": "-Ov226YhfrW2oxrWND2W",
+      "created_at": "2026-06-13T22:13:56.624744"
+    },
+    "-Ov226aTNUFNkEqlKd1P": {
+      "Code_Snippet": "ssh -T git@github.com",
+      "Instruction": "5. Test\n✅ Expected:\nHi (git user name>! You've successfully authenticated...",
+      "Step_ID": 617,
+      "Step_Order": 14,
+      "Topic_ID": "othe_inte_ssh_se",
+      "_key": "-Ov226aTNUFNkEqlKd1P",
+      "created_at": "2026-06-13T22:13:56.820429"
+    },
+    "-Ov226d0xpIOHH-Ln-GS": {
+      "Code_Snippet": "git remote -v",
+      "Headline": "Ensure your repositories use SSH (IMPORTANT)",
+      "Instruction": "On each machine, inside the repo:\ngo inside the repro folder with cd /<path>/<folder name>",
+      "Step_ID": 618,
+      "Step_Order": 15,
+      "Topic_ID": "othe_inte_ssh_se",
+      "_key": "-Ov226d0xpIOHH-Ln-GS",
+      "created_at": "2026-06-13T22:13:57.003177"
+    },
+    "-Ov226f_YrV_EvOOSVMZ": {
+      "Code_Snippet": "git remote set-url origin git@github.com:reni001/my_linux_howto_app.git",
+      "Instruction": "If you see HTTPS, fix it and check again.\n\n✅ Should show:\norigin  git@github.com:reni001/my_linux_howto_app.git (fetch)\norigin  git@github.com:reni001/my_linux_howto_app.git (push)",
+      "Step_ID": 619,
+      "Step_Order": 16,
+      "Topic_ID": "othe_inte_ssh_se",
+      "_key": "-Ov226f_YrV_EvOOSVMZ",
+      "created_at": "2026-06-13T22:13:57.166860"
+    },
+    "-Ov226iDaS0evst13EK-": {
+      "Code_Snippet": "git pull\ngit status\ngit push",
+      "Headline": "Final verification (do this once)",
+      "Instruction": "On each machine:\nNo password prompts ✅\nNo browser popups ✅\nSame behavior everywhere ✅",
+      "Step_ID": 620,
+      "Step_Order": 17,
+      "Topic_ID": "othe_inte_ssh_se",
+      "_key": "-Ov226iDaS0evst13EK-",
+      "created_at": "2026-06-13T22:13:57.358721"
+    },
+    "-Ov226kiAvekzZ12BlB_": {
+      "Code_Snippet": "if [ -z \"$SSH_AUTH_SOCK\" ]; then\n  eval \"$(ssh-agent -s)\" >/dev/null\n  ssh-add ~/.ssh/id_ed25519 >/dev/null 2>&1\nfi",
+      "Header_2": "✅ Persist ssh-agent (Linux)",
+      "Headline": "Recommended extras (optional but smart)",
+      "Instruction": "Add to ~/.bashrc:",
+      "Step_ID": 621,
+      "Step_Order": 18,
+      "Topic_ID": "othe_inte_ssh_se",
+      "_key": "-Ov226kiAvekzZ12BlB_",
+      "created_at": "2026-06-13T22:13:57.540342"
+    },
+    "-Ov226nOSJg_w3hLTqKW": {
+      "Header_2": "✅ Windows",
+      "Instruction": "Git for Windows auto-starts ssh-agent — nothing else needed.",
+      "Step_ID": 622,
+      "Step_Order": 19,
+      "Topic_ID": "othe_inte_ssh_se",
+      "_key": "-Ov226nOSJg_w3hLTqKW",
+      "created_at": "2026-06-13T22:13:57.731644"
     }
   },
   "topics": {
@@ -4052,13 +4052,13 @@
       "Cat_Icon": "other.png",
       "Category": "Other",
       "Date_Created": "202605-11",
-      "Date_Updated": "2026-06-13T20:27:04",
-      "Description": "🔐  use of SSH authentication for git synchronisation will eliminate the need of a password each time.",
+      "Date_Updated": "2026-06-14T00:13:53",
+      "Description": "use of SSH authentication for git synchronisation will eliminate the need of a password each time.",
       "Sub_Icon": "wifi2.png",
       "Subcategory": "Internet",
       "Title": "SSH setup for github",
       "Topic_ID": "othe_inte_ssh_se",
-      "Topic_Icon": "",
+      "Topic_Icon": "ssh2.png",
       "URLs": "",
       "_key": "28"
     },
@@ -4706,13 +4706,13 @@
       "Cat_Icon": "other.png",
       "Category": "Other",
       "Date_Created": "2026-06-12T18:46:33",
-      "Date_Updated": "2026-06-13T20:27:42",
+      "Date_Updated": "2026-06-14T00:05:07",
       "Description": "To get a service account key JSON file (often referred to as serviceAccountKey.json) for your Firebase project, you will need to generate a new one.\nFor security reasons, Google does not store your private keys once they are generated. This means you cannot re-download an existing key file if you have lost it. However, you can generate a new key at any time, and multiple active keys can coexist without conflict.",
       "Sub_Icon": "cloud2.png",
       "Subcategory": "Cloud",
       "Title": "Creating a ServiceAccountKey in Firebase",
       "Topic_ID": "other_cloud_creating_a_s_7a0d",
-      "Topic_Icon": "",
+      "Topic_Icon": "firebase.png",
       "URLs": "https://console.firebase.google.com/",
       "_key": "-OuwiaWUzXecM7acziVr"
     }
