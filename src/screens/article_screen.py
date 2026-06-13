@@ -26,6 +26,19 @@ from src.services.system_open_service import open_url as open_external_url
 
 icon = get_icon_path
 
+# ✅ GLOBAL UI CONSTANTS (like KV #:set)
+def UI(app):
+    return {
+        "SPACING": app.FONT_TEXT * 0.8,
+        "SPACING_SMALL": app.FONT_TEXT * 0.5,
+        "SPACING_LARGE": app.FONT_TEXT * 1.2,
+        "ICON_SIZE": app.FONT_TEXT * 1.8,
+        "ICON_SMALL": app.FONT_TEXT * 1.2,
+        "INPUT_HEIGHT": app.FONT_TEXT * 2.2,
+        "BUTTON_WIDTH": app.FONT_TEXT * 12,
+    }
+
+
 class ClickableImage(ButtonBehavior, Image):
     pass
 
@@ -68,9 +81,10 @@ class StepCard(BoxLayout):
         super().__init__(orientation='vertical', size_hint_y=None, **kwargs)
 
         app = App.get_running_app()
+        ui = UI(app)
 
-        self.padding = app.FONT_TEXT * 1.0
-        self.spacing = app.FONT_TEXT * 0.6
+        self.padding = ui["SPACING"]
+        self.spacing = ui["SPACING_SMALL"]
         self.bind(minimum_height=self.setter('height'))
 
         with self.canvas.before:
@@ -160,6 +174,7 @@ class ArticleScreen(Screen):
         return str(paths["assets"] / "screenshots" / filename)
 
     def _build_code_block(self, code: str, app):
+        ui = UI(app)
         if not code:
             return None
 
@@ -172,7 +187,7 @@ class ArticleScreen(Screen):
         code_box = BoxLayout(
             orientation='vertical',
             size_hint_y=None,
-            padding=[dp(12), dp(12), dp(80), dp(12)]
+            padding=[ui["SPACING"], ui["SPACING"], ui["ICON_SIZE"] * 2, ui["SPACING"]]
         )
 
         with code_box.canvas.before:
@@ -180,7 +195,7 @@ class ArticleScreen(Screen):
             code_box.bg_rect = RoundedRectangle(
                 pos=code_box.pos,
                 size=code_box.size,
-                radius=[dp(6)]
+                radius=[ui["SPACING_SMALL"]]
             )
 
         code_box.bind(minimum_height=code_box.setter('height'))
@@ -209,7 +224,7 @@ class ArticleScreen(Screen):
         copy_btn = Button(
             text="Copy",
             size_hint=(None, None),
-            size=(dp(90), dp(45)),
+            size=(ui["BUTTON_WIDTH"] * 0.25, ui["INPUT_HEIGHT"]),
             font_size=app.FONT_BUTTON,
             background_color=[0.3, 0.3, 0.3, 1]
         )
@@ -219,7 +234,8 @@ class ArticleScreen(Screen):
 
         return code_anchor
 
-    def _build_step_urls(self, raw_urls: str):
+    def _build_step_urls(self, raw_urls: str, app):
+        ui = UI(app)
         if not raw_urls:
             return []
 
@@ -231,15 +247,15 @@ class ArticleScreen(Screen):
             url_box = BoxLayout(
                 orientation='horizontal',
                 size_hint_y=None,
-                height=dp(30),
-                spacing=dp(10)
+                height=ui["INPUT_HEIGHT"],
+                spacing=ui["SPACING_SMALL"]
             )
 
             url_box.add_widget(
                 Image(
                     source=icon("link2.png"),
                     size_hint_x=None,
-                    width=dp(20)
+                    width=ui["ICON_SMALL"]
                 )
             )
 
@@ -247,7 +263,7 @@ class ArticleScreen(Screen):
                 text=link,
                 color=[0.1, 0.4, 0.8, 1],
                 background_color=[0, 0, 0, 0],
-                font_size='17sp',
+                font_size=app.FONT_TEXT,
                 halign='left',
                 shorten=True,
                 shorten_from='right',
@@ -258,12 +274,11 @@ class ArticleScreen(Screen):
             url_btn.bind(on_release=lambda x, u=link: self.open_url(u))
 
             url_box.add_widget(url_btn)
-
             widgets.append(url_box)
 
         return widgets
 
-    def _build_step_screenshot(self, step, safe_str):
+    def _build_step_screenshot(self, step, safe_str, app):
         screenshot = safe_str(step.get('Screenshot'))
         if not screenshot:
             return None
@@ -273,7 +288,7 @@ class ArticleScreen(Screen):
         img = ClickableImage(
             source=path,
             size_hint_y=None,
-            height=dp(300),
+            height=app.FONT_TEXT * 12,
             allow_stretch=True,
             keep_ratio=True
         )
@@ -282,14 +297,15 @@ class ArticleScreen(Screen):
         return img
 
     def _build_note_box(self, note: str, app):
+        ui = UI(app)
         if not note:
             return None
 
         note_container = BoxLayout(
             orientation='horizontal',
             size_hint_y=None,
-            spacing=dp(12),
-            padding=dp(12)
+            spacing=ui["SPACING"],
+            padding=ui["SPACING"]
         )
 
         with note_container.canvas.before:
@@ -297,7 +313,7 @@ class ArticleScreen(Screen):
             note_container.bg_rect = RoundedRectangle(
                 pos=note_container.pos,
                 size=note_container.size,
-                radius=[dp(6)]
+                radius=[ui["SPACING_SMALL"]]
             )
 
         note_container.bind(minimum_height=note_container.setter('height'))
@@ -307,7 +323,7 @@ class ArticleScreen(Screen):
             Image(
                 source=icon("note.png"),
                 size_hint=(None, None),
-                size=(dp(32), dp(32)),
+                size=(ui["ICON_SIZE"], ui["ICON_SIZE"]),
                 pos_hint={'top': 1}
             )
         )
@@ -318,7 +334,7 @@ class ArticleScreen(Screen):
             text=markup_text,
             markup=True,
             color=[0.2, 0.2, 0.2, 1],
-            font_size='20sp',
+            font_size=app.FONT_TEXT * 1.1,
             italic=True,
             size_hint_y=None,
             halign='left',
@@ -335,6 +351,7 @@ class ArticleScreen(Screen):
         return note_container
 
     def _build_topic_urls(self, raw_urls: str, app):
+        ui = UI(app)
         if not raw_urls:
             return []
 
@@ -346,15 +363,15 @@ class ArticleScreen(Screen):
             url_box = BoxLayout(
                 orientation='horizontal',
                 size_hint_y=None,
-                height=dp(30),
-                spacing=dp(10)
+                height=ui["INPUT_HEIGHT"],
+                spacing=ui["SPACING_SMALL"]
             )
 
             url_box.add_widget(
                 Image(
                     source=icon("link2.png"),
                     size_hint_x=None,
-                    width=dp(20)
+                    width=ui["ICON_SMALL"]
                 )
             )
 
@@ -380,6 +397,7 @@ class ArticleScreen(Screen):
 
     def _build_topic_header(self, data, app, safe_str):
         widgets = []
+        ui = UI(app)
 
         # --- ICON ---
         icon_name = safe_str(data.get('Topic_Icon'))
@@ -391,7 +409,7 @@ class ArticleScreen(Screen):
         img = Image(
             source=icon(icon_name),
             size_hint_y=None,
-            height=app.FONT_TEXT * 8
+            height=ui["ICON_SIZE"] * 3
         )
         widgets.append(img)
 
@@ -520,13 +538,14 @@ class ArticleScreen(Screen):
                 card.add_widget(code_widget)
 
             # --- STEP SCREENSHOT ---
-            screenshot_widget = self._build_step_screenshot(step, safe_str)
+            screenshot_widget = self._build_step_screenshot(step, safe_str, app)
             if screenshot_widget:
                 card.add_widget(screenshot_widget)
 
             # --- STEP URLS ---
             raw_step_urls = safe_str(step.get('URLs'))
-            url_widgets = self._build_step_urls(raw_step_urls)
+            url_widgets = self._build_step_urls(raw_step_urls, app)
+
 
             for w in url_widgets:
                 card.add_widget(w)
