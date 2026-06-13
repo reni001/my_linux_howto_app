@@ -39,6 +39,7 @@
             radius: [dp(8)]
 
 <SmallButton@BaseButton>:
+    size_hint_y: None
     height: INPUT_HEIGHT
     font_size: app.FONT_TEXT
     padding: [dp(10), 0]
@@ -46,15 +47,43 @@
     halign: "center"
     text_size: self.size
 
+<FormRow@BoxLayout>:
+    orientation: "horizontal"
+    size_hint_y: None
+    height: INPUT_HEIGHT
+    spacing: dp(10)
+    padding: [0, 0]
+
+<FormInput@TextInput>:
+    size_hint_y: None
+    height: INPUT_HEIGHT
+    multiline: False
+    font_size: app.FONT_TEXT
+    write_tab: False
+    padding: [dp(10), dp(8), dp(10), dp(8)]
+
+<ReadonlyFormInput@FormInput>:
+    readonly: True
+    foreground_color: app.COLOR_TEXT_SOFT
+
+<FormSpinner@Spinner>:
+    size_hint_y: None
+    height: INPUT_HEIGHT
+    background_normal: ''
+    background_color: app.COLOR_WHITE
+    color: [0.1, 0.25, 0.45, 1]
+
+<BrowseButton@SmallButton>:
+    size_hint_x: None
+    width: dp(140)
+    text_size: self.size
+    halign: "center"
+    valign: "middle"
+    background_color: app.COLOR_BLUE_MEDIUM if self.state == 'normal' else app.COLOR_BLUE_DARK_UI
+
 # ----------------------------
 # GENERIC APP BUTTONS
 # ----------------------------
-<BaseButton@Button>:
-    size_hint_y: None
-    height: dp(55)
-    font_size: app.FONT_BUTTON
-    bold: True
-
 <SecondaryButton@BaseButton>:
     background_color: app.COLOR_GREY_DARK if self.state == 'normal' else app.COLOR_GREY_LIGHT
 
@@ -121,13 +150,6 @@
     size: dp(40), dp(40)
     pos_hint: {"center_y": 0.5}
     fit_mode: "contain"
-
-<FormRow@BoxLayout>:
-    size_hint_y: None
-    height: INPUT_HEIGHT
-    spacing: dp(10)
-    padding: [0, dp(2)]   # optional micro-adjust
-    orientation: "horizontal"
 
 #----------- Panel Definitions ------------------------
 <StyledPanel@BoxLayout>:
@@ -524,7 +546,7 @@
 <CategoryCard>:
     orientation: 'vertical'
     padding: dp(10)
-    spacing: '5dp'
+    spacing: dp(5)
 
     size_hint_y: None
     height: root.card_height
@@ -563,7 +585,7 @@
 <EntryListItem>:
     orientation: 'horizontal'
     size_hint_y: None
-    height: '110dp'
+    height: dp(110)
     padding: dp(12)
     spacing: dp(15)
     canvas.before:
@@ -576,7 +598,7 @@
     LazyImage:
         source: root.icon_source
         size_hint_x: None
-        width: '60dp'
+        width: dp(60)
 
     BoxLayout:
         orientation: 'vertical'
@@ -653,7 +675,6 @@
 
             on_release: app.delete_topic(root.data)
 
-
 #----------- Screens --------------
 <MenuScreen>:
     FloatLayout:
@@ -692,7 +713,6 @@
 
         JumpToTopButton:
             on_release: scroll_view.scroll_y = 1
-
 
 <SearchScreen>:
     BoxLayout:
@@ -837,7 +857,6 @@
         JumpToTopButton:
             on_release: scroll_view.scroll_y = 1
 
-
 <AddTopicScreen>:
     FloatLayout:
         BoxLayout:
@@ -911,7 +930,6 @@
                             text: ""
                             on_release: root.cancel_edit()
 
-
             # Scroll area with grey background
             ScrollView:
                 id: form_scroll
@@ -952,43 +970,26 @@
                         height: dp(28)
 
                     # ---- topic fields (all ids Python uses) ----
-                    Spinner:
+                    FormSpinner:
                         id: category
                         text: "Click to choose category"
                         values: []
-                        size_hint_y: None
-                        height: INPUT_HEIGHT
-                        background_normal: ''
-                        background_color: app.COLOR_WHITE
-                        color: [0.1, 0.25, 0.45, 1]
                         on_text: root.on_category_changed(self.text)
 
-                    Spinner:
+                    FormSpinner:
                         id: subcategory
                         text: "Select Subcategory"
                         values: []
-                        size_hint_y: None
-                        height: INPUT_HEIGHT
-                        background_normal: ''
-                        background_color: app.COLOR_WHITE
-                        color: [0.1, 0.25, 0.45, 1]
                         on_text: root.on_subcategory_changed(self.text)
 
-                    TextInput:
+                    FormInput:
                         id: title
                         hint_text: "Title (required)"
-                        multiline: False
-                        size_hint_y: None
-                        height: INPUT_HEIGHT
                         write_tab: False
 
-                    TextInput:
+                    FormInput:
                         id: topic_id
                         hint_text: "Topic ID (optional, leave empty to auto-generate)"
-                        multiline: False
-                        size_hint_y: None
-                        height: INPUT_HEIGHT
-                        write_tab: False
 
                     TextInput:
                         id: description
@@ -1000,70 +1001,38 @@
                         write_tab: False
                         padding: [app.FONT_TEXT * 0.6, app.FONT_TEXT * 0.6]
 
-                    TextInput:
+                    FormInput:
                         id: urls
                         hint_text: "URLs (comma separated)"
-                        multiline: False
-                        size_hint_y: None
-                        height: INPUT_HEIGHT
-                        write_tab: False
 
-                    TextInput:
+                    ReadonlyFormInput:
                         id: date_created
                         hint_text: "Date Created (auto)"
-                        multiline: False
-                        readonly: True
-                        size_hint_y: None
-                        height: INPUT_HEIGHT
-                        write_tab: False
 
-                    TextInput:
+                    ReadonlyFormInput:
                         id: date_updated
                         hint_text: "Date Updated (auto)"
-                        multiline: False
-                        readonly: True
-                        size_hint_y: None
-                        height: INPUT_HEIGHT
-                        write_tab: False
 
-                    TextInput:
+                    ReadonlyFormInput:
                         id: cat_icon
                         hint_text: "Category Icon filename (auto)"
-                        multiline: False
-                        readonly: True
-                        size_hint_y: None
-                        height: INPUT_HEIGHT
-                        write_tab: False
 
-                    TextInput:
+                    ReadonlyFormInput:
                         id: sub_icon
                         hint_text: "Subcategory Icon filename (auto)"
-                        multiline: False
-                        readonly: True
-                        size_hint_y: None
-                        height: INPUT_HEIGHT
-                        write_tab: False
 
-                    TextInput:
+                    FormInput:
                         id: topic_icon
                         on_text: root.on_topic_icon_change(self.text)
                         hint_text: "Topic Icon filename (optional)"
-                        multiline: False
-                        size_hint_y: None
-                        height: INPUT_HEIGHT
-                        write_tab: False
 
                     FormRow:
-                        TextInput:
+                        FormInput:
                             id: icon_path
                             hint_text: "Icon file path (optional)"
-                            multiline: False
 
-                        SmallButton:
+                        BrowseButton:
                             text: "Browse"
-                            background_color: app.COLOR_BLUE_MEDIUM if self.state == 'normal' else app.COLOR_BLUE_DARK_UI
-                            size_hint_x: None
-                            width: dp(140)
                             on_release: root.pick_icon()
 
                     # ---- steps section ----
@@ -1088,38 +1057,23 @@
                             spacing: dp(6)
                             padding: dp(2)
 
-                    TextInput:
+                    FormInput:
                         id: step_order
                         hint_text: "Step Number (integer, required)"
-                        multiline: False
                         input_filter: "int"
-                        padding: [10, 10]
-                        size_hint_y: None
-                        height: INPUT_HEIGHT
-                        write_tab: False
 
-
-                    TextInput:
+                    FormInput:
                         id: step_headline
                         hint_text: "Main Header (optional)"
-                        multiline: False
-                        padding: [10, 10]
-                        size_hint_y: None
-                        height: INPUT_HEIGHT
-                        write_tab: False
 
-                    TextInput:
+                    FormInput:
                         id: step_header2
                         hint_text: "Header 2 (optional)"
-                        multiline: False
-                        padding: [10, 10]
-                        size_hint_y: None
-                        height: INPUT_HEIGHT
-                        write_tab: False
 
                     TextInput:
                         id: step_instruction
                         hint_text: "Instruction (required)"
+                        font_size: app.FONT_TEXT
                         multiline: True
                         size_hint_y: None
                         height: dp(110)
@@ -1128,6 +1082,7 @@
                     TextInput:
                         id: step_code
                         hint_text: "Code_Snippet (optional)"
+                        font_size: app.FONT_TEXT
                         multiline: True
                         size_hint_y: None
                         height: dp(90)
@@ -1135,30 +1090,24 @@
 
                     # --- SCREENSHOT ---
                     FormRow:
-                        TextInput:
+                        FormInput:
                             id: step_screenshot
                             hint_text: "Screenshot filename (optional)"
-                            multiline: False
 
-                        SmallButton:
+                        BrowseButton:
                             text: "Browse"
-                            background_color: app.COLOR_BLUE_MEDIUM if self.state == 'normal' else app.COLOR_BLUE_DARK_UI
-                            size_hint_x: None
-                            width: dp(140)
-                            on_release: root.pick_icon()
+                            on_release: root.pick_step_screenshot()
 
                     # --- STEP URLs ---
-                    TextInput:
+                    FormInput:
                         id: step_urls
                         hint_text: "Step URLs (comma separated)"
                         multiline: False
-                        size_hint_y: None
-                        height: INPUT_HEIGHT
-
 
                     TextInput:
                         id: step_notes
                         hint_text: "Notes (optional)"
+                        font_size: app.FONT_TEXT
                         multiline: True
                         size_hint_y: None
                         height: dp(80)
@@ -1167,7 +1116,6 @@
                     Widget:
                         size_hint_y: None
                         height: dp(60)
-
 
             # Bottom bar (optional, consistent)
             StyledPanel:
@@ -1211,7 +1159,6 @@
                         color: app.COLOR_WHITE
                         bold: True
                         on_release: root.save_topic()
-
 
         # ✅ FLOATING BUTTONS (LIKE ARTICLE SCREEN)
 
@@ -1349,7 +1296,6 @@
                     font_size: app.FONT_TEXT
                     padding: [app.FONT_TEXT * 0.5, app.FONT_TEXT * 0.5]
 
-
                 TextInput:
                     id: last_update
                     hint_text: "Last Update"
@@ -1388,7 +1334,7 @@
                 # -------- Preview (with icons) --------
                 ScrollView:
                     size_hint_y: None
-                    height: "220dp"
+                    height: dp(220)
                     bar_width: 8
 
                     BoxLayout:
