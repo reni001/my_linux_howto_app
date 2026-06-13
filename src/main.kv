@@ -4,6 +4,14 @@
 #:import Clock kivy.clock.Clock
 #:import Window kivy.core.window.Window
 
+#:set INPUT_HEIGHT app.FONT_TEXT * 2.2
+#:set SPACING app.FONT_TEXT * 0.8
+#:set SPACING_SMALL app.FONT_TEXT * 0.5
+#:set SPACING_LARGE app.FONT_TEXT * 1.2
+#:set ICON_SIZE app.FONT_TEXT * 1.8
+#:set ICON_SMALL app.FONT_TEXT * 1.2
+#:set BUTTON_WIDTH app.FONT_TEXT * 12
+
 <LazyImage@Image>:
 
 <ClickableStatus@ButtonBehavior+BoxLayout>:
@@ -13,14 +21,12 @@
         RoundedRectangle:
             pos: self.pos
             size: self.size
-            radius: [8]
-
-#:set INPUT_HEIGHT app.FONT_TEXT * 2.2
+            radius: [dp(8)]
 
 # ------ Button Definitions -------
 <BaseButton@Button>:
     size_hint_y: None
-    height: dp(55)
+    height: app.FONT_TEXT * 2.2
     font_size: app.FONT_BUTTON
     bold: True
 
@@ -49,7 +55,7 @@
 
 <BrowseButton@SmallButton>:
     size_hint_x: None
-    width: dp(140)
+    width: BUTTON_WIDTH
     text_size: self.size
     halign: "center"
     valign: "middle"
@@ -60,7 +66,7 @@
     orientation: "horizontal"
     size_hint_y: None
     height: INPUT_HEIGHT
-    spacing: dp(10)
+    spacing: SPACING
     padding: [0, 0]
 
 <FormInput@TextInput>:
@@ -118,13 +124,12 @@
 # ----------------------------
 # MENU BUTTONS ONLY
 # ----------------------------
-
 <MenuButton@BaseButton>:
     size_hint_y: None
     size_hint_x: 0.9
     pos_hint: {"center_x": 0.5}
 
-    height: dp(40)
+    height: INPUT_HEIGHT * 0.9
     font_size: app.FONT_TEXT
     padding: [dp(12), dp(6)]
 
@@ -134,7 +139,7 @@
     size_hint_x: 0.9               # ✅ same width as buttons
     pos_hint: {"center_x": 0.5}   # ✅ center align
 
-    height: dp(22)
+    height: app.FONT_TEXT * 1.2
 
     padding: [dp(6), 0]    # ✅ NEW → aligns with button text
     text_size: self.size
@@ -148,7 +153,7 @@
 <MenuDivider@Widget>:
     size_hint_y: None
     size_hint_x: 0.9
-    height: dp(6)
+    height: dp(3)
     pos_hint: {"center_x": 0.5}
 
     canvas.before:
@@ -163,14 +168,14 @@
 # ----------------------------
 <IconButton@Button>:
     size_hint: None, None
-    size: dp(40), dp(40)
+    size: ICON_SIZE, ICON_SIZE
     pos_hint: {"center_y": 0.5}
     fit_mode: "contain"
 
 #----------- Panel Definitions ------------------------
 <StyledPanel@BoxLayout>:
     size_hint_y: None
-    height: dp(65)
+    height: app.FONT_TEXT * 3.8
     padding: [dp(12), dp(8)]
     canvas.before:
         Color:
@@ -197,7 +202,7 @@
     BoxLayout:
         orientation: "horizontal"
         size_hint_x: 1          # ✅ IMPORTANT: use full width again
-        spacing: dp(6)
+        spacing: SPACING_SMALL
 
         Label:
             text: app.version_string
@@ -278,7 +283,7 @@
 <JumpToTopButton@ButtonBehavior+Image>:
     source: app.get_icon_path("top.png")
     size_hint: None, None
-    size: dp(52), dp(52)
+    size: ICON_SIZE * 1.4, ICON_SIZE * 1.4
     opacity: 0.9
     pos_hint: {'right': 0.98, 'y': 0.08}
     canvas.before:
@@ -292,7 +297,7 @@
 <ScrollDownButton@ButtonBehavior+Image>:
     source: app.get_icon_path("top.png")   # ✅ reuse same icon
     size_hint: None, None
-    size: dp(52), dp(52)
+    size: ICON_SIZE * 1.4, ICON_SIZE * 1.4
     opacity: 0.9
 
     canvas.before:
@@ -311,14 +316,14 @@
 
 <AppMenu>:
     size_hint: None, None
-    size: Window.width * 0.75, Window.height * 0.9
+    size: Window.width * 0.75, Window.height * 0.95
 
     background_color: [0, 0, 0, 0]
 
     BoxLayout:
         orientation: 'vertical'
         padding: [dp(20), dp(15), dp(20), dp(15)]
-        spacing: dp(12)
+        spacing: SPACING
         size_hint_y: 1   # ✅ CRITICAL
 
         canvas.before:
@@ -334,13 +339,13 @@
             orientation: "horizontal"
             size_hint_y: None
             height: dp(45)
-            spacing: dp(10)
+            spacing: SPACING
 
             # ✅ LEFT: ICON
             Image:
                 source: app.get_icon_path("howtolinux-icon.png")
                 size_hint: None, None
-                size: dp(32), dp(32)
+                size: ICON_SIZE * 0.8, ICON_SIZE * 0.8
                 pos_hint: {"center_y": 0.5}
 
             # ✅ CENTER: TITLE
@@ -396,7 +401,7 @@
                 orientation: 'vertical'
                 size_hint_y: None
                 height: self.minimum_height
-                spacing: dp(12)
+                spacing: SPACING
 
                 #MenuSectionLabel:
                 #    text: "ABOUT"
@@ -440,7 +445,7 @@
 
                 # -----
                 MenuSectionLabel:
-                    text: "Backup"
+                    text: "BACKUP"
 
                 MenuButton:
                     text: app.backup_text
@@ -561,9 +566,8 @@
 
 <CategoryCard>:
     orientation: 'vertical'
-    padding: dp(10)
-    spacing: dp(5)
-
+    padding: SPACING_SMALL
+    spacing: SPACING_SMALL
     size_hint_y: None
     height: root.card_height
 
@@ -596,40 +600,52 @@
         bold: True
         font_size: app.FONT_CATEGORY
         size_hint_y: None
-        height: dp(28)
+        height: app.FONT_TEXT * 1.6
 
 <EntryListItem>:
     orientation: 'horizontal'
     size_hint_y: None
-    height: dp(110)
-    padding: dp(12)
-    spacing: dp(15)
+    height: app.FONT_TEXT * 5
+    padding: [SPACING_SMALL, SPACING * 0.9, SPACING_SMALL * 1.5, SPACING * 0.9]
+    spacing: SPACING * 0.8
+
     canvas.before:
         Color:
             rgba: app.COLOR_WHITE if self.state == 'normal' else app.COLOR_GREY_HOVER
         RoundedRectangle:
-            pos: [self.pos[0]+2, self.pos[1]+2]
+            pos: [self.pos[0]+3, self.pos[1]+3]
             size: [self.size[0]-4, self.size[1]-4]
             radius: [10,]
-    LazyImage:
-        source: root.icon_source
+
+    AnchorLayout:
+        anchor_x: "left"
+        anchor_y: "center"
         size_hint_x: None
-        width: dp(60)
+        width: ICON_SIZE * 1.3 # ✅ left icon box column
+        padding: [SPACING_SMALL * 0.8, 0, 0, 0]
+
+        LazyImage:
+            source: root.icon_source
+            size_hint: None, None
+            size: ICON_SIZE * 1.6, ICON_SIZE * 1.6
+            fit_mode: "contain"
 
     BoxLayout:
         orientation: 'vertical'
+        size_hint_x: 1
 
         # ✅ TITLE ROW (WITH LOCAL MARK)
         BoxLayout:
             orientation: "horizontal"
             size_hint_y: None
-            height: dp(24)
-            spacing: dp(6)
+            #width: app.FONT_TEXT * 1.6   # reserved space
+            height: app.FONT_TEXT * 1.3
+            spacing: SPACING_SMALL
 
             Image:
                 source: app.get_icon_path("local.png")
                 size_hint: None, None
-                size: dp(24), dp(24)
+                size: app.FONT_TEXT * 1.3, app.FONT_TEXT * 1.3
                 opacity: 1 if root.data.get("source") == "user" else 0
 
             Label:
@@ -639,27 +655,37 @@
                 font_size: app.FONT_TITLE
                 halign: 'left'
                 text_size: (self.width, None)
+                shorten: True
+                max_lines: 1
 
         # ✅ DESCRIPTION
-        Label:
-            text: root.desc
-            color: app.COLOR_TEXT_DARK
-            font_size: app.FONT_TEXT
-            halign: 'left'
-            text_size: (self.width, None)
-            shorten: True
+        BoxLayout:
+            orientation: "horizontal"
+            spacing: 0
 
+            Widget:
+                size_hint_x: None
+                width: app.FONT_TEXT * 1.6   # SAME AS TITLE OFFSET
+
+            Label:
+                text: root.desc
+                color: app.COLOR_TEXT_DARK
+                font_size: app.FONT_TEXT
+                halign: 'left'
+                text_size: (self.width, None)
+                shorten: True
+                max_lines: 2
 
     BoxLayout:
         orientation: "horizontal"
         size_hint_x: None
-        width: dp(140)
-        spacing: dp(6)
-        padding: [0, dp(6)]
+        spacing: SPACING_SMALL
+        padding: [0, dp(6), SPACING_SMALL, dp(6)]
+        pos_hint: {"right": 0.9}
 
         # ✅ PROMOTE / DEMOTE
         IconButton:
-            size: dp(36), dp(36)
+            size: ICON_SIZE * 0.9, ICON_SIZE * 0.9
 
             opacity: 1 if app.is_admin_mode() else 0
             disabled: not app.is_admin_mode()
@@ -671,7 +697,7 @@
 
         # ✅ EDIT
         IconButton:
-            size: dp(36), dp(36)
+            size: ICON_SIZE * 0.9, ICON_SIZE * 0.9
 
             disabled: not (app.is_admin_mode() or root.data.get("source") == "user")
             opacity: 1 if (app.is_admin_mode() or root.data.get("source") == "user") else 0.3
@@ -682,7 +708,7 @@
 
         # ✅ DELETE
         IconButton:
-            size: dp(36), dp(36)
+            size: ICON_SIZE * 0.9, ICON_SIZE * 0.9
 
             disabled: not (app.is_admin_mode() or root.data.get("source") == "user")
             opacity: 1 if (app.is_admin_mode() or root.data.get("source") == "user") else 0.3
@@ -784,7 +810,7 @@
                 size_hint_y: None
                 height: self.minimum_height
                 padding: dp(15)
-                spacing: dp(10)
+                spacing: SPACING
 
         # --- NEW Bottom Panel ---
 
@@ -830,8 +856,8 @@
                     orientation: 'vertical'
                     size_hint_y: None
                     height: self.minimum_height
-                    padding: app.FONT_TEXT * 0.6
-                    spacing: app.FONT_TEXT * 0.72
+                    padding: [SPACING_LARGE * 1.1, SPACING_LARGE * 0.8, SPACING_LARGE * 1.1, SPACING_LARGE]
+                    spacing: SPACING_LARGE * 1.2
 
             BottomBar:
                 id: bottom_details
@@ -862,8 +888,9 @@
                     orientation: 'vertical'
                     size_hint_y: None
                     height: self.minimum_height
-                    padding: dp(25)
-                    spacing: dp(25)
+                    padding: [SPACING_LARGE * 1.1, SPACING_LARGE,                            SPACING_LARGE * 1.1, SPACING_LARGE * 1.2]
+                    spacing: SPACING_LARGE * 1.2
+
 
             # Bottom panel (Menu and Orientation)
 
@@ -881,8 +908,8 @@
             # Top bar (Article-like)
             StyledPanel:
                 size_hint_y: None
-                height: dp(75)
-                spacing: dp(10)
+                height: app.FONT_TITLE * 3.4
+                spacing: SPACING
                 padding: [dp(10), 0]
 
                 BoxLayout:
@@ -893,12 +920,12 @@
                         background_normal: ''
                         background_color: app.COLOR_TRANSPARENT
                         size_hint_x: None
-                        width: dp(50)
+                        width: app.FONT_TEXT * 3
                         on_release: app.root.current = app.previous_screen
                         Image:
                             source: app.get_icon_path("arrow_back.png")
                             center: self.parent.center
-                            size: dp(32), dp(32)
+                            size: ICON_SIZE * 0.8, ICON_SIZE * 0.8
 
                     # ✅ CENTER: title (with spacer trick)
                     Widget:
@@ -909,7 +936,7 @@
                         bold: True
                         font_size: app.FONT_TITLE
                         size_hint_x: None                  # ✅ important
-                        width: dp(180)                    # ✅ fixed width → no expansion
+                        width: app.FONT_TITLE * 8                    # ✅ fixed width → no expansion
                         halign: "center"
                         valign: "middle"
                         text_size: (self.width, None)     # ✅ disables wrapping
@@ -920,8 +947,8 @@
                     BoxLayout:
                         orientation: "horizontal"
                         size_hint_x: None
-                        width: dp(90)
-                        spacing: dp(6)
+                        width: app.FONT_TEXT * 5
+                        spacing: SPACING_SMALL
                         pos_hint: {"center_y": 0.5}   # ✅ THIS FIXES VERTICAL ALIGNMENT
 
                         # ✅ Topic icon
@@ -929,7 +956,7 @@
                             id: header_icon
                             source: app.get_icon_path("howtolinux-icon.png")  # default
                             size_hint: None, None
-                            size: dp(42), dp(42)
+                            size: ICON_SIZE, ICON_SIZE
                             allow_stretch: True
                             keep_ratio: True
                             pos_hint: {"center_y": 0.5}   # ✅ ALIGN WITH BUTTON
@@ -937,7 +964,7 @@
                         # ✅ Cancel button
                         Button:
                             size_hint: None, None
-                            size: dp(42), dp(42)
+                            size: ICON_SIZE, ICON_SIZE
                             pos_hint: {"center_y": 0.5}   # ✅ ALIGN WITH BUTTON
                             background_normal: app.get_icon_path("cancel.png")
                             background_down: app.get_icon_path("cancel.png")
@@ -971,8 +998,8 @@
 
                 BoxLayout:
                     orientation: "vertical"
-                    padding: [dp(25), dp(30), dp(25), dp(25)]
-                    spacing: dp(15)
+                    padding: [SPACING_LARGE, SPACING_LARGE * 1.2, SPACING_LARGE, SPACING_LARGE]
+                    spacing: SPACING
                     size_hint_y: None
                     height: self.minimum_height
 
@@ -983,7 +1010,7 @@
                         markup: True
                         color: (1, 0, 0, 1)
                         size_hint_y: None
-                        height: dp(28)
+                        height: app.FONT_TEXT * 1.6
 
                     # ---- topic fields (all ids Python uses) ----
                     FormSpinner:
@@ -1052,7 +1079,7 @@
                         font_size: app.FONT_SUBCATEGORY
                         bold: True
                         size_hint_y: None
-                        height: dp(28)
+                        height: app.FONT_TEXT * 1.6
 
                     ScrollView:
                         size_hint_y: None
@@ -1064,7 +1091,7 @@
                             cols: 1
                             size_hint_y: None
                             height: self.minimum_height
-                            spacing: dp(6)
+                            spacing: SPACING_SMALL
                             padding: dp(2)
 
                     FormInput:
@@ -1110,12 +1137,12 @@
 
                     Widget:
                         size_hint_y: None
-                        height: dp(60)
+                        height: app.FONT_TEXT * 3
 
             # Bottom bar (optional, consistent)
             StyledPanel:
                 size_hint_y: None
-                height: dp(65)
+                height: app.FONT_TEXT * 3.8
                 spacing: dp(8)
                 padding: [dp(8), dp(8)]
 
@@ -1133,7 +1160,7 @@
 
                 # ✅ RIGHT: action buttons grouped
                 BoxLayout:
-                    spacing: dp(6)
+                    spacing: SPACING_SMALL
 
                     PrimaryButton:
                         text: "Add Step"
@@ -1212,7 +1239,7 @@
                     Image:
                         source: app.get_icon_path("arrow_back.png")
                         center: self.parent.center
-                        size: dp(32), dp(32)
+                        size: ICON_SIZE * 0.8, ICON_SIZE * 0.8
 
                 Widget:
 
@@ -1234,11 +1261,11 @@
                     anchor_x: "right"
                     anchor_y: "center"
                     size_hint_x: None
-                    width: dp(60)
+                    width: app.FONT_TEXT * 3
 
                     Button:
                         size_hint: None, None
-                        size: dp(42), dp(42)
+                        size: ICON_SIZE, ICON_SIZE
                         background_normal: app.get_icon_path("cancel.png")
                         background_down: app.get_icon_path("cancel.png")
                         background_color: app.COLOR_WHITE
@@ -1294,12 +1321,12 @@
                     hint_text: "Description"
 
                 Label:
-                    text: "Changelog"
-                    font_size: app.FONT_SUBCATEGORY
+                    text: "CHANGELOG"
                     size_hint_y: None
-                    height: dp(28)
+                    height: app.FONT_TEXT * 1.6
                     color: app.COLOR_BLUE
                     bold: True
+                    font_size: app.FONT_SUBCATEGORY
 
                 # -------- Preview (with icons) --------
                 ScrollView:
@@ -1334,25 +1361,24 @@
 
                     MultilineFormInput:
                         id: changelog
+                        hint_text: "Edit changelog..."
 
         # -------- FIXED SAVE BAR --------
         StyledPanel:
             size_hint_y: None
-            height: dp(65)
-            padding: [dp(10), dp(8)]
+            height: app.FONT_TEXT * 3.8
+            padding: [dp(12), dp(8)]
 
             BoxLayout:
                 size_hint_x: 1
-                spacing: dp(10)
+                spacing: SPACING
 
                 Widget:   # ✅ left spacer
 
                 SuccessButton:
                     text: "Save App Info"
                     size_hint_x: None
-                    width: dp(220)      # ✅ smaller width
-                    height: dp(45)      # ✅ consistent height
-
+                    width: app.FONT_TEXT * 15
                     on_release: root.save_metadata()
 
                 Widget:   # ✅ right spacer

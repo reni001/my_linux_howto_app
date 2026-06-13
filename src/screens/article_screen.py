@@ -24,6 +24,7 @@ from src.utils.icon_utils import get_icon_path
 from src.ui.theme import COLOR_BLUE, COLOR_ORANGE, NOTE_BG, COLOR_WHITE
 from src.services.system_open_service import open_url as open_external_url
 
+icon = get_icon_path
 
 class ClickableImage(ButtonBehavior, Image):
     pass
@@ -62,7 +63,35 @@ class ZoomScatter(Scatter):
 
         return super().on_touch_down(touch)
 
+class StepCard(BoxLayout):
+    def __init__(self, step_data, **kwargs):
+        super().__init__(orientation='vertical', size_hint_y=None, **kwargs)
 
+        app = App.get_running_app()
+
+        self.padding = app.FONT_TEXT * 1.0
+        self.spacing = app.FONT_TEXT * 0.6
+
+        self.bind(minimum_height=self.setter('height'))
+
+        # ✅ background
+        with self.canvas.before:
+            Color(1, 1, 1, 1)
+            self.bg_rect = RoundedRectangle(
+                pos=self.pos,
+                size=self.size,
+                radius=[app.FONT_TEXT * 0.6]
+            )
+
+        self.bind(pos=self._update_graphics, size=self._update_graphics)
+
+        self.build(step_data, app)
+
+    def build(self, step, app):
+        def safe_str(val, default=""):
+            if val is None or str(val).lower() == 'nan':
+                return default
+            return str(val).strip()
 
 class ArticleScreen(Screen):
     def go_back(self):
@@ -89,7 +118,8 @@ class ArticleScreen(Screen):
         self.current_topic_key = data.get("_key")
 
         self.ids.content_box.clear_widgets()
-        self.ids.content_box.spacing = dp(15)
+        app = App.get_running_app()
+        self.ids.content_box.spacing = app.FONT_TEXT * 0.8   # = SPACING
         topic_id = data.get('Topic_ID')
 
         def safe_str(val, default=""):
@@ -98,16 +128,16 @@ class ArticleScreen(Screen):
 
         # --- 1. TOP ICON ---
         self.ids.content_box.add_widget(Image(
-            source=get_icon_path(safe_str(data.get('Topic_Icon'))),
+            source=icon(safe_str(data.get('Topic_Icon'))),
             size_hint_y=None,
-            height=dp(120)
+            height=app.FONT_TEXT * 8
         ))
 
         # --- 2. TOPIC TITLE ---
         title_lbl = Label(
             text=safe_str(data.get('Title')),
             color=COLOR_BLUE,
-            font_size='28sp',
+            font_size=app.FONT_TITLE * 1.5,
             bold=True,
             size_hint_y=None,
             halign='center'
@@ -157,7 +187,7 @@ class ArticleScreen(Screen):
             desc_lbl = Label(
                 text=desc_text,
                 color=[0.3, 0.3, 0.3, 1],
-                font_size='20sp',
+                font_size=app.FONT_TEXT * 1.2,
                 italic=True,
                 size_hint_y=None,
                 halign='left'
@@ -170,10 +200,24 @@ class ArticleScreen(Screen):
         raw_topic_urls = safe_str(data.get('URLs'))
         if raw_topic_urls:
             url_list = [u.strip() for u in raw_topic_urls.split(',') if u.strip()]
+
             for link in url_list:
                 url_box = BoxLayout(orientation='horizontal', size_hint_y=None, height=dp(30), spacing=dp(10))
-                url_box.add_widget(Image(source='assets/icons_core/link2.png', size_hint_x=None, width=dp(20)))
-                url_btn = Button(text=link, color=[0.1, 0.4, 0.8, 1], background_color=[0,0,0,0], font_size='18sp', underline=True, halign='left', shorten=True, shorten_from='right', size_hint_x=1)
+                url_box.add_widget(
+                    Image(
+                        source=icon("link2.png"),
+                        size_hint_x=None,
+                        width=dp(20)
+                    )
+                )
+                url_btn = Button(text=link, color=[0.1, 0.4, 0.8, 1], background_color=[0,0,0,0],
+                font_size='18sp',
+                underline=True,
+                halign='left',
+                shorten=True,
+                shorten_from='right',
+                size_hint_x=1)
+
                 url_btn.bind(size=lambda s, w: setattr(s, 'text_size', (w[0], None)))
                 url_btn.bind(on_release=lambda x, u=link: self.open_url(u))
                 url_box.add_widget(url_btn)
@@ -187,17 +231,17 @@ class ArticleScreen(Screen):
         topic_steps.sort(key=lambda x: int(x.get('Step_Order', 999)))
 
         for step in topic_steps:
-            card = BoxLayout(orientation='vertical', size_hint_y=None, padding=dp(20), spacing=dp(12))
+            card = BoxLayout(orientation='vertical', size_hint_y=None,                padding=app.FONT_TEXT * 1.0, spacing=app.FONT_TEXT * 0.6)
             card.bind(minimum_height=card.setter('height'))
             with card.canvas.before:
                 Color(rgba=[1, 1, 1, 1])
-                card.bg_rect = RoundedRectangle(pos=card.pos, size=card.size, radius=[dp(12),])
+                card.bg_rect = RoundedRectangle(pos=card.pos, size=card.size, radius=[app.FONT_TEXT * 0.6])
             card.bind(pos=self._update_graphics, size=self._update_graphics)
 
             # --- STEP HEADLINE ---
             h1 = safe_str(step.get('Headline'))
             if h1:
-                lbl = Label(text=h1, color=COLOR_BLUE, bold=True, font_size='24sp', size_hint_y=None, halign='left')
+                lbl = Label(text=h1, color=COLOR_BLUE, bold=True, font_size=app.FONT_SUBCATEGORY * 1.3, size_hint_y=None, halign='left')
                 lbl.bind(size=lambda s, w: setattr(s, 'text_size', (w[0], None)), texture_size=lambda inst, val: setattr(inst, 'height', val[1]))
                 card.add_widget(lbl)
 
@@ -205,14 +249,14 @@ class ArticleScreen(Screen):
             h2 = safe_str(step.get('Header_2'))
             if h2:
                 # Styled as Orange, Bold, slightly smaller than Headline
-                h2_lbl = Label(text=h2, color=COLOR_ORANGE, bold=True, font_size='19sp', size_hint_y=None, halign='left')
+                h2_lbl = Label(text=h2, color=COLOR_ORANGE, bold=True, font_size=app.FONT_SUBCATEGORY * 1.1, size_hint_y=None, halign='left')
                 h2_lbl.bind(size=lambda s, w: setattr(s, 'text_size', (w[0], None)), texture_size=lambda inst, val: setattr(inst, 'height', val[1]))
                 card.add_widget(h2_lbl)
 
             # --- STEP INSTRUCTION ---
             ins = safe_str(step.get('Instruction'))
             if ins:
-                lbl = Label(text=ins, color=[0.2, 0.2, 0.2, 1], font_size='20sp', size_hint_y=None, halign='left')
+                lbl = Label(text=ins, color=[0.2, 0.2, 0.2, 1], font_size=app.FONT_TEXT * 1.2, size_hint_y=None, halign='left')
                 lbl.bind(size=lambda s, w: setattr(s, 'text_size', (w[0], None)), texture_size=lambda inst, val: setattr(inst, 'height', val[1]))
                 card.add_widget(lbl)
 
@@ -243,7 +287,7 @@ class ArticleScreen(Screen):
                 code_lbl = Label(
                     text=code,
                     font_name='RobotoMono-Regular',
-                    color=[1, 0.5, 0, 1],
+                    color=COLOR_ORANGE,
                     font_size=app.FONT_CODE,   # ✅ HERE
                     line_height = 1.3,
                     size_hint_y=None,
@@ -272,7 +316,6 @@ class ArticleScreen(Screen):
                 code_anchor.add_widget(copy_btn)
 
                 card.add_widget(code_anchor)
-
 
             # --- STEP SCREENSHOT ---
             screenshot = safe_str(step.get('Screenshot'))
@@ -305,7 +348,7 @@ class ArticleScreen(Screen):
 
                     url_box.add_widget(
                         Image(
-                            source=get_icon_path("link2.png"),
+                            source=icon("link2.png"),
                             size_hint_x=None,
                             width=dp(20)
                         )
@@ -337,7 +380,7 @@ class ArticleScreen(Screen):
                 note_container.bind(minimum_height=note_container.setter('height'))
                 note_container.bind(pos=self._update_graphics, size=self._update_graphics)
                 note_container.add_widget(
-                    Image(source=get_icon_path("note.png"),
+                    Image(source=icon("note.png"),
                         size_hint=(None, None),
                         size=(dp(32), dp(32)), pos_hint={'top': 1})
                 )
