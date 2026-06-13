@@ -15,6 +15,8 @@
             size: self.size
             radius: [8]
 
+#:set INPUT_HEIGHT app.FONT_TEXT * 2.2
+
 # ------ Button Definitions -------
 <BaseButton@Button>:
     size_hint_y: None
@@ -37,8 +39,12 @@
             radius: [dp(8)]
 
 <SmallButton@BaseButton>:
-    height: dp(32)
+    height: INPUT_HEIGHT
     font_size: app.FONT_TEXT
+    padding: [dp(10), 0]
+    valign: "middle"
+    halign: "center"
+    text_size: self.size
 
 # ----------------------------
 # GENERIC APP BUTTONS
@@ -116,11 +122,12 @@
     pos_hint: {"center_y": 0.5}
     fit_mode: "contain"
 
-
 <FormRow@BoxLayout>:
     size_hint_y: None
-    height: dp(45)
+    height: INPUT_HEIGHT
     spacing: dp(10)
+    padding: [0, dp(2)]   # optional micro-adjust
+    orientation: "horizontal"
 
 #----------- Panel Definitions ------------------------
 <StyledPanel@BoxLayout>:
@@ -950,7 +957,7 @@
                         text: "Click to choose category"
                         values: []
                         size_hint_y: None
-                        height: dp(35)
+                        height: INPUT_HEIGHT
                         background_normal: ''
                         background_color: app.COLOR_WHITE
                         color: [0.1, 0.25, 0.45, 1]
@@ -961,7 +968,7 @@
                         text: "Select Subcategory"
                         values: []
                         size_hint_y: None
-                        height: dp(35)
+                        height: INPUT_HEIGHT
                         background_normal: ''
                         background_color: app.COLOR_WHITE
                         color: [0.1, 0.25, 0.45, 1]
@@ -972,7 +979,7 @@
                         hint_text: "Title (required)"
                         multiline: False
                         size_hint_y: None
-                        height: dp(35)
+                        height: INPUT_HEIGHT
                         write_tab: False
 
                     TextInput:
@@ -980,7 +987,7 @@
                         hint_text: "Topic ID (optional, leave empty to auto-generate)"
                         multiline: False
                         size_hint_y: None
-                        height: dp(35)
+                        height: INPUT_HEIGHT
                         write_tab: False
 
                     TextInput:
@@ -998,7 +1005,7 @@
                         hint_text: "URLs (comma separated)"
                         multiline: False
                         size_hint_y: None
-                        height: dp(35)
+                        height: INPUT_HEIGHT
                         write_tab: False
 
                     TextInput:
@@ -1007,7 +1014,7 @@
                         multiline: False
                         readonly: True
                         size_hint_y: None
-                        height: dp(35)
+                        height: INPUT_HEIGHT
                         write_tab: False
 
                     TextInput:
@@ -1016,7 +1023,7 @@
                         multiline: False
                         readonly: True
                         size_hint_y: None
-                        height: dp(35)
+                        height: INPUT_HEIGHT
                         write_tab: False
 
                     TextInput:
@@ -1025,7 +1032,7 @@
                         multiline: False
                         readonly: True
                         size_hint_y: None
-                        height: dp(35)
+                        height: INPUT_HEIGHT
                         write_tab: False
 
                     TextInput:
@@ -1034,7 +1041,7 @@
                         multiline: False
                         readonly: True
                         size_hint_y: None
-                        height: dp(35)
+                        height: INPUT_HEIGHT
                         write_tab: False
 
                     TextInput:
@@ -1043,7 +1050,7 @@
                         hint_text: "Topic Icon filename (optional)"
                         multiline: False
                         size_hint_y: None
-                        height: dp(35)
+                        height: INPUT_HEIGHT
                         write_tab: False
 
                     FormRow:
@@ -1088,7 +1095,7 @@
                         input_filter: "int"
                         padding: [10, 10]
                         size_hint_y: None
-                        height: dp(35)
+                        height: INPUT_HEIGHT
                         write_tab: False
 
 
@@ -1098,7 +1105,7 @@
                         multiline: False
                         padding: [10, 10]
                         size_hint_y: None
-                        height: dp(35)
+                        height: INPUT_HEIGHT
                         write_tab: False
 
                     TextInput:
@@ -1107,7 +1114,7 @@
                         multiline: False
                         padding: [10, 10]
                         size_hint_y: None
-                        height: dp(35)
+                        height: INPUT_HEIGHT
                         write_tab: False
 
                     TextInput:
@@ -1146,7 +1153,7 @@
                         hint_text: "Step URLs (comma separated)"
                         multiline: False
                         size_hint_y: None
-                        height: dp(35)
+                        height: INPUT_HEIGHT
 
 
                     TextInput:
