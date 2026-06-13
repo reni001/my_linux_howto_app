@@ -21,9 +21,12 @@ logging.getLogger("requests").setLevel(logging.WARNING)
 #os.environ["KIVY_NO_CONSOLELOG"] = "1"
 #os.environ["KIVY_LOG_LEVEL"] = "warning"
 
+os.environ["KIVY_NO_CONSOLELOG"] = "1"   # remove spam
+os.environ["KIVY_LOG_MODE"] = "PYTHON"   # prevent duplication
+
 # ✅ ENABLE DEBUG
-os.environ.pop("KIVY_NO_CONSOLELOG", None)
-os.environ["KIVY_LOG_LEVEL"] = "debug"
+#os.environ.pop("KIVY_NO_CONSOLELOG", None)
+#os.environ["KIVY_LOG_LEVEL"] = "debug"
 
 
 def global_exception_hook(exc_type, exc_value, exc_traceback):
@@ -165,6 +168,7 @@ from kivy.uix.modalview import ModalView
 from kivy.uix.popup import Popup
 from kivy.uix.scrollview import ScrollView
 from kivy.graphics import Color, RoundedRectangle, Line
+from kivy.logger import Logger, LOG_LEVELS
 
 # ----- Check if python 3.12 is installed ---------
 
@@ -174,6 +178,8 @@ if sys.version_info >= (3, 14):
     print("💡 Recommended: Use Python 3.12 if you encounter problems\n")
 
 # --- CONFIGURATION ---
+
+Logger.setLevel(LOG_LEVELS["warning"])
 
 # ------ Font registration --------
 # ✅ Register custom fonts

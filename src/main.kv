@@ -12,7 +12,7 @@
 #:set ICON_SMALL app.FONT_TEXT * 1.2
 #:set BUTTON_WIDTH app.FONT_TEXT * 12
 
-<LazyImage@Image>:
+<LazyImage>:
 
 <ClickableStatus@ButtonBehavior+BoxLayout>:
     canvas.before:
@@ -166,7 +166,7 @@
 # ----------------------------
 # ICON BUTTON - Disabled (transparent)
 # ----------------------------
-<IconButton@Button>:
+<IconButton>:
     size_hint: None, None
     size: ICON_SIZE, ICON_SIZE
     pos_hint: {"center_y": 0.5}
@@ -957,8 +957,7 @@
                             source: app.get_icon_path("howtolinux-icon.png")  # default
                             size_hint: None, None
                             size: ICON_SIZE, ICON_SIZE
-                            allow_stretch: True
-                            keep_ratio: True
+                            fit_mode: "contain"
                             pos_hint: {"center_y": 0.5}   # ✅ ALIGN WITH BUTTON
 
                         # ✅ Cancel button
