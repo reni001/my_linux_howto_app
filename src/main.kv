@@ -47,6 +47,15 @@
     halign: "center"
     text_size: self.size
 
+<BrowseButton@SmallButton>:
+    size_hint_x: None
+    width: dp(140)
+    text_size: self.size
+    halign: "center"
+    valign: "middle"
+    background_color: app.COLOR_BLUE_MEDIUM if self.state == 'normal' else app.COLOR_BLUE_DARK_UI
+
+#------Form definitions -------
 <FormRow@BoxLayout>:
     orientation: "horizontal"
     size_hint_y: None
@@ -59,6 +68,7 @@
     height: INPUT_HEIGHT
     multiline: False
     font_size: app.FONT_TEXT
+    cursor_width: dp(2)
     write_tab: False
     padding: [dp(10), dp(8), dp(10), dp(8)]
 
@@ -66,20 +76,26 @@
     readonly: True
     foreground_color: app.COLOR_TEXT_SOFT
 
+<MultilineFormInput@TextInput>:
+    size_hint_y: None
+    size_hint_x: 1
+    multiline: True
+    font_size: app.FONT_TEXT
+    cursor_width: dp(2)
+    write_tab: False
+    padding: [dp(10), dp(10), dp(10), dp(10)]
+
+    # ✅ CRITICAL FOR SCROLLING
+    text_size: self.width, None
+    height: max(INPUT_HEIGHT * 2.5, self.minimum_height)
+    #height: min(max(INPUT_HEIGHT * 2.5, self.minimum_height), INPUT_HEIGHT * 6)
+
 <FormSpinner@Spinner>:
     size_hint_y: None
     height: INPUT_HEIGHT
     background_normal: ''
     background_color: app.COLOR_WHITE
     color: [0.1, 0.25, 0.45, 1]
-
-<BrowseButton@SmallButton>:
-    size_hint_x: None
-    width: dp(140)
-    text_size: self.size
-    halign: "center"
-    valign: "middle"
-    background_color: app.COLOR_BLUE_MEDIUM if self.state == 'normal' else app.COLOR_BLUE_DARK_UI
 
 # ----------------------------
 # GENERIC APP BUTTONS
@@ -991,15 +1007,9 @@
                         id: topic_id
                         hint_text: "Topic ID (optional, leave empty to auto-generate)"
 
-                    TextInput:
+                    MultilineFormInput:
                         id: description
                         hint_text: "Description"
-                        font_size: app.FONT_TEXT
-                        multiline: True
-                        size_hint_y: None
-                        height: max(self.minimum_height, app.FONT_TEXT * 12)
-                        write_tab: False
-                        padding: [app.FONT_TEXT * 0.6, app.FONT_TEXT * 0.6]
 
                     FormInput:
                         id: urls
@@ -1070,23 +1080,13 @@
                         id: step_header2
                         hint_text: "Header 2 (optional)"
 
-                    TextInput:
+                    MultilineFormInput:
                         id: step_instruction
                         hint_text: "Instruction (required)"
-                        font_size: app.FONT_TEXT
-                        multiline: True
-                        size_hint_y: None
-                        height: dp(110)
-                        write_tab: False
 
-                    TextInput:
+                    MultilineFormInput:
                         id: step_code
                         hint_text: "Code_Snippet (optional)"
-                        font_size: app.FONT_TEXT
-                        multiline: True
-                        size_hint_y: None
-                        height: dp(90)
-                        write_tab: False
 
                     # --- SCREENSHOT ---
                     FormRow:
@@ -1104,14 +1104,9 @@
                         hint_text: "Step URLs (comma separated)"
                         multiline: False
 
-                    TextInput:
+                    MultilineFormInput:
                         id: step_notes
                         hint_text: "Notes (optional)"
-                        font_size: app.FONT_TEXT
-                        multiline: True
-                        size_hint_y: None
-                        height: dp(80)
-                        write_tab: False
 
                     Widget:
                         size_hint_y: None
@@ -1278,50 +1273,25 @@
                     size_hint_y: None
                     height: app.FONT_TEXT * 1.6
 
-                TextInput:
+                FormInput:
                     id: app_name
                     hint_text: "App Name"
-                    multiline: False
-                    size_hint_y: None
-                    height: app.FONT_TEXT * 2.2
-                    font_size: app.FONT_TEXT
-                    padding: [app.FONT_TEXT * 0.5, app.FONT_TEXT * 0.5]
 
-                TextInput:
+                FormInput:
                     id: version
                     hint_text: "Version (e.g. 1.2.0)"
-                    multiline: False
-                    size_hint_y: None
-                    height: app.FONT_TEXT * 2.2
-                    font_size: app.FONT_TEXT
-                    padding: [app.FONT_TEXT * 0.5, app.FONT_TEXT * 0.5]
 
-                TextInput:
+                FormInput:
                     id: last_update
                     hint_text: "Last Update"
-                    multiline: False
-                    size_hint_y: None
-                    height: app.FONT_TEXT * 2.2
-                    font_size: app.FONT_TEXT
-                    padding: [app.FONT_TEXT * 0.5, app.FONT_TEXT * 0.5]
 
-                TextInput:
+                FormInput:
                     id: developer
                     hint_text: "Developer"
-                    multiline: False
-                    size_hint_y: None
-                    height: app.FONT_TEXT * 2.2
-                    font_size: app.FONT_TEXT
-                    padding: [app.FONT_TEXT * 0.5, app.FONT_TEXT * 0.5]
 
-                TextInput:
+                MultilineFormInput:
                     id: description
                     hint_text: "Description"
-                    multiline: True
-                    font_size: app.FONT_TEXT * 1.05     # ✅ slightly bigger than normal
-                    padding: [app.FONT_TEXT * 0.6, app.FONT_TEXT * 0.6]
-                    size_hint_y: None
-                    height: max(self.minimum_height, app.FONT_TEXT * 5)
 
                 Label:
                     text: "Changelog"
@@ -1362,12 +1332,8 @@
                         bold: True
                         font_size: app.FONT_TEXT
 
-                    TextInput:
+                    MultilineFormInput:
                         id: changelog
-                        multiline: True
-                        size_hint_y: None
-                        font_size: app.FONT_TEXT
-                        height: max(self.minimum_height, app.FONT_TEXT * 8)
 
         # -------- FIXED SAVE BAR --------
         StyledPanel:
