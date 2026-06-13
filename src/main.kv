@@ -15,7 +15,13 @@
             size: self.size
             radius: [8]
 
-<StyledButton@Button>:
+# ------ Button Definitions -------
+<BaseButton@Button>:
+    size_hint_y: None
+    height: dp(55)
+    font_size: app.FONT_BUTTON
+    bold: True
+
     background_normal: ''
     background_down: ''
     background_color: 0, 0, 0, 0
@@ -28,16 +34,18 @@
         RoundedRectangle:
             pos: self.pos
             size: self.size
-            radius: [8]
+            radius: [dp(8)]
 
-# ------ Button Definitions -------
+<SmallButton@BaseButton>:
+    height: dp(32)
+    font_size: app.FONT_TEXT
 
 # ----------------------------
 # GENERIC APP BUTTONS
 # ----------------------------
-<BaseButton@StyledButton>:
+<BaseButton@Button>:
     size_hint_y: None
-    height: '55dp'
+    height: dp(55)
     font_size: app.FONT_BUTTON
     bold: True
 
@@ -62,31 +70,12 @@
 
 <MenuButton@BaseButton>:
     size_hint_y: None
-    size_hint_x: 0.9    # ✅ key line
-    pos_hint: {"center_x": 0.5}  # ✅ center the button
+    size_hint_x: 0.9
+    pos_hint: {"center_x": 0.5}
 
-    height: '40dp'
-    font_size: app.FONT_BUTTON
-    padding: [12, 5]
-
-<MenuNeutralButton@MenuButton>:
-    background_color: app.COLOR_GREY_DARK if self.state == 'normal' else app.COLOR_GREY_LIGHT
-
-<MenuNavButton@MenuButton>:
-    background_color: app.COLOR_BLUE if self.state == 'normal' else app.COLOR_BLUE_DARK_UI
-
-<MenuCreateButton@MenuButton>:
-    background_color: app.COLOR_GREEN if self.state == 'normal' else app.COLOR_GREEN_DARK_UI
-
-<MenuToolButton@MenuButton>:
-    background_color: app.COLOR_PURPLE if self.state == 'normal' else app.COLOR_PURPLE_DARK
-
-<MenuBackupButton@MenuButton>:
-    background_color: app.backup_bg if self.state == 'normal' else app.COLOR_PURPLE_DARK
-    color: app.backup_fg
-
-<MenuDangerButton@MenuButton>:
-    background_color: app.COLOR_RED if self.state == 'normal' else app.COLOR_RED_DARK
+    height: dp(40)
+    font_size: app.FONT_TEXT
+    padding: [dp(12), dp(6)]
 
 #------------------------
 <MenuSectionLabel@Label>:
@@ -105,7 +94,6 @@
     color: app.COLOR_TEXT_SOFT
     font_size: app.FONT_TEXT * 0.75
 
-
 <MenuDivider@Widget>:
     size_hint_y: None
     size_hint_x: 0.9
@@ -120,21 +108,6 @@
             width: 1
 
 # ----------------------------
-# SPECIAL STATE BUTTONS
-# ----------------------------
-<UpdateButton@MenuButton>:
-    background_color: app.update_bg if self.state == 'normal' else app.COLOR_ORANGE_LIGHT_UI
-    color: app.update_fg
-
-<UpgradeButton@MenuButton>:
-    background_color: app.upgrade_bg if self.state == 'normal' else app.COLOR_ORANGE_LIGHT_UI
-    color: app.upgrade_fg
-
-<SyncButton@MenuButton>:
-    background_color: app.sync_bg if self.state == 'normal' else app.COLOR_ORANGE_LIGHT_UI
-    color: app.sync_fg
-
-# ----------------------------
 # ICON BUTTON - Disabled (transparent)
 # ----------------------------
 <IconButton@Button>:
@@ -143,11 +116,17 @@
     pos_hint: {"center_y": 0.5}
     fit_mode: "contain"
 
+
+<FormRow@BoxLayout>:
+    size_hint_y: None
+    height: dp(45)
+    spacing: dp(10)
+
 #----------- Panel Definitions ------------------------
 <StyledPanel@BoxLayout>:
     size_hint_y: None
-    height: '65dp'
-    padding: ['12dp', '8dp']
+    height: dp(65)
+    padding: [dp(12), dp(8)]
     canvas.before:
         Color:
             rgba: app.COLOR_PANEL
@@ -254,7 +233,7 @@
 <JumpToTopButton@ButtonBehavior+Image>:
     source: app.get_icon_path("top.png")
     size_hint: None, None
-    size: '52dp', '52dp'
+    size: dp(52), dp(52)
     opacity: 0.9
     pos_hint: {'right': 0.98, 'y': 0.08}
     canvas.before:
@@ -268,7 +247,7 @@
 <ScrollDownButton@ButtonBehavior+Image>:
     source: app.get_icon_path("top.png")   # ✅ reuse same icon
     size_hint: None, None
-    size: '52dp', '52dp'
+    size: dp(52), dp(52)
     opacity: 0.9
 
     canvas.before:
@@ -293,8 +272,8 @@
 
     BoxLayout:
         orientation: 'vertical'
-        padding: ['20dp', '15dp', '20dp', '15dp']
-        spacing: '12dp'
+        padding: [dp(20), dp(15), dp(20), dp(15)]
+        spacing: dp(12)
         size_hint_y: 1   # ✅ CRITICAL
 
         canvas.before:
@@ -372,14 +351,15 @@
                 orientation: 'vertical'
                 size_hint_y: None
                 height: self.minimum_height
-                spacing: '12dp'
+                spacing: dp(12)
 
-                MenuSectionLabel:
-                    text: "ABOUT"
+                #MenuSectionLabel:
+                #    text: "ABOUT"
 
                 #-----
-                MenuNeutralButton:
+                MenuButton:
                     text: "About App"
+                    background_color: app.COLOR_GREY_DARK if self.state == 'normal' else app.COLOR_GREY_LIGHT
                     on_release:
                         root.dismiss()
                         app.open_about_popup()
@@ -390,20 +370,23 @@
                 MenuSectionLabel:
                     text: "TOOLS"
 
-                MenuToolButton:
+                MenuButton:
                     text: "Clean Unused Icons & Images"
+                    background_color: app.COLOR_PURPLE if self.state == 'normal' else app.COLOR_PURPLE_DARK
                     on_release:
                         root.dismiss()
                         Clock.schedule_once(lambda dt: app.confirm_clean_icons(), 0)
 
-                MenuToolButton:
+                MenuButton:
                     text: "Manage Categories"
+                    background_color: app.COLOR_PURPLE if self.state == 'normal' else app.COLOR_PURPLE_DARK
                     on_release:
                         root.dismiss()
                         Clock.schedule_once(lambda dt: app.open_category_dialog(), 0)
 
-                MenuToolButton:
+                MenuButton:
                     text: "Manage Subcategories"
+                    background_color: app.COLOR_PURPLE if self.state == 'normal' else app.COLOR_PURPLE_DARK
                     on_release:
                         root.dismiss()
                         Clock.schedule_once(lambda dt: app.open_subcategory_dialog(), 0)
@@ -414,8 +397,10 @@
                 MenuSectionLabel:
                     text: "Backup"
 
-                MenuBackupButton:
+                MenuButton:
                     text: app.backup_text
+                    background_color: app.backup_bg if self.state == 'normal' else app.COLOR_PURPLE_DARK
+                    color: app.backup_fg
                     on_release:
                         Clock.schedule_once(lambda dt: app.backup_current_data(), 0)
 
@@ -426,8 +411,9 @@
                             rectangle: self.x + 1, self.y + 1, self.width - 2, self.height - 2
                             width: 2
 
-                MenuToolButton:
+                MenuButton:
                     text: "Restore Backup"
+                    background_color: app.COLOR_PURPLE if self.state == 'normal' else app.COLOR_PURPLE_DARK
                     on_release:
                         root.dismiss()
                         Clock.schedule_once(lambda dt: app.show_restore_backup_dialog(), 0)
@@ -438,14 +424,16 @@
                 MenuSectionLabel:
                     text: "NAVIGATION"
 
-                MenuNavButton:
+                MenuButton:
                     text: "Open Database"
+                    background_color: app.COLOR_BLUE if self.state == 'normal' else app.COLOR_BLUE_DARK_UI
                     on_release:
                         root.dismiss()
                         Clock.schedule_once(lambda dt: app.open_database(), 0)
 
-                MenuNavButton:
+                MenuButton:
                     text: "Open Assets Folder"
+                    background_color: app.COLOR_BLUE if self.state == 'normal' else app.COLOR_BLUE_DARK_UI
                     on_release:
                         root.dismiss()
                         Clock.schedule_once(lambda dt: app.open_assets_folder(), 0)
@@ -456,8 +444,9 @@
                 MenuSectionLabel:
                     text: "CREATION"
 
-                MenuCreateButton:
+                MenuButton:
                     text: "Add Topic"
+                    background_color: app.COLOR_GREEN if self.state == 'normal' else app.COLOR_GREEN_DARK_UI
                     on_release:
                         root.dismiss()
                         Clock.schedule_once(lambda dt: app.open_new_topic(), 0)
@@ -468,8 +457,10 @@
                 MenuSectionLabel:
                     text: "SYSTEM"
 
-                UpdateButton:
+                MenuButton:
                     text: app.update_text
+                    background_color: app.update_bg if self.state == 'normal' else app.COLOR_ORANGE_LIGHT_UI
+                    color: app.update_fg
                     on_release:
                         Clock.schedule_once(lambda dt: app.update_data(), 0)
 
@@ -480,8 +471,11 @@
                             rectangle: self.x + 1, self.y + 1, self.width - 2, self.height - 2
                             width: 2
 
-                UpgradeButton:
+                MenuButton:
                     text: app.upgrade_text
+                    background_color: app.upgrade_bg if self.state == 'normal' else app.COLOR_ORANGE_LIGHT_UI
+                    color: app.upgrade_fg
+
                     on_release:
                         Clock.schedule_once(lambda dt: app.upgrade_app(), 0)
 
@@ -492,12 +486,16 @@
                             rectangle: self.x + 1, self.y + 1, self.width - 2, self.height - 2
                             width: 2
 
-                SyncButton:
+                MenuButton:
                     id: sync_btn
                     disabled: not app.is_admin_mode()
                     opacity: 1 if app.is_admin_mode() else 0.5
                     text: app.sync_text
                     bold: True
+
+                    background_color: app.sync_bg if self.state == 'normal' else app.COLOR_ORANGE_LIGHT_UI
+                    color: app.sync_fg
+
                     on_release:
                         Clock.schedule_once(lambda dt: app.run_sync_script(), 0)
 
@@ -508,8 +506,9 @@
                             rounded_rectangle: self.x + 1, self.y + 1, self.width - 2, self.height - 2, 0
                             width: 2
 
-                MenuDangerButton:
+                MenuButton:
                     text: "Quit Application"
+                    background_color: app.COLOR_RED if self.state == 'normal' else app.COLOR_RED_DARK
                     on_release:
                         root.dismiss()
                         Clock.schedule_once(lambda dt: app.stop(), 0)
@@ -517,7 +516,7 @@
 
 <CategoryCard>:
     orientation: 'vertical'
-    padding: '10dp'
+    padding: dp(10)
     spacing: '5dp'
 
     size_hint_y: None
@@ -558,8 +557,8 @@
     orientation: 'horizontal'
     size_hint_y: None
     height: '110dp'
-    padding: '12dp'
-    spacing: '15dp'
+    padding: dp(12)
+    spacing: dp(15)
     canvas.before:
         Color:
             rgba: app.COLOR_WHITE if self.state == 'normal' else app.COLOR_GREY_HOVER
@@ -741,8 +740,8 @@
                 orientation: 'vertical'
                 size_hint_y: None
                 height: self.minimum_height
-                padding: '15dp'
-                spacing: '10dp'
+                padding: dp(15)
+                spacing: dp(10)
 
         # --- NEW Bottom Panel ---
 
@@ -820,8 +819,8 @@
                     orientation: 'vertical'
                     size_hint_y: None
                     height: self.minimum_height
-                    padding: '25dp'
-                    spacing: '25dp'
+                    padding: dp(25)
+                    spacing: dp(25)
 
             # Bottom panel (Menu and Orientation)
 
@@ -840,8 +839,8 @@
             # Top bar (Article-like)
             StyledPanel:
                 size_hint_y: None
-                height: '75dp'
-                spacing: '10dp'
+                height: dp(75)
+                spacing: dp(10)
                 padding: [dp(10), 0]
 
                 BoxLayout:
@@ -852,12 +851,12 @@
                         background_normal: ''
                         background_color: app.COLOR_TRANSPARENT
                         size_hint_x: None
-                        width: '50dp'
+                        width: dp(50)
                         on_release: app.root.current = app.previous_screen
                         Image:
                             source: app.get_icon_path("arrow_back.png")
                             center: self.parent.center
-                            size: '32dp', '32dp'
+                            size: dp(32), dp(32)
 
                     # ✅ CENTER: title (with spacer trick)
                     Widget:
@@ -879,7 +878,7 @@
                     BoxLayout:
                         orientation: "horizontal"
                         size_hint_x: None
-                        width: "90dp"
+                        width: dp(90)
                         spacing: dp(6)
                         pos_hint: {"center_y": 0.5}   # ✅ THIS FIXES VERTICAL ALIGNMENT
 
@@ -896,7 +895,7 @@
                         # ✅ Cancel button
                         Button:
                             size_hint: None, None
-                            size: "42dp", "42dp"
+                            size: dp(42), dp(42)
                             pos_hint: {"center_y": 0.5}   # ✅ ALIGN WITH BUTTON
                             background_normal: app.get_icon_path("cancel.png")
                             background_down: app.get_icon_path("cancel.png")
@@ -931,8 +930,8 @@
 
                 BoxLayout:
                     orientation: "vertical"
-                    padding: ["25dp", "30dp", "25dp", "25dp"]
-                    spacing: "15dp"
+                    padding: [dp(25), dp(30), dp(25), dp(25)]
+                    spacing: dp(15)
                     size_hint_y: None
                     height: self.minimum_height
 
@@ -943,7 +942,7 @@
                         markup: True
                         color: (1, 0, 0, 1)
                         size_hint_y: None
-                        height: "28dp"
+                        height: dp(28)
 
                     # ---- topic fields (all ids Python uses) ----
                     Spinner:
@@ -951,7 +950,7 @@
                         text: "Click to choose category"
                         values: []
                         size_hint_y: None
-                        height: "35dp"
+                        height: dp(35)
                         background_normal: ''
                         background_color: app.COLOR_WHITE
                         color: [0.1, 0.25, 0.45, 1]
@@ -962,7 +961,7 @@
                         text: "Select Subcategory"
                         values: []
                         size_hint_y: None
-                        height: "35dp"
+                        height: dp(35)
                         background_normal: ''
                         background_color: app.COLOR_WHITE
                         color: [0.1, 0.25, 0.45, 1]
@@ -973,7 +972,7 @@
                         hint_text: "Title (required)"
                         multiline: False
                         size_hint_y: None
-                        height: "35dp"
+                        height: dp(35)
                         write_tab: False
 
                     TextInput:
@@ -981,7 +980,7 @@
                         hint_text: "Topic ID (optional, leave empty to auto-generate)"
                         multiline: False
                         size_hint_y: None
-                        height: "35dp"
+                        height: dp(35)
                         write_tab: False
 
                     TextInput:
@@ -999,7 +998,7 @@
                         hint_text: "URLs (comma separated)"
                         multiline: False
                         size_hint_y: None
-                        height: "35dp"
+                        height: dp(35)
                         write_tab: False
 
                     TextInput:
@@ -1008,7 +1007,7 @@
                         multiline: False
                         readonly: True
                         size_hint_y: None
-                        height: "35dp"
+                        height: dp(35)
                         write_tab: False
 
                     TextInput:
@@ -1017,7 +1016,7 @@
                         multiline: False
                         readonly: True
                         size_hint_y: None
-                        height: "35dp"
+                        height: dp(35)
                         write_tab: False
 
                     TextInput:
@@ -1026,7 +1025,7 @@
                         multiline: False
                         readonly: True
                         size_hint_y: None
-                        height: "35dp"
+                        height: dp(35)
                         write_tab: False
 
                     TextInput:
@@ -1035,7 +1034,7 @@
                         multiline: False
                         readonly: True
                         size_hint_y: None
-                        height: "35dp"
+                        height: dp(35)
                         write_tab: False
 
                     TextInput:
@@ -1044,30 +1043,21 @@
                         hint_text: "Topic Icon filename (optional)"
                         multiline: False
                         size_hint_y: None
-                        height: "35dp"
+                        height: dp(35)
                         write_tab: False
 
-                    BoxLayout:
-                        size_hint_y: None
-                        height: "35dp"
-                        spacing: "10dp"
-
+                    FormRow:
                         TextInput:
                             id: icon_path
                             hint_text: "Icon file path (optional)"
                             multiline: False
-                            size_hint_y: None
-                            height: "35dp"
-                            write_tab: False
 
-                        PrimaryButton:
+                        SmallButton:
                             text: "Browse"
+                            background_color: app.COLOR_BLUE_MEDIUM if self.state == 'normal' else app.COLOR_BLUE_DARK_UI
                             size_hint_x: None
                             width: dp(140)
-                            height: dp(45)
-
                             on_release: root.pick_icon()
-
 
                     # ---- steps section ----
                     Label:
@@ -1076,7 +1066,7 @@
                         font_size: app.FONT_SUBCATEGORY
                         bold: True
                         size_hint_y: None
-                        height: "28dp"
+                        height: dp(28)
 
                     ScrollView:
                         size_hint_y: None
@@ -1088,8 +1078,8 @@
                             cols: 1
                             size_hint_y: None
                             height: self.minimum_height
-                            spacing: "6dp"
-                            padding: "2dp"
+                            spacing: dp(6)
+                            padding: dp(2)
 
                     TextInput:
                         id: step_order
@@ -1098,7 +1088,7 @@
                         input_filter: "int"
                         padding: [10, 10]
                         size_hint_y: None
-                        height: "35dp"
+                        height: dp(35)
                         write_tab: False
 
 
@@ -1108,7 +1098,7 @@
                         multiline: False
                         padding: [10, 10]
                         size_hint_y: None
-                        height: "35dp"
+                        height: dp(35)
                         write_tab: False
 
                     TextInput:
@@ -1117,7 +1107,7 @@
                         multiline: False
                         padding: [10, 10]
                         size_hint_y: None
-                        height: "35dp"
+                        height: dp(35)
                         write_tab: False
 
                     TextInput:
@@ -1125,7 +1115,7 @@
                         hint_text: "Instruction (required)"
                         multiline: True
                         size_hint_y: None
-                        height: "110dp"
+                        height: dp(110)
                         write_tab: False
 
                     TextInput:
@@ -1133,25 +1123,22 @@
                         hint_text: "Code_Snippet (optional)"
                         multiline: True
                         size_hint_y: None
-                        height: "90dp"
+                        height: dp(90)
                         write_tab: False
 
                     # --- SCREENSHOT ---
-                    BoxLayout:
-                        size_hint_y: None
-                        height: "35dp"
-                        spacing: "10dp"
-
+                    FormRow:
                         TextInput:
                             id: step_screenshot
                             hint_text: "Screenshot filename (optional)"
                             multiline: False
-                            size_hint_y: None
-                            height: "35dp"
 
-                        SecondaryBlueButton:
+                        SmallButton:
                             text: "Browse"
-                            on_release: root.pick_step_screenshot()
+                            background_color: app.COLOR_BLUE_MEDIUM if self.state == 'normal' else app.COLOR_BLUE_DARK_UI
+                            size_hint_x: None
+                            width: dp(140)
+                            on_release: root.pick_icon()
 
                     # --- STEP URLs ---
                     TextInput:
@@ -1159,7 +1146,7 @@
                         hint_text: "Step URLs (comma separated)"
                         multiline: False
                         size_hint_y: None
-                        height: "35dp"
+                        height: dp(35)
 
 
                     TextInput:
@@ -1167,36 +1154,36 @@
                         hint_text: "Notes (optional)"
                         multiline: True
                         size_hint_y: None
-                        height: "80dp"
+                        height: dp(80)
                         write_tab: False
 
                     Widget:
                         size_hint_y: None
-                        height: "60dp"
+                        height: dp(60)
 
 
             # Bottom bar (optional, consistent)
             StyledPanel:
                 size_hint_y: None
-                height: '65dp'
-                spacing: "8dp"
-                padding: ["8dp", "8dp"]
+                height: dp(65)
+                spacing: dp(8)
+                padding: [dp(8), dp(8)]
 
                 # ✅ LEFT: menu icon (fixed width)
                 Button:
                     background_normal: ''
                     background_color: app.COLOR_TRANSPARENT
                     size_hint_x: None
-                    width: '40dp'
+                    width: dp(40)
                     on_release: app.open_app_menu()
                     Image:
                         source: app.get_icon_path("menu.png")
                         center: self.parent.center
-                        size: '28dp', '28dp'
+                        size: dp(28), dp(28)
 
                 # ✅ RIGHT: action buttons grouped
                 BoxLayout:
-                    spacing: "6dp"
+                    spacing: dp(6)
 
                     PrimaryButton:
                         text: "Add Step"
@@ -1276,7 +1263,7 @@
                     Image:
                         source: app.get_icon_path("arrow_back.png")
                         center: self.parent.center
-                        size: '32dp', '32dp'
+                        size: dp(32), dp(32)
 
                 Widget:
 
@@ -1298,11 +1285,11 @@
                     anchor_x: "right"
                     anchor_y: "center"
                     size_hint_x: None
-                    width: "60dp"
+                    width: dp(60)
 
                     Button:
                         size_hint: None, None
-                        size: "42dp", "42dp"
+                        size: dp(42), dp(42)
                         background_normal: app.get_icon_path("cancel.png")
                         background_down: app.get_icon_path("cancel.png")
                         background_color: app.COLOR_WHITE
@@ -1387,7 +1374,7 @@
                     text: "Changelog"
                     font_size: app.FONT_SUBCATEGORY
                     size_hint_y: None
-                    height: "28dp"
+                    height: dp(28)
                     color: app.COLOR_BLUE
                     bold: True
 
