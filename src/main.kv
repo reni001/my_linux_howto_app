@@ -11,6 +11,7 @@
 #:set ICON_SIZE app.FONT_TEXT * 1.8
 #:set ICON_SMALL app.FONT_TEXT * 1.2
 #:set BUTTON_WIDTH app.FONT_TEXT * 12
+#:set ICON_DETAIL app.FONT_TEXT * 3.6
 
 <LazyImage>:
 
@@ -605,7 +606,7 @@
 <EntryListItem>:
     orientation: 'horizontal'
     size_hint_y: None
-    height: app.FONT_TEXT * 5
+    height: app.FONT_TEXT * 5.5
     padding: [SPACING_SMALL, SPACING * 0.9, SPACING_SMALL * 1.5, SPACING * 0.9]
     spacing: SPACING * 0.8
 
@@ -621,13 +622,13 @@
         anchor_x: "left"
         anchor_y: "center"
         size_hint_x: None
-        width: ICON_SIZE * 1.3 # ✅ left icon box column
+        width: ICON_DETAIL * 1.1 # ✅ left icon box column
         padding: [SPACING_SMALL * 0.8, 0, 0, 0]
 
         LazyImage:
             source: root.icon_source
             size_hint: None, None
-            size: ICON_SIZE * 1.6, ICON_SIZE * 1.6
+            size: ICON_DETAIL, ICON_DETAIL
             fit_mode: "contain"
 
     BoxLayout:
@@ -1176,7 +1177,8 @@
                         on_release: root.clear_step_form()
 
                     SuccessButton:
-                        text: "Save"
+                        id: save_btn
+                        text: ''
                         color: app.COLOR_WHITE
                         bold: True
                         on_release: root.save_topic()

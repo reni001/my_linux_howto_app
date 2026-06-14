@@ -36,6 +36,18 @@ else
 fi
 
 # ----------------------------------------
+# DETECT WSL ENVIRONMENT
+# ----------------------------------------
+
+IS_WSL=false
+
+if grep -qi microsoft /proc/version 2>/dev/null || \
+   grep -qi microsoft /proc/sys/kernel/osrelease 2>/dev/null; then
+    IS_WSL=true
+    echo "[INFO] ✅ WSL environment detected"
+fi
+
+# ----------------------------------------
 # INSTALL SYSTEM DEPENDENCIES
 # ----------------------------------------
 
@@ -57,15 +69,12 @@ install_ubuntu() {
 
     if [ "$IS_WSL" = true ]; then
         echo "[INFO] ⚙️ WSL detected → minimal GUI dependencies"
+        echo "[INFO] Clipboard handled by Windows → skipping xclip"
 
         sudo apt install -y \
             python3-venv python3-dev build-essential \
             libgl1 libgles2 \
             || echo "[WARNING] dependency install failed"
-
-        # ✅ OPTIONAL (only for debugging / fallback)
-        # No heavy editors needed because Windows handles opening
-        echo "[INFO] Skipping desktop apps (WSL uses Windows programs)"
 
     else
         echo "[INFO] Standard Linux install"
@@ -76,6 +85,7 @@ install_ubuntu() {
             libgstreamer1.0-dev gstreamer1.0-plugins-base \
             libmtdev-dev libjpeg-dev libpng-dev pkg-config \
             xdg-utils \
+            xclip \
             || echo "[WARNING] dependency install failed"
     fi
 }
@@ -116,19 +126,6 @@ case "$OS" in
         echo "[WARNING] Unsupported OS: $OS"
         ;;
 esac
-
-
-# ----------------------------------------
-# DETECT WSL ENVIRONMENT
-# ----------------------------------------
-
-IS_WSL=false
-
-if grep -qi microsoft /proc/version 2>/dev/null || \
-   grep -qi microsoft /proc/sys/kernel/osrelease 2>/dev/null; then
-    IS_WSL=true
-    echo "[INFO] ✅ WSL environment detected"
-fi
 
 # ----------------------------------------
 # PYTHON DETECTION

@@ -36,9 +36,9 @@ from src.services.subcategory_service import load_subcategories
 
 class AddTopicScreen(Screen):
     edit_topic_key = StringProperty("")
-    edit_mode = BooleanProperty(False)     # ✅ THIS FIXES YOUR CRASH
+    edit_mode = BooleanProperty(False)     
     edit_topic_id = StringProperty("")     # ✅ needed for edit tracking
-    edit_is_local = BooleanProperty(False)   # ✅ NEW
+    edit_is_local = BooleanProperty(False)   
     pending_steps = ListProperty([])  # list of step dicts to save together with the topic
     selected_step_index = NumericProperty(-1)   # -1 means "no step selected"
     
@@ -95,7 +95,7 @@ class AddTopicScreen(Screen):
             return filename
 
         shutil.copy2(filepath, dest)
-        print(f"✅ Imported screenshot: {dest}")
+        print(f"✓ Imported screenshot: {dest}")
         return filename
 
     from src.ui.file_picker_popup import open_file_picker
@@ -113,7 +113,7 @@ class AddTopicScreen(Screen):
                 self.ids.step_screenshot.text = fname
                 self.ids.status_label.text = self._txt(f"✔ Screenshot selected: {fname}")
             except Exception as e:
-                self.ids.status_label.text = self._txt(f"❌ Screenshot import failed: {e}")
+                self.ids.status_label.text = self._txt(f"✖ Screenshot import failed: {e}")
 
         open_file_picker(
             title="Select Screenshot",
@@ -123,8 +123,9 @@ class AddTopicScreen(Screen):
         )
 
 
-
     def on_pre_enter(self):
+        self.set_save_state("idle")
+        
         app = App.get_running_app()
 
         if not app.is_admin_mode():
@@ -340,7 +341,7 @@ class AddTopicScreen(Screen):
 
         # ✅ 3. copy to correct folder
         shutil.copy2(src_path, target_path)
-        print(f"✅ Imported icon: {target_path}")
+        print(f"✓ Imported icon: {target_path}")
 
         return filename
 
@@ -384,12 +385,12 @@ class AddTopicScreen(Screen):
         try:
             step_order = int(self.ids.step_order.text.strip())
         except Exception:
-            self.ids.status_label.text = self._txt("⚠️ Step_Order must be an integer (e.g. 1, 2, 3).")
+            self.ids.status_label.text = self._txt("! Step_Order must be an integer (e.g. 1, 2, 3).")
             return
 
         instruction = self.ids.step_instruction.text.strip()
         if not instruction:
-            self.ids.status_label.text = self._txt("⚠️ Instruction is required.")
+            self.ids.status_label.text = self._txt("! Instruction is required.")
             return
         # Build step dict
         step = {
@@ -426,7 +427,7 @@ class AddTopicScreen(Screen):
         self.refresh_steps_list()
         self.ids.form_scroll.scroll_y = 0.3
 
-        self.ids.status_label.text = self._txt(f"✅ Step saved.")
+        self.ids.status_label.text = self._txt(f"✓ Step saved.")
 
 
     def remove_last_step(self):
@@ -770,7 +771,7 @@ class AddTopicScreen(Screen):
                 merged_topic["local_only"] = True
 
                 app.update_local_topic(existing_topic_id, merged_topic, merged_steps)
-                self.ids.status_label.text = self._txt("✅ Local topics merged")
+                self.ids.status_label.text = self._txt("✓ Local topics merged")
 
             # ✅ OFFICIAL duplicate → update Firebase
             else:
@@ -788,7 +789,7 @@ class AddTopicScreen(Screen):
                     payload["Topic_ID"] = existing_topic_id
                     add_step_to_firebase(payload)
 
-                self.ids.status_label.text = self._txt("✅ Official topics merged")
+                self.ids.status_label.text = self._txt("✓ Official topics merged")
 
             # ✅ cleanup local duplicate if editing another local topic
             try:
@@ -798,7 +799,7 @@ class AddTopicScreen(Screen):
 
                     if current_id and current_id != existing_id:
                         app.delete_local_topic(current_id)
-                        print(f"✅ Removed duplicate local topic: {current_id}")
+                        print(f"✓ Removed duplicate local topic: {current_id}")
 
             except Exception as e:
                 print("DEBUG: cleanup failed:", e)
@@ -820,7 +821,7 @@ class AddTopicScreen(Screen):
             Clock.schedule_once(_restore_category, 0.4)
 
         except Exception as e:
-            self.ids.status_label.text = self._txt(f"❌ Merge failed: {e}")
+            self.ids.status_label.text = self._txt(f"✖ Merge failed: {e}")
 
 
     def refresh_steps_list(self):
@@ -979,11 +980,40 @@ class AddTopicScreen(Screen):
         self.refresh_steps_preview()
         self.refresh_steps_list()
 
+    def set_save_state(self, state):
+        if "save_btn" not in self.ids: 
+            return
+
+        btn = self.ids.save_btn
+
+        if state == "saving":
+            btn.text = "saving ..."
+            btn.disabled = True
+
+        elif state == "success":
+            btn.text = "Saved ✔"
+            btn.disabled = False
+
+        elif state == "error":
+            btn.text = "Error"
+            btn.disabled = False
+
+        else:
+            btn.text = "Save"
+            btn.disabled = False
 
     # -----------------------------
     # SAVE TOPIC + ALL STEPS TO FIREBASE
     # -----------------------------
+
     def save_topic(self):
+        # ✅ show saving state immediately
+        self.set_save_state("saving")
+        
+        # ✅ run save on next UI tick (safe, no thread crash)
+        Clock.schedule_once(lambda dt: self._save_topic_internal(), 0.05)
+
+    def _save_topic_internal(self):
         app = App.get_running_app()
         now = self._now()
 
@@ -1003,7 +1033,6 @@ class AddTopicScreen(Screen):
             "Topic_Icon": icon_filename,
         }
 
-
         # ✅ DATE HANDLING
         if self.edit_mode:
             topic["Date_Created"] = self.ids.date_created.text.strip()
@@ -1020,17 +1049,19 @@ class AddTopicScreen(Screen):
                 topic["Topic_ID"] = user_id
 
         # ✅ 3. Required fields
+        
         if not topic["Category"] or not topic["Title"]:
-            self.ids.status_label.text = self._txt("⚠️ Category and Title are required.")
+            self.ids.status_label.text = self._txt("! Category and Title are required.")
+            self.set_save_state("error")
+            Clock.schedule_once(lambda dt: self.set_save_state("idle"), 2.5)
             return
 
         # ✅ 4. Duplicate check BEFORE any icon copy or save
         duplicate = self._find_duplicate_topic(topic)
         if duplicate:
+            self.set_save_state("idle")
             self._show_merge_popup(topic, duplicate)
             return
-
-
 
         # ✅ 6. LOCAL SAVE PATH
         # Rule:
@@ -1053,12 +1084,16 @@ class AddTopicScreen(Screen):
                     topic_payload["local_only"] = True
 
                     app.update_local_topic(self.edit_topic_id, topic_payload, step_payloads)
-                    self.ids.status_label.text = self._txt("✅ Local topic updated")
+                    self.ids.status_label.text = self._txt("✓ Local topic updated")
+                    self.set_save_state("success")
+                    Clock.schedule_once(lambda dt: self.set_save_state("idle"), 2)
 
                 # create new local topic
                 else:
                     app.save_local_topic(topic_payload, step_payloads)
-                    self.ids.status_label.text = self._txt("✅ Topic saved locally")
+                    self.ids.status_label.text = self._txt("✓ Topic saved locally")                  
+                    self.set_save_state("success")
+                    Clock.schedule_once(lambda dt: self.set_save_state("idle"), 2)
 
                 target_category = topic.get("Category", "")
 
@@ -1076,7 +1111,9 @@ class AddTopicScreen(Screen):
                 return
 
             except Exception as e:
-                self.ids.status_label.text = self._txt(f"❌ Local save failed: {e}")
+                self.ids.status_label.text = self._txt(f"✖ Local save failed: {e}")
+                self.set_save_state("error")
+                Clock.schedule_once(lambda dt: self.set_save_state("idle"), 3)          
                 return
 
         # ✅ 7. OFFICIAL / FIREBASE SAVE PATH
@@ -1128,7 +1165,9 @@ class AddTopicScreen(Screen):
             if "topic_id" in self.ids:
                 self.ids.topic_id.text = topic_id
 
-            self.ids.status_label.text = self._txt(f"✅ Saved topic + steps (Topic_ID: {str(topic_id)[:8]}…)")
+            self.ids.status_label.text = self._txt(f"✓ Saved topic + steps (Topic_ID: {str(topic_id)[:8]}…)")            
+            self.set_save_state("success")
+            Clock.schedule_once(lambda dt: self.set_save_state("idle"), 2)
 
             if "topic_id" in self.ids:
                 self.ids.topic_id.text = topic_id
@@ -1138,7 +1177,9 @@ class AddTopicScreen(Screen):
             self.edit_topic_key = topic_key
 
         except Exception as e:
-            self.ids.status_label.text = self._txt(f"❌ Save failed: {e}")
+            self.ids.status_label.text = self._txt(f"✖ Save failed: {e}")
+            self.set_save_state("error")           
+            Clock.schedule_once(lambda dt: self.set_save_state("idle"), 3)
 
     def on_kv_post(self, base_widget):
         from kivy.uix.textinput import TextInput
