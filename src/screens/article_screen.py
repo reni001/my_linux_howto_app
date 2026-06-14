@@ -185,13 +185,18 @@ class ArticleScreen(Screen):
         paths = get_runtime_paths()
         return str(paths["assets"] / "screenshots" / filename)
 
-    def _highlight_code_simple(self, code: str) -> str:
+    def _highlight_code_simple(self, code: str, query: str = "") -> str:
         """
         Lightweight syntax highlighting for shell / terminal style code blocks.
         Uses Kivy markup only, no external dependency.
         """
         if not code:
             return ""
+        
+        # ✅ normalize search query for code highlighting
+        query_words = []
+        if query:
+            query_words = re.sub(r"[^a-z0-9 ]+", " ", query.lower()).split()
 
         # colours
         C_DEFAULT = "ffb347"   # warm orange
@@ -201,6 +206,12 @@ class ArticleScreen(Screen):
         C_OPT     = "7fd1ff"   # cyan
         C_URL     = "66d9ef"   # bright cyan
         C_STRING  = "a6e22e"   # green
+
+        
+        # ✅ derive white from theme
+        r, g, b = [int(c * 255) for c in COLOR_WHITE[:3]]
+        C_MATCH = f"{r:02x}{g:02x}{b:02x}"
+
 
         known_cmds = {
             "sudo", "apt", "apt-get", "pacman", "dnf", "yum", "zypper",
@@ -215,6 +226,15 @@ class ArticleScreen(Screen):
 
         def colour(text, hex_colour):
             return f"[color={hex_colour}]{text}[/color]"
+        
+        def token_matches_query(token_plain: str) -> bool:
+            if not query_words:
+                return False
+
+            normalized_token = re.sub(r"[^a-z0-9 ]+", " ", token_plain.lower())
+            normalized_token = " ".join(normalized_token.split())
+
+            return any(word and word in normalized_token for word in query_words)
 
         def highlight_line(line: str) -> str:
             stripped = line.lstrip()
@@ -269,13 +289,22 @@ class ArticleScreen(Screen):
 
                 plain = re.sub(r'\[/?color=.*?\]|\[/color\]', '', token)
 
+                # ✅ base syntax colour first
+                rendered = token
+
                 if plain in known_cmds and not command_coloured:
-                    out.append(colour(token, C_CMD))
+                    rendered = colour(token, C_CMD)
                     command_coloured = True
                 elif plain.startswith("-"):
-                    out.append(colour(token, C_OPT))
+                    rendered = colour(token, C_OPT)
                 else:
-                    out.append(token)
+                    rendered = token
+
+                # ✅ then add search emphasis WITHOUT replacing syntax colour
+                if token_matches_query(plain):
+                    rendered = f"[b][color={C_MATCH}]{token}[/color][/b]"
+
+                out.append(rendered)
 
             highlighted = " ".join(out)
 
@@ -321,14 +350,9 @@ class ArticleScreen(Screen):
         except:
             font_path = "DejaVuSansMono.ttf"
         
-        # if searching, prioritise search highlight inside code
-        
-        # ✅ first apply syntax highlighting ALWAYS
-        highlighted_code = self._highlight_code_simple(code)
-
-        # ✅ then apply search highlight ON TOP
-        #if query:
-        #    highlighted_code = highlight_text(highlighted_code, query)
+        # if searching, prioritise search highlight inside code       
+        # ✅ syntax highlight + code-match emphasis handled in one place
+        highlighted_code = self._highlight_code_simple(code, query=query)
 
         # font fallback
         try:
