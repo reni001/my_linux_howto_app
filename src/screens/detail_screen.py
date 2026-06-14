@@ -13,7 +13,7 @@ from kivy.app import App
 from src.ui.components import ExpandableSection, EntryListItem
 from src.utils.icon_utils import get_icon_path
 from src.ui.theme import COLOR_BLUE
-from src.services.search_service import topic_matches
+from src.services.search_service import topic_matches, highlight_text, find_match_location
 
 
 class DetailScreen(Screen):
@@ -75,7 +75,6 @@ class DetailScreen(Screen):
         )
 
         self.ids.list_container.add_widget(cat_label)
-
 
         target_cat = self.header_title.strip().lower()
         query = query.lower().strip()
@@ -146,11 +145,26 @@ class DetailScreen(Screen):
 
                 #print("DEBUG fixed item:", original)   # optional
 
+                topic_id = str(original.get("Topic_ID", "")).strip()
+
+                steps = [
+                    s for s in app.APP_DATA.get("steps", [])
+                    if str(s.get("Topic_ID", "")).strip() == topic_id
+                ]
+
+                location = find_match_location(query, original, steps)
+
+                title = highlight_text(original.get("Title", ""), query)
+                desc = highlight_text(original.get("Description", ""), query)
+
+                if location and query:
+                    desc = f"{desc}\n[size=12][color=#7a7a7a]Match in: {location}[/color][/size]"
+
                 btn = EntryListItem(
-                    title=original.get("Title", ""),
-                    desc=original.get("Description", ""),
+                    title=title,
+                    desc=desc,
                     icon_source=get_icon_path(original.get("Topic_Icon")),
-                    data=original   # ✅ ALWAYS ORIGINAL
+                    data=original
                 )
 
                 btn.bind(on_release=self.go_article)
@@ -161,6 +175,10 @@ class DetailScreen(Screen):
 
     def go_article(self, instance):
         self.manager.last_screen = "details"
-        self.manager.get_screen("article").setup_article(instance.data)
+
+        article = self.manager.get_screen("article")
+        article.current_search_query = self.ids.local_search.text.strip()
+        article.setup_article(instance.data)
+
         self.manager.current = "article"
 

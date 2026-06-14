@@ -1,4 +1,6 @@
 import re
+from kivy.utils import escape_markup
+from src.ui.theme import COLOR_HIGHLIGHT
 
 
 def _safe_str(value):
@@ -7,16 +9,21 @@ def _safe_str(value):
     return str(value)
 
 
+def rgba_to_hex(color):
+    r, g, b = [int(c * 255) for c in color[:3]]
+    return f"#{r:02x}{g:02x}{b:02x}"
+
+
 def _normalize(text: str) -> str:
-    text = text.lower()
+    text = _safe_str(text).lower()
 
-    # ✅ replace special separators with space
-    text = re.sub(r"[-_/\\\.]", " ", text)
+    # replace common separators with spaces
+    text = re.sub(r"[-_/\\.:]", " ", text)
 
-    # ✅ remove all non-alphanumeric (keep spaces)
+    # remove everything except letters, numbers and spaces
     text = re.sub(r"[^a-z0-9 ]+", " ", text)
 
-    # ✅ collapse spaces
+    # collapse repeated spaces
     text = " ".join(text.split())
 
     return text
@@ -25,17 +32,16 @@ def _normalize(text: str) -> str:
 def build_search_blob(topic: dict, steps: list[dict]) -> str:
     parts = []
 
-    # ✅ ALL topic fields
+    # all topic fields
     for value in topic.values():
         parts.append(_safe_str(value))
 
-    # ✅ ALL step fields
-    for s in steps:
-        for value in s.values():
+    # all step fields
+    for step in steps:
+        for value in step.values():
             parts.append(_safe_str(value))
 
     raw_blob = " ".join(parts)
-
     return _normalize(raw_blob)
 
 
@@ -45,22 +51,95 @@ def topic_matches(query: str, topic: dict, steps: list[dict]) -> bool:
 
     blob = build_search_blob(topic, steps)
 
-    # ✅ EXTRACT EXACT SEARCH (with quotes)
     query = query.strip()
 
+    # exact search if user types "..."
     if query.startswith('"') and query.endswith('"'):
-        exact = query[1:-1]  # remove quotes
+        exact = query[1:-1].strip().lower()
 
-        # ✅ IMPORTANT: do NOT normalize for exact search
         raw_blob = " ".join(
             [_safe_str(v) for v in topic.values()] +
             [_safe_str(v) for s in steps for v in s.values()]
         ).lower()
 
-        return exact.lower() in raw_blob
+        return exact in raw_blob
 
-    # ✅ NORMAL SEARCH (fuzzy)
     normalized_query = _normalize(query)
     words = normalized_query.split()
 
     return all(word in blob for word in words)
+
+
+def highlight_text(text: str, query: str) -> str:
+    """
+    Returns Kivy-markup-safe highlighted text.
+    """
+    raw_text = _safe_str(text)
+
+    if not raw_text:
+        return ""
+
+    escaped = escape_markup(raw_text)
+
+    if not query:
+        return escaped
+
+    color = rgba_to_hex(COLOR_HIGHLIGHT)
+
+    normalized_query = _normalize(query)
+    words = [w for w in normalized_query.split() if len(w) >= 2]
+
+    result = escaped
+
+    # longest words first = safer highlighting
+    for word in sorted(set(words), key=len, reverse=True):
+        pattern = re.compile(re.escape(word), re.IGNORECASE)
+        result = pattern.sub(
+            lambda m: f"[b][color={color}]{m.group(0)}[/color][/b]",
+            result
+        )
+
+    return result
+
+
+def _matches_field(query: str, value) -> bool:
+    if not query:
+        return False
+
+    if query.startswith('"') and query.endswith('"'):
+        exact = query[1:-1].strip().lower()
+        return exact in _safe_str(value).lower()
+
+    words = _normalize(query).split()
+    field_blob = _normalize(value)
+    return all(word in field_blob for word in words)
+
+
+def find_match_location(query: str, topic: dict, steps: list[dict]) -> str:
+    if not query:
+        return ""
+
+    # topic fields first
+    if _matches_field(query, topic.get("Title", "")):
+        return "Title"
+    if _matches_field(query, topic.get("Description", "")):
+        return "Description"
+    if _matches_field(query, topic.get("URLs", "")):
+        return "Topic URL"
+
+    # step fields
+    for idx, step in enumerate(steps, start=1):
+        if _matches_field(query, step.get("Code_Snippet", "")):
+            return f"Step {idx} (Code)"
+        if _matches_field(query, step.get("Instruction", "")):
+            return f"Step {idx} (Instruction)"
+        if _matches_field(query, step.get("Notes", "")):
+            return f"Step {idx} (Notes)"
+        if _matches_field(query, step.get("Headline", "")):
+            return f"Step {idx} (Headline)"
+        if _matches_field(query, step.get("Header_2", "")):
+            return f"Step {idx} (Header)"
+        if _matches_field(query, step.get("URLs", "")):
+            return f"Step {idx} (URL)"
+
+    return "Topic"

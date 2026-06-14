@@ -1,4 +1,3 @@
-
 # --- Kivy ---
 from kivy.uix.screenmanager import Screen
 from kivy.uix.label import Label
@@ -10,7 +9,7 @@ from kivy.core.window import Window
 from src.ui.components import EntryListItem
 from src.utils.icon_utils import get_icon_path
 from src.ui.theme import COLOR_ORANGE
-from src.services.search_service import topic_matches
+from src.services.search_service import topic_matches, highlight_text, find_match_location
 
 
 class SearchScreen(Screen):
@@ -25,8 +24,13 @@ class SearchScreen(Screen):
 
     def go_article(self, instance):
         self.manager.last_screen = "search"
-        self.manager.get_screen("article").setup_article(instance.data)
+
+        article = self.manager.get_screen("article")
+        article.current_search_query = self.ids.search_input.text.strip()
+        article.setup_article(instance.data)
+
         self.manager.current = "article"
+
 
     def filter_results(self, query):
         self.ids.results_container.clear_widgets()
@@ -106,15 +110,31 @@ class SearchScreen(Screen):
 
             # ✅ add items under this category
             for item in grouped[cat]:
+                topic_id = str(item.get("Topic_ID", "")).strip()
+
+                steps = [
+                    s for s in app.APP_DATA.get("steps", [])
+                    if str(s.get("Topic_ID", "")).strip() == topic_id
+                ]
+
+                location = find_match_location(query, item, steps)
+
+                raw_title = item.get("Title", "")
+                raw_desc = item.get("Description", "")
+
+                title = highlight_text(raw_title, query)
+                desc = highlight_text(raw_desc, query)
+
+                if location:
+                    desc = f"{desc}\n[size=12][color=#7a7a7a]Match in: {location}[/color][/size]"
+
                 btn = EntryListItem(
-                    title=item.get('Title',''),
-                    desc=item.get('Description',''),
+                    title=title,
+                    desc=desc,
                     icon_source=get_icon_path(item.get('Topic_Icon')),
                     data=item
                 )
 
                 btn.bind(on_release=self.go_article)
                 self.ids.results_container.add_widget(btn)
-
-
 

@@ -1,3 +1,5 @@
+import re
+
 from kivy.uix.label import Label
 from kivy.uix.image import Image
 from kivy.uix.boxlayout import BoxLayout
@@ -16,7 +18,7 @@ from kivy.graphics import Color, RoundedRectangle, Line
 from kivy.graphics.transformation import Matrix
 from kivy.app import App
 from kivy.utils import escape_markup
-import re
+from kivy.properties import StringProperty
 
 from pathlib import Path
 from datetime import datetime
@@ -26,6 +28,7 @@ from src.utils.icon_utils import get_icon_path
 from src.ui.theme import COLOR_BLUE, COLOR_ORANGE, NOTE_BG, COLOR_WHITE
 from src.services.system_open_service import open_url as open_external_url
 from src.utils.font_utils import get_font_path
+from src.services.search_service import highlight_text
 
 icon = get_icon_path
 
@@ -80,12 +83,13 @@ class ZoomScatter(Scatter):
         return super().on_touch_down(touch)
 
 class StepCard(BoxLayout):
-    def __init__(self, step_data, **kwargs):
+    def __init__(self, step_data, query="", **kwargs):
         super().__init__(orientation='vertical', size_hint_y=None, **kwargs)
 
         app = App.get_running_app()
         ui = UI(app)
 
+        self.query = query
         self.padding = ui["SPACING"]
         self.spacing = ui["SPACING_SMALL"]
         self.bind(minimum_height=self.setter('height'))
@@ -100,9 +104,9 @@ class StepCard(BoxLayout):
 
         self.bind(pos=self._update_graphics, size=self._update_graphics)
 
-        self.build(step_data, app)
+        self.build(step_data, app, query)
 
-    def build(self, step, app):
+    def build(self, step, app, query):
         def safe_str(val, default=""):
             if val is None or str(val).lower() == 'nan':
                 return default
@@ -112,7 +116,8 @@ class StepCard(BoxLayout):
         h1 = safe_str(step.get('Headline'))
         if h1:
             lbl = Label(
-                text=h1,
+                text=highlight_text(h1, query),
+                markup=True,
                 color=COLOR_BLUE,
                 bold=True,
                 font_size=app.FONT_SUBCATEGORY * 1.3,
@@ -129,7 +134,8 @@ class StepCard(BoxLayout):
         h2 = safe_str(step.get('Header_2'))
         if h2:
             h2_lbl = Label(
-                text=h2,
+                text=highlight_text(h2, query),
+                markup=True,
                 color=COLOR_ORANGE,
                 bold=True,
                 font_size=app.FONT_SUBCATEGORY * 1.1,
@@ -146,7 +152,8 @@ class StepCard(BoxLayout):
         ins = safe_str(step.get('Instruction'))
         if ins:
             ins_lbl = Label(
-                text=ins,
+                text=highlight_text(ins, query),
+                markup=True,
                 color=[0.2, 0.2, 0.2, 1],
                 font_size=app.FONT_TEXT * 1.2,
                 size_hint_y=None,
@@ -163,6 +170,8 @@ class StepCard(BoxLayout):
         self.bg_rect.size = self.size
 
 class ArticleScreen(Screen):
+    current_search_query = StringProperty("")
+
     def go_back(self):
         dest = getattr(self.manager, 'last_screen', 'details')
         self.manager.current = dest
@@ -279,7 +288,7 @@ class ArticleScreen(Screen):
         lines = code.splitlines()
         return "\n".join(highlight_line(line) for line in lines)
 
-    def _build_code_block(self, code: str, app):
+    def _build_code_block(self, code: str, app, query=""):
         ui = UI(app)
         if not code:
             return None
@@ -311,10 +320,12 @@ class ArticleScreen(Screen):
             font_path = get_font_path("JetBrainsMono-Regular.ttf")
         except:
             font_path = "DejaVuSansMono.ttf"
-
-
-        # syntax-highlighted code text
-        highlighted_code = self._highlight_code_simple(code)
+        
+        # if searching, prioritise search highlight inside code
+        if query:
+            highlighted_code = highlight_text(code, query)
+        else:
+            highlighted_code = self._highlight_code_simple(code)
 
         # font fallback
         try:
@@ -357,7 +368,7 @@ class ArticleScreen(Screen):
 
         return code_anchor
 
-    def _build_step_urls(self, raw_urls: str, app):
+    def _build_step_urls(self, raw_urls: str, app, query=""):
         ui = UI(app)
         if not raw_urls:
             return []
@@ -420,7 +431,7 @@ class ArticleScreen(Screen):
         img.bind(on_release=lambda x, p=path: self.show_fullscreen_image(p))
         return img
 
-    def _build_note_box(self, note: str, app):
+    def _build_note_box(self, note: str, app, query=""):
         ui = UI(app)
         if not note:
             return None
@@ -451,8 +462,9 @@ class ArticleScreen(Screen):
                 pos_hint={'top': 1}
             )
         )
-
-        markup_text = "[b][color=ff8b02]NOTE:[/color][/b]\n" + note
+                
+        highlighted_note = highlight_text(note, query) if query else note
+        markup_text = "[b][color=#ff8b02]NOTE:[/color][/b]\n" + highlighted_note
 
         note_lbl = Label(
             text=markup_text,
@@ -618,6 +630,8 @@ class ArticleScreen(Screen):
         if not data:
             return
 
+        self.current_search_query = str(self.current_search_query or "").strip()
+
         # ✅ STORE CURRENT TOPIC
         self.current_topic_id = data.get("Topic_ID")
         self.current_topic_key = data.get("_key")
@@ -651,13 +665,13 @@ class ArticleScreen(Screen):
         all_steps = app.APP_DATA.get('steps', [])
         topic_steps = [s for s in all_steps if s and s.get('Topic_ID') == topic_id]
         topic_steps.sort(key=lambda x: int(x.get('Step_Order', 999)))
-
+       
         for step in topic_steps:
-            card = StepCard(step)
+            card = StepCard(step, query=self.current_search_query)
 
             # --- CODE SNIPPET ---
             code = safe_str(step.get('Code_Snippet'))
-            code_widget = self._build_code_block(code, app)
+            code_widget = self._build_code_block(code, app, query=self.current_search_query)
             if code_widget:
                 card.add_widget(code_widget)
 
@@ -668,7 +682,7 @@ class ArticleScreen(Screen):
 
             # --- STEP URLS ---
             raw_step_urls = safe_str(step.get('URLs'))
-            url_widgets = self._build_step_urls(raw_step_urls, app)
+            url_widgets = self._build_step_urls(raw_step_urls, app, query=self.current_search_query)
 
 
             for w in url_widgets:
@@ -676,7 +690,7 @@ class ArticleScreen(Screen):
 
             # --- NOTES ---
             note = safe_str(step.get('Notes'))
-            note_widget = self._build_note_box(note, app)
+            note_widget = self._build_note_box(note, app, query=self.current_search_query)
             if note_widget:
                 card.add_widget(note_widget)
 
