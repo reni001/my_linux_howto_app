@@ -18,6 +18,7 @@ COLOR_GREEN_DARK = [0.1, 0.5, 0.1, 1]   # optional subtle version
 COLOR_RED = [1, 0.3, 0.3, 1]            # ✅ primary error (use this)
 #COLOR_RED_DARK = [0.7, 0.1, 0.1, 1]     # optional subtle version
 COLOR_RED_DARK = [0.8, 0.2, 0.2, 1]
+COLOR_ERROR_BG = [1, 0.75, 0.75, 1]   # ✅ soft red (pleasant)
 
 
 COLOR_BG_DARK = [0.12, 0.18, 0.30, 1]

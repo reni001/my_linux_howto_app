@@ -10,6 +10,7 @@ from kivy.core.window import Window
 from src.ui.components import EntryListItem
 from src.utils.icon_utils import get_icon_path
 from src.ui.theme import COLOR_ORANGE
+from src.services.search_service import topic_matches
 
 
 class SearchScreen(Screen):
@@ -38,15 +39,39 @@ class SearchScreen(Screen):
         app = App.get_running_app()
         all_topics = app.APP_DATA.get('topics', [])
 
-        # ✅ filter EXACTLY like original
-        matches = [
-            t for t in all_topics
-            if t and (
-                query in str(t.get('Title','')).lower()
-                or query in str(t.get('Category','')).lower()
-                or query in str(t.get('Description','')).lower()
-            )
-        ]
+        # ✅ filter EXACTLY like original        
+        matches = []
+
+        for t in all_topics:
+            if not t:
+                continue
+
+            topic_id = str(t.get("Topic_ID", "")).strip()
+
+            # ✅ DEBUG: show topic id
+            print("\n==== TOPIC DEBUG ====")
+            print("TITLE:", t.get("Title"))
+            print("TOPIC_ID:", topic_id)
+
+            # ✅ DEBUG: inspect first 3 steps to see real key names
+            all_steps = app.APP_DATA.get("steps", [])
+            for idx, s in enumerate(all_steps[:3]):
+                print(f"STEP SAMPLE {idx+1}:", s)
+
+            # ✅ TEMPORARY ROBUST MATCH:
+            # try several possible key names for topic linkage
+            steps = [
+                s for s in all_steps
+                if str(s.get("Topic_ID", "")).strip() == topic_id
+                or str(s.get("topic_id", "")).strip() == topic_id
+                or str(s.get("Topic Id", "")).strip() == topic_id
+                or str(s.get("topicId", "")).strip() == topic_id
+            ]
+
+            print("FOUND STEPS FOR TOPIC:", len(steps))
+
+            if topic_matches(query, t, steps):
+                matches.append(t)
 
         # ✅ FIX: remove duplicates (new issue after refactor)
         unique = {}

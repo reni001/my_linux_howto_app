@@ -7,11 +7,13 @@ from kivy.core.window import Window
 from kivy.app import App
 from kivy.uix.label import Label
 from kivy.metrics import dp
+from kivy.app import App
 
 # --- project ---
 from src.ui.components import ExpandableSection, EntryListItem
 from src.utils.icon_utils import get_icon_path
 from src.ui.theme import COLOR_BLUE
+from src.services.search_service import topic_matches
 
 
 class DetailScreen(Screen):
@@ -84,11 +86,21 @@ class DetailScreen(Screen):
         ]
 
         if query:
-            items = [
-                i for i in items
-                if query in str(i.get("Title", "")).lower()
-                or query in str(i.get("Description", "")).lower()
-            ]
+            filtered = []
+
+            for i in items:
+                topic_id = str(i.get("Topic_ID"))
+
+                steps = [
+                    s for s in app.APP_DATA.get("steps", [])
+                    if str(s.get("Topic_ID")) == topic_id
+                ]
+
+
+                if topic_matches(query, i, steps):
+                    filtered.append(i)
+
+            items = filtered
 
         subs = {}
         for i in items:

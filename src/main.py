@@ -36,6 +36,20 @@ def global_exception_hook(exc_type, exc_value, exc_traceback):
 sys.excepthook = global_exception_hook
 
 
+def is_wsl():
+    try:
+        with open("/proc/sys/kernel/osrelease") as f:
+            return "microsoft" in f.read().lower()
+    except:
+        return False
+
+
+if is_wsl():
+    from kivy.config import Config
+    Config.set('kivy', 'clipboard', 'dummy')
+
+
+
 # --- Project imports ---
 from src.utils.first_run import initialize_first_run
 from src.utils.runtime_paths import is_dev_mode, get_runtime_paths
@@ -135,6 +149,7 @@ from src.ui.theme import (
     COLOR_TEXT_DARK,
     COLOR_TEXT_SOFT,
     COLOR_RED,
+    COLOR_ERROR_BG,
     COLOR_GREEN,
     COLOR_CYAN,
     COLOR_BLUE_DARK_UI,
@@ -254,6 +269,7 @@ class LinuxHowToApp(App):
 
     COLOR_RED = COLOR_RED
     COLOR_RED_DARK = COLOR_RED_DARK
+    COLOR_ERROR_BG = COLOR_ERROR_BG
 
     # --- Background / layout ---
     COLOR_BG_DARK = COLOR_BG_DARK

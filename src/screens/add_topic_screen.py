@@ -20,6 +20,8 @@ from kivy.uix.filechooser import FileChooserListView
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.spinner import Spinner
 from kivy.metrics import dp
+from kivy.factory import Factory
+from kivy.uix.textinput import TextInput
 
 # --- Your project ---
 from src.services.editor_service import (
@@ -32,6 +34,7 @@ from src.logic.taxonomy import build_taxonomy
 from src.ui.components import HoverRow, EntryListItem, ExpandableSection
 from src.ui.file_picker_popup import open_file_picker
 from src.services.subcategory_service import load_subcategories
+from src.ui.styled_popup import create_popup_container
 
 
 class AddTopicScreen(Screen):
@@ -125,7 +128,7 @@ class AddTopicScreen(Screen):
 
     def on_pre_enter(self):
         self.set_save_state("idle")
-        
+
         app = App.get_running_app()
 
         if not app.is_admin_mode():
@@ -601,7 +604,18 @@ class AddTopicScreen(Screen):
         return self._merge_steps(existing_steps, new_steps)
 
     def _show_merge_popup(self, new_topic, duplicate_topic):
-        content = BoxLayout(orientation="vertical", spacing=10, padding=10)
+        
+        container = create_popup_container()
+
+        content = BoxLayout(
+            orientation="vertical",
+            spacing=10,
+            padding=10,
+            size_hint=(0.95, 0.95),
+            pos_hint={"center_x": 0.5, "center_y": 0.5}
+        )
+
+        container.add_widget(content)
 
         preview_lines = []
         preview_lines.append(f"Merging into existing topic:\n{duplicate_topic.get('Title')}\n")
@@ -678,10 +692,24 @@ class AddTopicScreen(Screen):
         strategy_box.add_widget(row_steps)
 
         content.add_widget(strategy_box)
+        
+        btn_box = BoxLayout(
+            size_hint_y=None,
+            height=dp(60),
+            spacing=dp(10),
+            padding = [dp(5), dp(5)]
+        )
+        
+        btn_merge = Factory.SuccessButton(
+            text="MERGE"
+        )
 
-        btn_box = BoxLayout(size_hint_y=None, height="40dp", spacing=10)
-        btn_merge = Button(text="MERGE", background_color=[0.2, 0.7, 0.3, 1])
-        btn_cancel = Button(text="Cancel")
+        btn_cancel = Factory.SecondaryButton(
+            text="Cancel"
+        )
+
+        btn_merge.size_hint_x = 1
+        btn_cancel.size_hint_x = 1
 
         btn_box.add_widget(btn_merge)
         btn_box.add_widget(btn_cancel)
@@ -689,10 +717,11 @@ class AddTopicScreen(Screen):
 
         popup = Popup(
             title="Preview Merge",
-            content=content,
+            content=container,
             size_hint=(0.82, 0.78),
             background="",
-            background_color=(0, 0, 0, 0)
+            background_color=(0, 0, 0, 0),
+            separator_height=0
         )
 
         def do_merge(instance):
@@ -722,6 +751,8 @@ class AddTopicScreen(Screen):
         urls_strategy: str = "Add",
         steps_strategy: str = "Add",
     ):
+        print("✅ MERGE STARTED")  
+        
         app = App.get_running_app()
 
         try:
@@ -771,6 +802,7 @@ class AddTopicScreen(Screen):
                 merged_topic["local_only"] = True
 
                 app.update_local_topic(existing_topic_id, merged_topic, merged_steps)
+                print("✅ LOCAL MERGE DONE")
                 self.ids.status_label.text = self._txt("✓ Local topics merged")
 
             # ✅ OFFICIAL duplicate → update Firebase
@@ -781,6 +813,7 @@ class AddTopicScreen(Screen):
                 merged_topic["Topic_ID"] = existing_topic_id
 
                 add_topic_to_firebase(merged_topic, overwrite=True)
+                print("✅ FIREBASE MERGE DONE")
 
                 delete_steps_for_topic(existing_topic_id)
 
@@ -803,22 +836,31 @@ class AddTopicScreen(Screen):
 
             except Exception as e:
                 print("DEBUG: cleanup failed:", e)
-
+            
             # ✅ remember target category
             target_category = merged_topic.get("Category", "")
 
-            # ✅ go to menu first
-            app.sm.current = "menu"
+            # ✅ reload data first
+            app.fetch_database()
 
-            # ✅ then reopen category after UI refresh
-            def _restore_category(_dt):
+            def _open_merged_category(_dt):
                 try:
-                    menu = app.root.get_screen("menu")
-                    menu.open_category(target_category)
-                except Exception as e:
-                    print("DEBUG: restore category failed:", e)
+                    print(f"✅ OPEN MERGED CATEGORY: {target_category}")
 
-            Clock.schedule_once(_restore_category, 0.4)
+                    # rebuild menu first
+                    menu = app.root.get_screen("menu")
+                    menu.populate_menu()
+
+                    # ✅ use existing menu navigation to go to DetailScreen
+                    menu.open_category(target_category)
+
+                except Exception as e:
+                    print("DEBUG: open merged category failed:", e)
+
+            # ✅ IMPORTANT:
+            # Your log shows Firebase refresh finishes AFTER the earlier 0.3 / 0.4 timing.
+            # So we wait longer before opening the category.
+            Clock.schedule_once(_open_merged_category, 1.5)
 
         except Exception as e:
             self.ids.status_label.text = self._txt(f"✖ Merge failed: {e}")
@@ -1050,12 +1092,45 @@ class AddTopicScreen(Screen):
 
         # ✅ 3. Required fields
         
-        if not topic["Category"] or not topic["Title"]:
-            self.ids.status_label.text = self._txt("! Category and Title are required.")
+        category = topic.get("Category", "").strip()
+        subcategory = topic.get("Subcategory", "").strip()
+        title = topic.get("Title", "").strip()
+
+        if (
+            not category
+            or category in ("Click to choose category",)
+            or not subcategory
+            or subcategory in ("Click to choose subcategory", "Select Subcategory")
+            or not title
+        ):
+            self.ids.status_label.text = self._txt("! Category, Subcategory and Title are required.")
+
+            app = App.get_running_app()
+            default_bg = app.COLOR_WHITE
+            error_bg = app.COLOR_ERROR_BG   # ✅ soft theme color
+
+            # ✅ RESET FIRST
+            if "category" in self.ids:
+                self.ids.category.background_color = default_bg
+            if "subcategory" in self.ids:
+                self.ids.subcategory.background_color = default_bg
+            if "title" in self.ids:
+                self.ids.title.background_color = default_bg
+
+            # ✅ APPLY ERROR COLOR
+            if category in ("", "Click to choose category"):
+                self.ids.category.background_color = error_bg
+
+            if subcategory in ("", "Click to choose subcategory", "Select Subcategory"):
+                self.ids.subcategory.background_color = error_bg
+
+            if not title:
+                self.ids.title.background_color = error_bg
+
             self.set_save_state("error")
             Clock.schedule_once(lambda dt: self.set_save_state("idle"), 2.5)
             return
-
+        
         # ✅ 4. Duplicate check BEFORE any icon copy or save
         duplicate = self._find_duplicate_topic(topic)
         if duplicate:
@@ -1181,8 +1256,22 @@ class AddTopicScreen(Screen):
             self.set_save_state("error")           
             Clock.schedule_once(lambda dt: self.set_save_state("idle"), 3)
 
-    def on_kv_post(self, base_widget):
-        from kivy.uix.textinput import TextInput
+    def _clear_error_on_input(self, instance, value):
+        app = App.get_running_app()
+
+        if value and value.strip():
+            instance.background_color = app.COLOR_WHITE
+    
+    def on_kv_post(self, base_widget):     
+        for widget in self.walk():
+            # ✅ for text inputs
+            if isinstance(widget, TextInput) and not widget.readonly:
+                widget.bind(focus=self._handle_focus)
+                widget.bind(text=self._clear_error_on_input)   # ✅ NEW
+
+            # ✅ for dropdowns (category/subcategory)
+            if isinstance(widget, Spinner):
+                widget.bind(text=self._clear_error_on_input)   # ✅ NEW
 
         for widget in self.walk():
             if isinstance(widget, TextInput) and not widget.readonly:
