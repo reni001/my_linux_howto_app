@@ -322,10 +322,13 @@ class ArticleScreen(Screen):
             font_path = "DejaVuSansMono.ttf"
         
         # if searching, prioritise search highlight inside code
-        if query:
-            highlighted_code = highlight_text(code, query)
-        else:
-            highlighted_code = self._highlight_code_simple(code)
+        
+        # ✅ first apply syntax highlighting ALWAYS
+        highlighted_code = self._highlight_code_simple(code)
+
+        # ✅ then apply search highlight ON TOP
+        #if query:
+        #    highlighted_code = highlight_text(highlighted_code, query)
 
         # font fallback
         try:

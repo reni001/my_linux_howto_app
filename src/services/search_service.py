@@ -72,28 +72,39 @@ def topic_matches(query: str, topic: dict, steps: list[dict]) -> bool:
 
 def highlight_text(text: str, query: str) -> str:
     """
-    Returns Kivy-markup-safe highlighted text.
+    Safe highlight:
+    - does NOT break existing [color=...] syntax highlighting
+    - works for normal text (titles, descriptions, instructions)
     """
-    raw_text = _safe_str(text)
 
-    if not raw_text:
-        return ""
+    if not text or not query:
+        return text
 
-    escaped = escape_markup(raw_text)
+    import re
 
-    if not query:
-        return escaped
+    # ✅ IMPORTANT: if already contains color markup (code block), skip
+    if "[color=" in text:
+        return text
+
+    from src.ui.theme import COLOR_HIGHLIGHT
+
+    def rgba_to_hex(color):
+        r, g, b = [int(c * 255) for c in color[:3]]
+        return f"#{r:02x}{g:02x}{b:02x}"
 
     color = rgba_to_hex(COLOR_HIGHLIGHT)
 
-    normalized_query = _normalize(query)
-    words = [w for w in normalized_query.split() if len(w) >= 2]
+    normalized_query = re.sub(r"[^a-z0-9 ]+", " ", query.lower())
+    words = normalized_query.split()
 
-    result = escaped
+    result = text
 
-    # longest words first = safer highlighting
-    for word in sorted(set(words), key=len, reverse=True):
+    for word in set(words):
+        if len(word) < 2:
+            continue
+
         pattern = re.compile(re.escape(word), re.IGNORECASE)
+
         result = pattern.sub(
             lambda m: f"[b][color={color}]{m.group(0)}[/color][/b]",
             result
