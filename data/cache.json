@@ -3845,7 +3845,7 @@
       "_key": "-Ov5XEgEj-4m9MQvOJO5",
       "created_at": "2026-06-14T14:28:45.847593"
     },
-    "-OvUeWbWNjpSpc7gzNuY": {
+    "-OvUruWJxAbqKWElLWLI": {
       "Code_Snippet": "sudo apt-get install zsh\n\nzsh",
       "Header_2": "",
       "Headline": "Step 1 Install zsh",
@@ -3856,10 +3856,10 @@
       "Step_Order": 1,
       "Topic_ID": "debian_tweaks_tweaking_ter_dc64",
       "URLs": "",
-      "_key": "-OvUeWbWNjpSpc7gzNuY",
-      "created_at": "2026-06-19T11:35:27.824212"
+      "_key": "-OvUruWJxAbqKWElLWLI",
+      "created_at": "2026-06-19T12:33:57.558666"
     },
-    "-OvUeWf6l-Zj_XEqHDlc": {
+    "-OvUruZRGqLgjzJqLLDT": {
       "Code_Snippet": "sh -c \"$(curl -fsSL https://raw.github.com/robbyrussell/oh-my-zsh/master/tools/install.sh)\"",
       "Header_2": "",
       "Headline": "Step 2: Install Oh My Zsh",
@@ -3870,10 +3870,10 @@
       "Step_Order": 2,
       "Topic_ID": "debian_tweaks_tweaking_ter_dc64",
       "URLs": "https://github.com/ohmyzsh/ohmyzsh",
-      "_key": "-OvUeWf6l-Zj_XEqHDlc",
-      "created_at": "2026-06-19T11:35:28.056315"
+      "_key": "-OvUruZRGqLgjzJqLLDT",
+      "created_at": "2026-06-19T12:33:57.756922"
     },
-    "-OvUeWiVaaFepbmPiqwx": {
+    "-OvUrubI8XNngXoTvX_H": {
       "Code_Snippet": "https://github.com/tonsky/FiraCode/releases/download/6.2/Fira_Code_v6.2.zip",
       "Header_2": "",
       "Headline": "Step 3: Install missing fonts",
@@ -3884,10 +3884,10 @@
       "Step_Order": 3,
       "Topic_ID": "debian_tweaks_tweaking_ter_dc64",
       "URLs": "https://github.com/tonsky/FiraCode, https://www.nerdfonts.com/font-downloads",
-      "_key": "-OvUeWiVaaFepbmPiqwx",
-      "created_at": "2026-06-19T11:35:28.274369"
+      "_key": "-OvUrubI8XNngXoTvX_H",
+      "created_at": "2026-06-19T12:33:57.946186"
     },
-    "-OvUeWlXeQY6Esu4gWex": {
+    "-OvUrueFYWvkeaUp7iE-": {
       "Code_Snippet": "git clone https://github.com/romkatv/powerlevel10k.git $ZSH_CUSTOM/themes/powerlevel10k",
       "Header_2": "",
       "Headline": "Step 4: Install PowerLevel10k",
@@ -3898,10 +3898,10 @@
       "Step_Order": 4,
       "Topic_ID": "debian_tweaks_tweaking_ter_dc64",
       "URLs": "",
-      "_key": "-OvUeWlXeQY6Esu4gWex",
-      "created_at": "2026-06-19T11:35:28.473318"
+      "_key": "-OvUrueFYWvkeaUp7iE-",
+      "created_at": "2026-06-19T12:33:58.145021"
     },
-    "-OvUeWoZPDsio-DOa9Eg": {
+    "-OvUruh71y831In0-6Dk": {
       "Code_Snippet": "ZSH_THEME=\"powerlevel10k/powerlevel10k\"",
       "Header_2": "",
       "Headline": "",
@@ -3912,10 +3912,10 @@
       "Step_Order": 5,
       "Topic_ID": "debian_tweaks_tweaking_ter_dc64",
       "URLs": "",
-      "_key": "-OvUeWoZPDsio-DOa9Eg",
-      "created_at": "2026-06-19T11:35:28.674514"
+      "_key": "-OvUruh71y831In0-6Dk",
+      "created_at": "2026-06-19T12:33:58.317109"
     },
-    "-OvUeWrPzOMi7wnAVelI": {
+    "-OvUrukHfAYT3Eq0xzdP": {
       "Code_Snippet": "p10k configure",
       "Header_2": "",
       "Headline": "Step 5: Configure the Theme",
@@ -3926,10 +3926,10 @@
       "Step_Order": 6,
       "Topic_ID": "debian_tweaks_tweaking_ter_dc64",
       "URLs": "",
-      "_key": "-OvUeWrPzOMi7wnAVelI",
-      "created_at": "2026-06-19T11:35:28.862758"
+      "_key": "-OvUrukHfAYT3Eq0xzdP",
+      "created_at": "2026-06-19T12:33:58.507506"
     },
-    "-OvUeWul7JiJme2iEf8E": {
+    "-OvUrunRKASaCwrYrd86": {
       "Code_Snippet": "plugins=(\n  git\n  sudo\n  dirhistory\n  k\n  autojump\n  zsh-syntax-highlighting\n  zsh-autosuggestions)",
       "Header_2": "",
       "Headline": "Step 6: add plugins",
@@ -3940,10 +3940,10 @@
       "Step_Order": 7,
       "Topic_ID": "debian_tweaks_tweaking_ter_dc64",
       "URLs": "",
-      "_key": "-OvUeWul7JiJme2iEf8E",
-      "created_at": "2026-06-19T11:35:29.073886"
+      "_key": "-OvUrunRKASaCwrYrd86",
+      "created_at": "2026-06-19T12:33:58.733147"
     },
-    "-OvUeWxdGTX3ZDWCZar7": {
+    "-OvUruqdNSDwulTxeSd-": {
       "Code_Snippet": "git clone https://github.com/supercrabtree/k $ZSH_CUSTOM/plugins/k",
       "Header_2": "Plugin k",
       "Headline": "",
@@ -3954,10 +3954,10 @@
       "Step_Order": 8,
       "Topic_ID": "debian_tweaks_tweaking_ter_dc64",
       "URLs": "https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins, https://github.com/supercrabtree/k",
-      "_key": "-OvUeWxdGTX3ZDWCZar7",
-      "created_at": "2026-06-19T11:35:29.260092"
+      "_key": "-OvUruqdNSDwulTxeSd-",
+      "created_at": "2026-06-19T12:33:58.934811"
     },
-    "-OvUeX-PlKb52Vmad47G": {
+    "-OvUrutSp6FqQVrQg3Ys": {
       "Code_Snippet": "git clone --depth 1 -- https://github.com/marlonrichert/zsh-autocomplete.git $ZSH_CUSTOM/plugins/zsh-autocomplete",
       "Header_2": "Plugin Autocomplete",
       "Headline": "",
@@ -3968,10 +3968,10 @@
       "Step_Order": 9,
       "Topic_ID": "debian_tweaks_tweaking_ter_dc64",
       "URLs": "",
-      "_key": "-OvUeX-PlKb52Vmad47G",
-      "created_at": "2026-06-19T11:35:29.442038"
+      "_key": "-OvUrutSp6FqQVrQg3Ys",
+      "created_at": "2026-06-19T12:33:59.133874"
     },
-    "-OvUeX2TnB5aTf6xv_ga": {
+    "-OvUruwBblHlLAVREIYt": {
       "Code_Snippet": "git clone https://github.com/wting/autojump.git  \n\ncd autojump\n./install.py or ./uninstall.py",
       "Header_2": "Plugin Autojump",
       "Headline": "",
@@ -3982,10 +3982,10 @@
       "Step_Order": 10,
       "Topic_ID": "debian_tweaks_tweaking_ter_dc64",
       "URLs": "https://github.com/wting/autojump#installation",
-      "_key": "-OvUeX2TnB5aTf6xv_ga",
-      "created_at": "2026-06-19T11:35:29.640231"
+      "_key": "-OvUruwBblHlLAVREIYt",
+      "created_at": "2026-06-19T12:33:59.312767"
     },
-    "-OvUeX5TOIvyXow5Wz-b": {
+    "-OvUruzGPmXUtOfQDCTD": {
       "Code_Snippet": "git clone https://github.com/zsh-users/zsh-syntax-highlighting.git $ZSH_CUSTOM/plugins/zsh-syntax-highlighting",
       "Header_2": "Plugin Syntax Highlighting",
       "Headline": "",
@@ -3996,10 +3996,10 @@
       "Step_Order": 11,
       "Topic_ID": "debian_tweaks_tweaking_ter_dc64",
       "URLs": "https://github.com/zsh-users/zsh-syntax-highlighting/tree/master",
-      "_key": "-OvUeX5TOIvyXow5Wz-b",
-      "created_at": "2026-06-19T11:35:29.836995"
+      "_key": "-OvUruzGPmXUtOfQDCTD",
+      "created_at": "2026-06-19T12:33:59.512638"
     },
-    "-OvUeX8TE0o2UaA4SD6v": {
+    "-OvUrv1pAK0mBt6rm422": {
       "Code_Snippet": "echo \"source .oh-my-zsh/custom/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh\" >> ${ZDOTDIR:-$HOME}/.zshrc",
       "Header_2": "",
       "Headline": "",
@@ -4010,10 +4010,10 @@
       "Step_Order": 12,
       "Topic_ID": "debian_tweaks_tweaking_ter_dc64",
       "URLs": "",
-      "_key": "-OvUeX8TE0o2UaA4SD6v",
-      "created_at": "2026-06-19T11:35:30.032317"
+      "_key": "-OvUrv1pAK0mBt6rm422",
+      "created_at": "2026-06-19T12:33:59.739074"
     },
-    "-OvUeXBJtJy94XbDCIbJ": {
+    "-OvUrv4nM0zOyhW0HWMj": {
       "Code_Snippet": "",
       "Header_2": "",
       "Headline": "Custom Aliases",
@@ -4024,8 +4024,8 @@
       "Step_Order": 13,
       "Topic_ID": "debian_tweaks_tweaking_ter_dc64",
       "URLs": "",
-      "_key": "-OvUeXBJtJy94XbDCIbJ",
-      "created_at": "2026-06-19T11:35:30.219795"
+      "_key": "-OvUrv4nM0zOyhW0HWMj",
+      "created_at": "2026-06-19T12:33:59.932433"
     }
   },
   "topics": {
@@ -5113,13 +5113,13 @@
       "Cat_Icon": "debian.png",
       "Category": "Debian",
       "Date_Created": "2026-06-19T10:37:39",
-      "Date_Updated": "2026-06-19T13:35:26",
+      "Date_Updated": "2026-06-19T14:33:56",
       "Description": "Oh My Zsh is a community-driven framework for managing your Zsh (Z shell) configuration. Powerlevel10k is a highly popular, lightning-fast theme for Oh My Zsh. Together, they transform your default terminal into a beautiful, highly productive, and information-rich workspace.\n\nPairing the two gives superpowers in the command line:\n# Interactive Setup: \nPowerlevel10k features an out-of-the-box configuration wizard that lets you visually build your prompt (choose colors, icons, and layout).\n\n# Smart Git Integration: \nIt displays your current Git branch, uncommitted changes, and whether you are ahead or behind the remote repository, right in the prompt.\n\n# Lightning Fast: \nUnlike older flashy themes that slow down your terminal, Powerlevel10k loads instantly and features \"instant prompt\" capabilities.\n\n# Context Information: \nIt shows at-a-glance information like your current working directory, battery life, background background jobs, execution time of the last command, and errors.\n\n# Plugin Ecosystem: \nOh My Zsh allows you to easily install plugins like zsh-autosuggestions and zsh-syntax-highlighting to auto-complete commands and color-code text as you type.\n\n# Transient Prompts: It hides old commands and cleans up previous multi-line prompt layouts once they run, making it easy to copy and scroll through your terminal history.",
       "Sub_Icon": "tweaks.png",
       "Subcategory": "Tweaks",
       "Title": "Tweaking terminal for easier and colorful use",
       "Topic_ID": "debian_tweaks_tweaking_ter_dc64",
-      "Topic_Icon": "",
+      "Topic_Icon": "ohmyzsh.png",
       "URLs": "https://github.com/ohmyzsh/ohmyzsh, https://dev.to/abdfnx/oh-my-zsh-powerlevel10k-cool-terminal-1no0",
       "_key": "-OvU5SFUDKnh3ssFGgR3"
     }
