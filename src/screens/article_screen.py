@@ -29,6 +29,7 @@ from src.ui.theme import COLOR_BLUE, COLOR_ORANGE, NOTE_BG, COLOR_WHITE
 from src.services.system_open_service import open_url as open_external_url
 from src.utils.font_utils import get_font_path
 from src.services.search_service import highlight_text
+from src.utils.text_formatting import format_rich_text
 
 icon = get_icon_path
 
@@ -43,6 +44,92 @@ def UI(app):
         "INPUT_HEIGHT": app.FONT_TEXT * 2.2,
         "BUTTON_WIDTH": app.FONT_TEXT * 12,
     }
+
+def _rgba_to_hex(color):
+    r, g, b = [int(c * 255) for c in color[:3]]
+    return f"{r:02x}{g:02x}{b:02x}"
+
+
+def _bind_auto_height(lbl):
+    lbl.fbind(
+        "size",
+        lambda s, w: setattr(s, 'text_size', (w[0], None))
+    )
+    lbl.fbind(
+        "texture_size",
+        lambda inst, val: setattr(inst, 'height', val[1])
+    )
+
+def add_formatted_block(parent, text, app, query="", font_size=None, color=None, italic=False):
+    if not text:
+        return
+
+    font_size = font_size or (app.FONT_TEXT * 1.2)
+    color = color or [0.3, 0.3, 0.3, 1]
+
+    r, g, b = [int(c * 255) for c in COLOR_ORANGE[:3]]
+    bullet_hex = f"{r:02x}{g:02x}{b:02x}"
+
+    lines = text.splitlines()
+
+    for line in lines:
+        raw = line.rstrip()
+
+        if not raw.strip():
+            parent.add_widget(Widget(size_hint_y=None, height=dp(6)))
+            continue
+
+        stripped = raw.strip()
+
+        # indentation (4 spaces = level)
+        indent = len(raw) - len(raw.lstrip(" "))
+        level = indent // 4
+
+        # ✅ BULLET LINE
+        if stripped.startswith("- "):
+            content = stripped[2:]
+            content = format_rich_text(content)
+            content = highlight_text(content, query)
+
+            # ✅ use slightly larger bullet
+            bullet = f"[color={bullet_hex}][size={int(font_size * 1.3)}]•[/size][/color]"
+
+            # ✅ indent using padding ONLY (no fake spaces)
+            lbl = Label(
+                text=f"{bullet} {content}",
+                markup=True,
+                color=color,
+                font_size=font_size,
+                italic=italic,
+                size_hint_y=None,
+                halign="left",
+                valign="middle",   # ✅ THIS centers bullet vertically with first line
+                padding=(dp(level * 14), 0)  # ✅ clean indent
+            )
+
+            _bind_auto_height(lbl)
+
+            parent.add_widget(lbl)
+
+        # ✅ NORMAL TEXT
+        else:
+            content = format_rich_text(stripped)
+            content = highlight_text(content, query)
+
+            lbl = Label(
+                text=content,
+                markup=True,
+                color=color,
+                font_size=font_size,
+                italic=italic,
+                size_hint_y=None,
+                halign="left",
+                valign="top"
+            )
+
+            _bind_auto_height(lbl)
+
+            parent.add_widget(lbl)
 
 
 class ClickableImage(ButtonBehavior, Image):
@@ -143,7 +230,7 @@ class StepCard(BoxLayout):
                 halign='left'
             )
             h2_lbl.bind(
-                size=lambda s, w: setattr(s, 'text_size', (w[0], None)),
+                size=lambda s, w: setattr(s, 'text_size', (w[0] - 20, None)),
                 texture_size=lambda inst, val: setattr(inst, 'height', val[1])
             )
             self.add_widget(h2_lbl)
@@ -151,19 +238,15 @@ class StepCard(BoxLayout):
         # --- STEP INSTRUCTION ---
         ins = safe_str(step.get('Instruction'))
         if ins:
-            ins_lbl = Label(
-                text=highlight_text(ins, query),
-                markup=True,
-                color=[0.2, 0.2, 0.2, 1],
+            add_formatted_block(
+                self,
+                ins,
+                app,
+                query=query,
                 font_size=app.FONT_TEXT * 1.2,
-                size_hint_y=None,
-                halign='left'
+                color=[0.2, 0.2, 0.2, 1],
+                italic=False
             )
-            ins_lbl.bind(
-                size=lambda s, w: setattr(s, 'text_size', (w[0], None)),
-                texture_size=lambda inst, val: setattr(inst, 'height', val[1])
-            )
-            self.add_widget(ins_lbl)
 
     def _update_graphics(self, *args):
         self.bg_rect.pos = self.pos
@@ -450,7 +533,7 @@ class ArticleScreen(Screen):
         img = ClickableImage(
             source=path,
             size_hint_y=None,
-            height=ui["ICON_SIZE"] * 6,
+            height=ui["ICON_SIZE"] * 10,
             allow_stretch=True,
             keep_ratio=True
         )
@@ -489,29 +572,40 @@ class ArticleScreen(Screen):
                 pos_hint={'top': 1}
             )
         )
-                
-        highlighted_note = highlight_text(note, query) if query else note
-        markup_text = "[b][color=#ff8b02]NOTE:[/color][/b]\n" + highlighted_note
-
-        note_lbl = Label(
-            text=markup_text,
-            markup=True,
-            color=[0.2, 0.2, 0.2, 1],
-            font_size=app.FONT_TEXT * 1.1,
-            italic=True,
+        
+        content_box = BoxLayout(
+            orientation='vertical',
             size_hint_y=None,
-            halign='left',
-            valign='top'
+            spacing=dp(4)
         )
+        content_box.bind(minimum_height=content_box.setter('height'))
 
-        note_lbl.bind(
+        title_lbl = Label(
+            text="[b][color=#ff8b02]NOTE:[/color][/b]",
+            markup=True,
+            size_hint_y=None,
+            halign='left'
+        )
+        title_lbl.bind(
             size=lambda s, w: setattr(s, 'text_size', (w[0], None)),
             texture_size=lambda inst, val: setattr(inst, 'height', val[1])
         )
 
-        note_container.add_widget(note_lbl)
+        content_box.add_widget(title_lbl)
 
+        add_formatted_block(
+            content_box,
+            note,
+            app,
+            query=query,
+            font_size=app.FONT_TEXT * 1.1,
+            color=[0.2, 0.2, 0.2, 1],
+            italic=True
+        )
+
+        note_container.add_widget(content_box)
         return note_container
+
 
     def _build_topic_urls(self, raw_urls: str, app):
         ui = UI(app)
@@ -634,22 +728,26 @@ class ArticleScreen(Screen):
 
         # --- DESCRIPTION ---
         desc_text = safe_str(data.get('Description'))
+
         if desc_text:
-            desc_lbl = Label(
-                text=desc_text,
-                color=[0.3, 0.3, 0.3, 1],
-                font_size=app.FONT_TEXT * 1.2,
-                italic=True,
+            desc_box = BoxLayout(
+                orientation='vertical',
                 size_hint_y=None,
-                halign='left'
+                spacing=dp(4)
+            )
+            desc_box.bind(minimum_height=desc_box.setter('height'))
+
+            add_formatted_block(
+                desc_box,
+                desc_text,
+                app,
+                query=self.current_search_query,
+                font_size=app.FONT_TEXT * 1.2,
+                color=[0.3, 0.3, 0.3, 1],
+                italic=True
             )
 
-            desc_lbl.bind(
-                size=lambda s, w: setattr(s, 'text_size', (w[0], None)),
-                texture_size=lambda inst, val: setattr(inst, 'height', val[1])
-            )
-
-            widgets.append(desc_lbl)
+            widgets.append(desc_box)
 
         return widgets
 
@@ -715,11 +813,25 @@ class ArticleScreen(Screen):
             for w in url_widgets:
                 card.add_widget(w)
 
-            # --- NOTES ---
+            # --- NOTES (Stable Logic) ---
             note = safe_str(step.get('Notes'))
-            note_widget = self._build_note_box(note, app, query=self.current_search_query)
-            if note_widget:
-                card.add_widget(note_widget)
+            if note:
+                note_container = BoxLayout(orientation='horizontal', size_hint_y=None, spacing=dp(12), padding=dp(12))
+                with note_container.canvas.before:
+                    Color(rgba=NOTE_BG)
+                    note_container.bg_rect = RoundedRectangle(pos=note_container.pos, size=note_container.size, radius=[dp(6),])
+                note_container.bind(minimum_height=note_container.setter('height'))
+                note_container.bind(pos=self._update_graphics, size=self._update_graphics)
+                note_container.add_widget(
+                    Image(source=get_icon_path("note.png"),
+                        size_hint=(None, None),
+                        size=(dp(32), dp(32)), pos_hint={'top': 1})
+                )
+                markup_text = "[b][color=ff8b02]NOTE:[/color][/b]\n" + note
+                n_lbl = Label(text=markup_text, markup=True, color=[0.2, 0.2, 0.2, 1], font_size='20sp', italic=True, size_hint_y=None, halign='left', valign='top')
+                n_lbl.bind(size=lambda s, w: setattr(s, 'text_size', (w[0], None)), texture_size=lambda inst, val: setattr(inst, 'height', val[1]))
+                note_container.add_widget(n_lbl)
+                card.add_widget(note_container)
 
             self.ids.content_box.add_widget(card)
 
