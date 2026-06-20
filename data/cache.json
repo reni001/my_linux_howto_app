@@ -3845,7 +3845,7 @@
       "_key": "-Ov5XEgEj-4m9MQvOJO5",
       "created_at": "2026-06-14T14:28:45.847593"
     },
-    "-OvUruWJxAbqKWElLWLI": {
+    "-Ovb5XZC7ccVD7GyWNSy": {
       "Code_Snippet": "sudo apt-get install zsh\n\nzsh",
       "Header_2": "",
       "Headline": "Step 1 Install zsh",
@@ -3856,10 +3856,10 @@
       "Step_Order": 1,
       "Topic_ID": "debian_tweaks_tweaking_ter_dc64",
       "URLs": "",
-      "_key": "-OvUruWJxAbqKWElLWLI",
-      "created_at": "2026-06-19T12:33:57.558666"
+      "_key": "-Ovb5XZC7ccVD7GyWNSy",
+      "created_at": "2026-06-20T22:15:11.851288"
     },
-    "-OvUruZRGqLgjzJqLLDT": {
+    "-Ovb5Xbi_XgTT3T3yyRT": {
       "Code_Snippet": "sh -c \"$(curl -fsSL https://raw.github.com/robbyrussell/oh-my-zsh/master/tools/install.sh)\"",
       "Header_2": "",
       "Headline": "Step 2: Install Oh My Zsh",
@@ -3870,24 +3870,24 @@
       "Step_Order": 2,
       "Topic_ID": "debian_tweaks_tweaking_ter_dc64",
       "URLs": "https://github.com/ohmyzsh/ohmyzsh",
-      "_key": "-OvUruZRGqLgjzJqLLDT",
-      "created_at": "2026-06-19T12:33:57.756922"
+      "_key": "-Ovb5Xbi_XgTT3T3yyRT",
+      "created_at": "2026-06-20T22:15:12.069450"
     },
-    "-OvUrubI8XNngXoTvX_H": {
+    "-Ovb5Xid4NrUqqgfMb7I": {
       "Code_Snippet": "https://github.com/tonsky/FiraCode/releases/download/6.2/Fira_Code_v6.2.zip",
       "Header_2": "",
       "Headline": "Step 3: Install missing fonts",
-      "Instruction": "In case you use WSL under windows download and install Fira Cuda and set it as default in your terminal for Linux.\nIn order to be able to see special icons install MesloLG Nerd Font:\n- MesloGS NF Regular.ttf\n- MesloGS NF Italic.ttf\n- MesloGS NF Bold.ttf\n- MesloGS NF /Bold Italic.ttf",
+      "Instruction": "In case you use WSL under windows download and install Fira Cuda and set it as default in your terminal for Linux.\nIn order to be able to see special icons install MesloLG Nerd Font:\n    - MesloGS NF Regular.ttf\n    - MesloGS NF Italic.ttf\n    - MesloGS NF Bold.ttf\n    - MesloGS NF /Bold Italic.ttf",
       "Notes": "",
       "Screenshot": "zsh-02.png",
       "Step_ID": 697,
       "Step_Order": 3,
       "Topic_ID": "debian_tweaks_tweaking_ter_dc64",
       "URLs": "https://github.com/tonsky/FiraCode, https://www.nerdfonts.com/font-downloads",
-      "_key": "-OvUrubI8XNngXoTvX_H",
-      "created_at": "2026-06-19T12:33:57.946186"
+      "_key": "-Ovb5Xid4NrUqqgfMb7I",
+      "created_at": "2026-06-20T22:15:12.300424"
     },
-    "-OvUrueFYWvkeaUp7iE-": {
+    "-Ovb5XlweO2iwvTImp9Y": {
       "Code_Snippet": "git clone https://github.com/romkatv/powerlevel10k.git $ZSH_CUSTOM/themes/powerlevel10k",
       "Header_2": "",
       "Headline": "Step 4: Install PowerLevel10k",
@@ -3898,10 +3898,10 @@
       "Step_Order": 4,
       "Topic_ID": "debian_tweaks_tweaking_ter_dc64",
       "URLs": "",
-      "_key": "-OvUrueFYWvkeaUp7iE-",
-      "created_at": "2026-06-19T12:33:58.145021"
+      "_key": "-Ovb5XlweO2iwvTImp9Y",
+      "created_at": "2026-06-20T22:15:12.730330"
     },
-    "-OvUruh71y831In0-6Dk": {
+    "-Ovb5XpZ-hVdlEWGH3z3": {
       "Code_Snippet": "ZSH_THEME=\"powerlevel10k/powerlevel10k\"",
       "Header_2": "",
       "Headline": "",
@@ -3912,10 +3912,10 @@
       "Step_Order": 5,
       "Topic_ID": "debian_tweaks_tweaking_ter_dc64",
       "URLs": "",
-      "_key": "-OvUruh71y831In0-6Dk",
-      "created_at": "2026-06-19T12:33:58.317109"
+      "_key": "-Ovb5XpZ-hVdlEWGH3z3",
+      "created_at": "2026-06-20T22:15:12.949799"
     },
-    "-OvUrukHfAYT3Eq0xzdP": {
+    "-Ovb5Xt-Q2abZlL3mQ_L": {
       "Code_Snippet": "p10k configure",
       "Header_2": "",
       "Headline": "Step 5: Configure the Theme",
@@ -3926,10 +3926,10 @@
       "Step_Order": 6,
       "Topic_ID": "debian_tweaks_tweaking_ter_dc64",
       "URLs": "",
-      "_key": "-OvUrukHfAYT3Eq0xzdP",
-      "created_at": "2026-06-19T12:33:58.507506"
+      "_key": "-Ovb5Xt-Q2abZlL3mQ_L",
+      "created_at": "2026-06-20T22:15:13.175319"
     },
-    "-OvUrunRKASaCwrYrd86": {
+    "-Ovb5XwJUa35zh678C8d": {
       "Code_Snippet": "plugins=(\n  git\n  sudo\n  dirhistory\n  k\n  autojump\n  zsh-syntax-highlighting\n  zsh-autosuggestions)",
       "Header_2": "",
       "Headline": "Step 6: add plugins",
@@ -3940,24 +3940,24 @@
       "Step_Order": 7,
       "Topic_ID": "debian_tweaks_tweaking_ter_dc64",
       "URLs": "",
-      "_key": "-OvUrunRKASaCwrYrd86",
-      "created_at": "2026-06-19T12:33:58.733147"
+      "_key": "-Ovb5XwJUa35zh678C8d",
+      "created_at": "2026-06-20T22:15:13.390974"
     },
-    "-OvUruqdNSDwulTxeSd-": {
+    "-Ovb5Xzhm7eWCozDebY3": {
       "Code_Snippet": "git clone https://github.com/supercrabtree/k $ZSH_CUSTOM/plugins/k",
       "Header_2": "Plugin k",
       "Headline": "",
-      "Instruction": "4 of the above mentioned plugins need to be added to the already existent plugins in the .oh-my-zsh folder:\n\n~\\.oh-my-zsh\\custom\\plugins\n\n\"k\" gives directory listings for zsh with git features:\nk is a zsh script / plugin to make directory listings more readable, adding a bit of color and some git status information on files and directories.\n\nDirectory listings for zsh with git features:\nk is a zsh script / plugin to make directory listings more readable, adding a bit of color and some git status information on files and directories.\n\nRotting dates:\nDates fade with age.\n\nInstallation",
+      "Instruction": "4 of the above mentioned plugins need to be added to the already existent plugins in the .oh-my-zsh folder:\n\n~\\.oh-my-zsh\\custom\\plugins\n\n**Plugin k**\n\"k\" gives directory listings for zsh with git features:\nk is a zsh script / plugin to make directory listings more readable, adding a bit of color and some git status information on files and directories.\n\nDirectory listings for zsh with git features:\nk is a zsh script / plugin to make directory listings more readable, adding a bit of color and some git status information on files and directories.\n\nRotting dates:\nDates fade with age.\n\nInstallation",
       "Notes": "",
       "Screenshot": "",
       "Step_ID": 702,
       "Step_Order": 8,
       "Topic_ID": "debian_tweaks_tweaking_ter_dc64",
       "URLs": "https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins, https://github.com/supercrabtree/k",
-      "_key": "-OvUruqdNSDwulTxeSd-",
-      "created_at": "2026-06-19T12:33:58.934811"
+      "_key": "-Ovb5Xzhm7eWCozDebY3",
+      "created_at": "2026-06-20T22:15:13.609921"
     },
-    "-OvUrutSp6FqQVrQg3Ys": {
+    "-Ovb5Y1tDlxZyj3NEWDi": {
       "Code_Snippet": "git clone --depth 1 -- https://github.com/marlonrichert/zsh-autocomplete.git $ZSH_CUSTOM/plugins/zsh-autocomplete",
       "Header_2": "Plugin Autocomplete",
       "Headline": "",
@@ -3968,24 +3968,24 @@
       "Step_Order": 9,
       "Topic_ID": "debian_tweaks_tweaking_ter_dc64",
       "URLs": "",
-      "_key": "-OvUrutSp6FqQVrQg3Ys",
-      "created_at": "2026-06-19T12:33:59.133874"
+      "_key": "-Ovb5Y1tDlxZyj3NEWDi",
+      "created_at": "2026-06-20T22:15:13.817122"
     },
-    "-OvUruwBblHlLAVREIYt": {
+    "-Ovb5Y55Uf6EUAWmW0yo": {
       "Code_Snippet": "git clone https://github.com/wting/autojump.git  \n\ncd autojump\n./install.py or ./uninstall.py",
       "Header_2": "Plugin Autojump",
       "Headline": "",
-      "Instruction": "autojump is a faster way to navigate your filesystem. It works by maintaining a database of the directories you use the most from the command line.\n\nDirectories must be visited first before they can be jumped to.\n\nUSAGE\nj is a convenience wrapper function around autojump. Any option that can be used with autojump can be used with j and vice versa.\n\nJump To A Directory That Contains foo:\n\nj foo\nJump To A Directory That Contains foo, Preferring Child Directories:\n\nYou can prioritize child directories over matches in the databases via\n\njc foo\nOpen File Manager To Directories (instead of jumping):\n\nInstead of jumping to a directory, you can open a file explorer window (Mac Finder, Windows Explorer, GNOME Nautilus, etc.) to the directory instead.\n\njo music\nOpening a file manager to a child directory is also supported:\n\njco images\nUsing Multiple Arguments:\n\nLet's assume the following database:\n\n30   /home/user/mail/inbox\n10   /home/user/work/inbox\nj in would jump into /home/user/mail/inbox as the higher weighted entry. However you can pass multiple arguments to autojump to prefer a different entry. In the above example, j w in would then change directory to /home/user/work/inbox.",
+      "Instruction": "autojump is a faster way to navigate your filesystem. It works by maintaining a database of the directories you use the most from the command line.\n\nDirectories must be visited first before they can be jumped to.\n\n**USAGE**\nj is a convenience wrapper function around autojump. Any option that can be used with autojump can be used with j and vice versa.\n\nJump To A Directory That Contains foo:\n- j foo\n\nJump To A Directory That Contains foo, Preferring Child Directories:\nYou can prioritize child directories over matches in the databases via\n- jc foo\n\nOpen File Manager To Directories (instead of jumping):\nInstead of jumping to a directory, you can open a file explorer window (Mac Finder, Windows Explorer, GNOME Nautilus, etc.) to the directory instead.\n- jo music\n\nOpening a file manager to a child directory is also supported:\n- jco images\n\nUsing Multiple Arguments:\nLet's assume the following database:\n\n30   /home/user/mail/inbox\n10   /home/user/work/inbox\nj in would jump into /home/user/mail/inbox as the higher weighted entry. However you can pass multiple arguments to autojump to prefer a different entry. In the above example, j w in would then change directory to /home/user/work/inbox.",
       "Notes": "",
       "Screenshot": "",
       "Step_ID": 704,
       "Step_Order": 10,
       "Topic_ID": "debian_tweaks_tweaking_ter_dc64",
       "URLs": "https://github.com/wting/autojump#installation",
-      "_key": "-OvUruwBblHlLAVREIYt",
-      "created_at": "2026-06-19T12:33:59.312767"
+      "_key": "-Ovb5Y55Uf6EUAWmW0yo",
+      "created_at": "2026-06-20T22:15:14.014678"
     },
-    "-OvUruzGPmXUtOfQDCTD": {
+    "-Ovb5Y8WTs4efcgQ085O": {
       "Code_Snippet": "git clone https://github.com/zsh-users/zsh-syntax-highlighting.git $ZSH_CUSTOM/plugins/zsh-syntax-highlighting",
       "Header_2": "Plugin Syntax Highlighting",
       "Headline": "",
@@ -3996,24 +3996,24 @@
       "Step_Order": 11,
       "Topic_ID": "debian_tweaks_tweaking_ter_dc64",
       "URLs": "https://github.com/zsh-users/zsh-syntax-highlighting/tree/master",
-      "_key": "-OvUruzGPmXUtOfQDCTD",
-      "created_at": "2026-06-19T12:33:59.512638"
+      "_key": "-Ovb5Y8WTs4efcgQ085O",
+      "created_at": "2026-06-20T22:15:14.234428"
     },
-    "-OvUrv1pAK0mBt6rm422": {
+    "-Ovb5YC5_shyyDMlLTSU": {
       "Code_Snippet": "echo \"source .oh-my-zsh/custom/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh\" >> ${ZDOTDIR:-$HOME}/.zshrc",
       "Header_2": "",
       "Headline": "",
-      "Instruction": "Sourcing of zsh-syntax-highlighting.zsh at the end of the .zshrc file:\n\nzsh-syntax-highlighting works by hooking into the Zsh Line Editor (ZLE) and computing syntax highlighting for the command-line buffer as it stands at the time z-sy-h's hook is invoked.\n\nIn zsh 5.2 and older, zsh-syntax-highlighting.zsh hooks into ZLE by wrapping ZLE widgets. It must be sourced after all custom widgets have been created (i.e., after all zle -N calls and after running compinit) in order to be able to wrap all of them. Widgets created after z-sy-h is sourced will work, but will not update the syntax highlighting.\n\nIn zsh newer than 5.8 (not including 5.8 itself), zsh-syntax-highlighting uses the add-zle-hook-widget facility to install a zle-line-pre-redraw hook. Hooks are run in order of registration, therefore, z-sy-h must be sourced (and register its hook) after anything else that adds hooks that modify the command-line buffer.",
+      "Instruction": "Sourcing of zsh-syntax-highlighting.zsh at the end of the .zshrc file:\n\n    - zsh-syntax-highlighting works by hooking into the Zsh Line Editor (ZLE) and computing syntax highlighting for the command-line buffer as it stands at the time z-sy-h's hook is invoked.\n\n- In zsh 5.2 and older, zsh-syntax-highlighting.zsh hooks into ZLE by wrapping ZLE widgets. It must be sourced after all custom widgets have been created (i.e., after all zle -N calls and after running compinit) in order to be able to wrap all of them. Widgets created after z-sy-h is sourced will work, but will not update the syntax highlighting.\n\n- In zsh newer than 5.8 (not including 5.8 itself), zsh-syntax-highlighting uses the add-zle-hook-widget facility to install a zle-line-pre-redraw hook. Hooks are run in order of registration, therefore, z-sy-h must be sourced (and register its hook) after anything else that adds hooks that modify the command-line buffer.",
       "Notes": "",
       "Screenshot": "",
       "Step_ID": 706,
       "Step_Order": 12,
       "Topic_ID": "debian_tweaks_tweaking_ter_dc64",
       "URLs": "",
-      "_key": "-OvUrv1pAK0mBt6rm422",
-      "created_at": "2026-06-19T12:33:59.739074"
+      "_key": "-Ovb5YC5_shyyDMlLTSU",
+      "created_at": "2026-06-20T22:15:14.458442"
     },
-    "-OvUrv4nM0zOyhW0HWMj": {
+    "-Ovb5YFYz_vuLP-QfG5R": {
       "Code_Snippet": "",
       "Header_2": "",
       "Headline": "Custom Aliases",
@@ -4024,8 +4024,8 @@
       "Step_Order": 13,
       "Topic_ID": "debian_tweaks_tweaking_ter_dc64",
       "URLs": "",
-      "_key": "-OvUrv4nM0zOyhW0HWMj",
-      "created_at": "2026-06-19T12:33:59.932433"
+      "_key": "-Ovb5YFYz_vuLP-QfG5R",
+      "created_at": "2026-06-20T22:15:14.691606"
     }
   },
   "topics": {
@@ -5113,8 +5113,8 @@
       "Cat_Icon": "debian.png",
       "Category": "Debian",
       "Date_Created": "2026-06-19T10:37:39",
-      "Date_Updated": "2026-06-19T14:33:56",
-      "Description": "Oh My Zsh is a community-driven framework for managing your Zsh (Z shell) configuration. Powerlevel10k is a highly popular, lightning-fast theme for Oh My Zsh. Together, they transform your default terminal into a beautiful, highly productive, and information-rich workspace.\n\nPairing the two gives superpowers in the command line:\n# Interactive Setup: \nPowerlevel10k features an out-of-the-box configuration wizard that lets you visually build your prompt (choose colors, icons, and layout).\n\n# Smart Git Integration: \nIt displays your current Git branch, uncommitted changes, and whether you are ahead or behind the remote repository, right in the prompt.\n\n# Lightning Fast: \nUnlike older flashy themes that slow down your terminal, Powerlevel10k loads instantly and features \"instant prompt\" capabilities.\n\n# Context Information: \nIt shows at-a-glance information like your current working directory, battery life, background background jobs, execution time of the last command, and errors.\n\n# Plugin Ecosystem: \nOh My Zsh allows you to easily install plugins like zsh-autosuggestions and zsh-syntax-highlighting to auto-complete commands and color-code text as you type.\n\n# Transient Prompts: It hides old commands and cleans up previous multi-line prompt layouts once they run, making it easy to copy and scroll through your terminal history.",
+      "Date_Updated": "2026-06-21T00:15:10",
+      "Description": "Oh My Zsh is a community-driven framework for managing your Zsh (Z shell) configuration. Powerlevel10k is a highly popular, lightning-fast theme for Oh My Zsh. Together, they transform your default terminal into a beautiful, highly productive, and information-rich workspace.\n\nPairing the two gives superpowers in the command line:\n\n**Interactive Setup:** \nPowerlevel10k features an out-of-the-box configuration wizard that lets you visually build your prompt (choose colors, icons, and layout).\n\n**Smart Git Integration:** \nIt displays your current Git branch, uncommitted changes, and whether you are ahead or behind the remote repository, right in the prompt.\n\n**Lightning Fast:** \nUnlike older flashy themes that slow down your terminal, Powerlevel10k loads instantly and features \"instant prompt\" capabilities.\n\n**Context Information:** \nIt shows at-a-glance information like your current working directory, battery life, background background jobs, execution time of the last command, and errors.\n\n**Plugin Ecosystem:** \nOh My Zsh allows you to easily install plugins like zsh-autosuggestions and zsh-syntax-highlighting to auto-complete commands and color-code text as you type.\n\n**Transient Prompts:**\n It hides old commands and cleans up previous multi-line prompt layouts once they run, making it easy to copy and scroll through your terminal history.",
       "Sub_Icon": "tweaks.png",
       "Subcategory": "Tweaks",
       "Title": "Tweaking terminal for easier and colorful use",
