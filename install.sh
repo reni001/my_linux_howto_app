@@ -258,9 +258,9 @@ fi
 
 echo "Creating version file..."
 
-echo "2.4.0" > "$DATA_DIR/version.txt"
+echo "2.5.0" > "$DATA_DIR/version.txt"
 
-echo "[INFO] version.txt created with version 2.4.0"
+echo "[INFO] version.txt created with version 2.5.0"
 
 
 # ----------------------------------------

@@ -392,9 +392,19 @@ class AddTopicScreen(Screen):
             return
 
         instruction = self.ids.step_instruction.text.strip()
-        if not instruction:
-            self.ids.status_label.text = self._txt("! Instruction is required.")
+        code = self.ids.step_code.text.strip()
+        notes = self.ids.step_notes.text.strip()
+        screenshot = self.ids.step_screenshot.text.strip()
+
+        # ✅ NEW flexible validation
+        has_content = any([instruction, code, notes, screenshot])
+
+        if not has_content:
+            self.ids.status_label.text = self._txt(
+                "! Step must contain Instruction, Code, Screenshot or Notes."
+            )
             return
+
         # Build step dict
         step = {
             "Step_Order": step_order,

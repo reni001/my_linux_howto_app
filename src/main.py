@@ -184,6 +184,7 @@ from kivy.uix.popup import Popup
 from kivy.uix.scrollview import ScrollView
 from kivy.graphics import Color, RoundedRectangle, Line
 from kivy.logger import Logger, LOG_LEVELS
+from kivy.utils import escape_markup
 
 # ----- Check if python 3.12 is installed ---------
 
@@ -411,7 +412,6 @@ class LinuxHowToApp(App):
         popup.dismiss()              # ✅ close popup first
         self.sm.current = "app_info" # ✅ then switch screen
 
-
     def fetch_database(self):
         # 1) Load data from Firebase / cache
         fetch_database(self)
@@ -498,6 +498,81 @@ class LinuxHowToApp(App):
     def reload_data(self):
         self.APP_DATA = fetch_database(force_reload=True)
         self.refresh_ui()
+
+    #---------- formatting help popup ----------
+    def open_formatting_help_popup(self):
+        modal = ModalView(
+            size_hint=(None, None),
+            size=(dp(550), dp(500)),
+            auto_dismiss=True,
+            background_color=(0, 0, 0, 0.6)
+        )
+
+        root = BoxLayout(
+            orientation="vertical",
+            padding=dp(14),
+            spacing=dp(10)
+        )
+
+        with root.canvas.before:
+            from kivy.graphics import Color, RoundedRectangle
+            Color(1, 1, 1, 1)
+            root.bg = RoundedRectangle(pos=root.pos, size=root.size, radius=[dp(12)])
+        root.bind(
+            pos=lambda inst, val: setattr(root.bg, "pos", val),
+            size=lambda inst, val: setattr(root.bg, "size", val)
+        )
+
+        text = """#### Text formatting options ####
+
+    Bold: **text** or [b]text[/b]
+
+    Italic: [i]text[/i]
+
+    Bullet: - item
+
+    Nested bullet: (4 spaces)- item
+
+    Empty line: (blank line)
+
+    Notice blocks:
+      NOTE: text
+      WARNING: text
+      TIP: text
+
+    Multiline notice blocks:
+    NOTE:
+    - line 1
+    - line 2
+    (stopped by an empty line or another block)
+    """
+
+        content = Label(
+            text=escape_markup(text),
+            markup=True,
+            color=(0.2, 0.2, 0.2, 1),
+            size_hint_y=None,
+            halign="left",
+            valign="top"
+        )
+        content.bind(
+            size=lambda s, w: setattr(s, "text_size", (w[0], None)),
+            texture_size=lambda inst, val: setattr(inst, "height", val[1])
+        )
+
+        close_btn = Button(
+            text="Close",
+            size_hint_y=None,
+            height=dp(40),
+            background_color=self.COLOR_BLUE
+        )
+        close_btn.bind(on_release=lambda x: modal.dismiss())
+
+        root.add_widget(content)
+        root.add_widget(close_btn)
+
+        modal.add_widget(root)
+        modal.open()
 
     #----------- update version ----------
     def update_version_labels(self):

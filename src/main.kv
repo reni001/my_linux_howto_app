@@ -1109,9 +1109,29 @@
                         id: step_header2
                         hint_text: "Header 2 (optional)"
 
-                    MultilineFormInput:
-                        id: step_instruction
-                        hint_text: "Instruction (required)"
+                    # --- STEP INSTRUCTION + HELP BUTTON ---# --- STEP IN
+
+                    SecondaryBlueButton:
+                        text: "Formatting help"
+                        size_hint_x: None
+                        width: dp(140)
+                        font_size: app.FONT_TEXT * 0.85
+                        on_release: app.open_formatting_help_popup()
+                    
+                    BoxLayout:
+                        orientation: "vertical"
+                        size_hint_y: None
+                        height: step_instruction.height + dp(30)
+                        spacing: dp(4)
+
+                        MultilineFormInput:
+                            id: step_instruction
+                            hint_text: "Instruction (optional)"
+
+                        BoxLayout:
+                            size_hint_y: None
+                            height: dp(26)
+
 
                     MultilineFormInput:
                         id: step_code

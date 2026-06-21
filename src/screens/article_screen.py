@@ -38,7 +38,7 @@ def UI(app):
     return {
         "SPACING": app.FONT_TEXT * 0.8,
         "SPACING_SMALL": app.FONT_TEXT * 0.5,
-        "SPACING_LARGE": app.FONT_TEXT * 1.2,
+        "SPACING_LARGE": app.FONT_TEXT * 1.8,
         "ICON_SIZE": app.FONT_TEXT * 1.8,
         "ICON_SMALL": app.FONT_TEXT * 1.2,
         "INPUT_HEIGHT": app.FONT_TEXT * 2.2,
@@ -49,6 +49,8 @@ def _rgba_to_hex(color):
     r, g, b = [int(c * 255) for c in color[:3]]
     return f"{r:02x}{g:02x}{b:02x}"
 
+def _core_icon_path(filename: str) -> str:
+    return str(get_runtime_paths()["assets"] / "icons_core" / filename)
 
 def _bind_auto_height(lbl):
     lbl.fbind(
@@ -71,30 +73,168 @@ def add_formatted_block(parent, text, app, query="", font_size=None, color=None,
     bullet_hex = f"{r:02x}{g:02x}{b:02x}"
 
     lines = text.splitlines()
+    prev_was_bullet = False
 
-    for line in lines:
-        raw = line.rstrip()
+    def _bind_bg(widget):
+        def update_pos(inst, val):
+            widget.bg_rect.pos = val
+        def update_size(inst, val):
+            widget.bg_rect.size = val
+        widget.bind(pos=update_pos, size=update_size)
 
+    def _make_notice_box(title, body_text, bg, icon_name):
+        box = BoxLayout(
+            orientation='horizontal',
+            size_hint_y=None,
+            spacing=dp(10),
+            padding=[dp(12), dp(10), dp(12), dp(10)]
+        )
+        box.bind(minimum_height=box.setter('height'))
+
+        with box.canvas.before:
+            Color(rgba=bg)
+            box.bg_rect = RoundedRectangle(
+                pos=box.pos,
+                size=box.size,
+                radius=[dp(8)]
+            )
+
+        _bind_bg(box)
+
+        # icon from assets/icons_core
+        icon_source = _core_icon_path(icon_name)
+        if Path(icon_source).exists():
+            icon_container = BoxLayout(
+                size_hint=(None, 1),
+                width=dp(26),
+                padding=(0, dp(2), 0, 0)
+            )
+
+            icon_container.add_widget(
+                Image(
+                    source=icon_source,
+                    size_hint=(None, None),
+                    size=(dp(22), dp(22)),
+                    pos_hint={"top": 1}   # ✅ THIS FIXES POSITION
+                )
+            )
+
+            box.add_widget(icon_container)
+
+        content_box = BoxLayout(
+            orientation='vertical',
+            size_hint_y=None,
+            spacing=dp(2)
+        )
+        content_box.bind(minimum_height=content_box.setter('height'))
+
+        title_lbl = Label(
+            text=f"[b]{title}:[/b]",
+            markup=True,
+            color=[0.2, 0.2, 0.2, 1],
+            font_size=font_size,
+            size_hint_y=None,
+            halign="left",
+            valign="top"
+        )
+        _bind_auto_height(title_lbl)
+        content_box.add_widget(title_lbl)
+
+        # render the body using the same formatting system
+        if body_text.strip():
+            add_formatted_block(
+                content_box,
+                body_text,
+                app,
+                query=query,
+                font_size=font_size,
+                color=[0.2, 0.2, 0.2, 1],
+                italic=False
+            )
+
+        box.add_widget(content_box)
+        return box
+
+    i = 0
+    while i < len(lines):
+        raw = lines[i].rstrip()
+
+        # visible empty line
         if not raw.strip():
-            parent.add_widget(Widget(size_hint_y=None, height=dp(6)))
+            parent.add_widget(
+                Widget(size_hint_y=None, height=dp(app.FONT_TEXT * 0.6))
+            )
+            prev_was_bullet = False
+            i += 1
             continue
 
         stripped = raw.strip()
+        upper = stripped.upper()
 
-        # indentation (4 spaces = level)
-        indent = len(raw) - len(raw.lstrip(" "))
-        level = indent // 4
+        # =====================================================
+        # NOTE / WARNING / TIP blocks (single-line or multi-line)
+        # =====================================================
+        block_type = None
+        if upper.startswith("NOTE:"):
+            block_type = "note"
+        elif upper.startswith("WARNING:"):
+            block_type = "warning"
+        elif upper.startswith("TIP:"):
+            block_type = "tip"
 
-        # ✅ BULLET LINE
+        if block_type:
+            if block_type == "note":
+                title = "NOTE"
+                bg = [1.0, 0.96, 0.78, 1]   # yellow
+                icon_name = "note.png"
+            elif block_type == "warning":
+                title = "WARNING"
+                bg = [1.0, 0.85, 0.85, 1]   # red
+                icon_name = "warning.png"
+            else:
+                title = "TIP"
+                bg = [0.85, 1.0, 0.90, 1]   # green
+                icon_name = "tip.png"
+
+            # first line content (may be empty)
+            first_line_content = stripped.split(":", 1)[1].strip()
+            body_lines = []
+            if first_line_content:
+                body_lines.append(first_line_content)
+
+            i += 1
+
+            # collect following lines until blank line or next NOTE/WARNING/TIP
+            while i < len(lines):
+                next_raw = lines[i].rstrip()
+                next_stripped = next_raw.strip()
+                next_upper = next_stripped.upper()
+
+                if next_upper.startswith("NOTE:") or next_upper.startswith("WARNING:") or next_upper.startswith("TIP:"):
+                    break
+
+                if not next_stripped:
+                    break
+
+                body_lines.append(next_raw)
+                i += 1
+
+            body_text = "\n".join(body_lines)
+
+            parent.add_widget(_make_notice_box(title, body_text, bg, icon_name))
+            prev_was_bullet = False
+            continue
+
+        # =====================================================
+        # Bullet line
+        # =====================================================
         if stripped.startswith("- "):
             content = stripped[2:]
             content = format_rich_text(content)
             content = highlight_text(content, query)
 
-            # ✅ use slightly larger bullet
             bullet = f"[color={bullet_hex}][size={int(font_size * 1.3)}]•[/size][/color]"
 
-            # ✅ indent using padding ONLY (no fake spaces)
             lbl = Label(
                 text=f"{bullet} {content}",
                 markup=True,
@@ -103,35 +243,42 @@ def add_formatted_block(parent, text, app, query="", font_size=None, color=None,
                 italic=italic,
                 size_hint_y=None,
                 halign="left",
-                valign="middle",   # ✅ THIS centers bullet vertically with first line
-                padding=(dp(level * 14), 0)  # ✅ clean indent
+                valign="middle",
+                padding=(dp((len(raw) - len(raw.lstrip(' '))) // 4 * 14), 0, 0, dp(-6))
             )
-
             _bind_auto_height(lbl)
 
-            parent.add_widget(lbl)
-
-        # ✅ NORMAL TEXT
-        else:
-            content = format_rich_text(stripped)
-            content = highlight_text(content, query)
-
-            lbl = Label(
-                text=content,
-                markup=True,
-                color=color,
-                font_size=font_size,
-                italic=italic,
-                size_hint_y=None,
-                halign="left",
-                valign="top"
-            )
-
-            _bind_auto_height(lbl)
+            if prev_was_bullet:
+                lbl.height -= dp(4)
 
             parent.add_widget(lbl)
+            prev_was_bullet = True
+            i += 1
+            continue
 
+        # =====================================================
+        # Normal text
+        # =====================================================
+        content = format_rich_text(stripped)
+        content = highlight_text(content, query)
 
+        lbl = Label(
+            text=content,
+            markup=True,
+            color=color,
+            font_size=font_size,
+            italic=italic,
+            size_hint_y=None,
+            halign="left",
+            valign="top",
+            padding=(0, 0, 0, dp(4))
+        )
+        _bind_auto_height(lbl)
+
+        parent.add_widget(lbl)
+        prev_was_bullet = False
+        i += 1
+        
 class ClickableImage(ButtonBehavior, Image):
     pass
 
@@ -177,11 +324,21 @@ class StepCard(BoxLayout):
         ui = UI(app)
 
         self.query = query
-        self.padding = ui["SPACING"]
-        self.spacing = ui["SPACING_SMALL"]
+        self.padding = ui["SPACING"] * 1.4
+        #self.spacing = ui["SPACING"] * 0.9
+        self.spacing = dp(6)
         self.bind(minimum_height=self.setter('height'))
 
         with self.canvas.before:
+            # ✅ SHADOW (slightly offset)
+            Color(0, 0, 0, 0.12)
+            self.shadow_rect = RoundedRectangle(
+                pos=(self.x + dp(2), self.y - dp(3)),
+                size=self.size,
+                radius=[ui["SPACING_SMALL"]]
+            )
+
+            # ✅ MAIN CARD
             Color(1, 1, 1, 1)
             self.bg_rect = RoundedRectangle(
                 pos=self.pos,
@@ -251,6 +408,10 @@ class StepCard(BoxLayout):
     def _update_graphics(self, *args):
         self.bg_rect.pos = self.pos
         self.bg_rect.size = self.size
+
+        self.shadow_rect.pos = (self.x + dp(2), self.y - dp(3))
+        self.shadow_rect.size = self.size
+
 
 class ArticleScreen(Screen):
     current_search_query = StringProperty("")
@@ -572,7 +733,7 @@ class ArticleScreen(Screen):
                 pos_hint={'top': 1}
             )
         )
-        
+        prev_was_bullet = False
         content_box = BoxLayout(
             orientation='vertical',
             size_hint_y=None,
@@ -798,11 +959,13 @@ class ArticleScreen(Screen):
             code = safe_str(step.get('Code_Snippet'))
             code_widget = self._build_code_block(code, app, query=self.current_search_query)
             if code_widget:
+                card.add_widget(Widget(size_hint_y=None, height=dp(6)))
                 card.add_widget(code_widget)
 
             # --- STEP SCREENSHOT ---
             screenshot_widget = self._build_step_screenshot(step, safe_str, app)
             if screenshot_widget:
+                card.add_widget(Widget(size_hint_y=None, height=dp(16)))
                 card.add_widget(screenshot_widget)
 
             # --- STEP URLS ---

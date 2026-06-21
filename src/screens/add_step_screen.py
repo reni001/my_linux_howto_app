@@ -112,12 +112,22 @@ class AddStepScreen(Screen):
             "Instruction": self.ids.step_instruction.text.strip(),
             "Code_Snippet": self.ids.step_code.text.strip(),
             "Notes": self.ids.step_notes.text.strip(),
+            "Screenshot": self.ids.step_screenshot.text.strip(),
         }
 
-        # Basic validation
-        if not step["Instruction"]:
-            self.ids.step_status.text = "Instruction is required."
+        # Basic validation        
+        # ✅ Flexible validation: allow any content, but not completely empty     
+        has_content = any([
+            step["Instruction"].strip(),
+            step["Code_Snippet"].strip(),
+            step["Notes"].strip(),
+            step["Screenshot"].strip()
+        ])
+
+        if not has_content:
+            self.ids.step_status.text = "Step must contain at least Instruction, Code, or Notes."
             return
+
 
         try:
             key = add_step_to_firebase(step)
