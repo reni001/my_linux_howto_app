@@ -1,11 +1,11 @@
 {
   "metadata": {
     "app_name": "Linux HowTo",
-    "changelog": "VERSION 2.4.0 - Search & Highlighting Upgrade\n\nFeatures\n- Full-text search across all topic and step fields\n- Search inside step content including Instruction, Code, Notes and URLs\n- Exact search support using quotes (e.g. \"ls -l\")\n- Display of match location in results (e.g. Step 2 (Code))\n- Highlighting of search terms in titles, descriptions and steps\n- Highlighting of matched code tokens directly inside code blocks\n- Theme-integrated highlight color system (COLOR_HIGHLIGHT, COLOR_WHITE)\n\nImprovements\n- Improved search robustness with normalization of query and content\n- Better matching of command-line inputs including special characters (- / .)\n- Code syntax highlighting preserved while highlighting matched tokens\n- Step-aware search results with better contextual relevance\n- Consistent highlighting across SearchScreen, DetailScreen and ArticleScreen\n- Highlighting avoids breaking existing markup and syntax colors\n\nFixes\n- Fixed issue where step content was not included in search results\n- Fixed incorrect Topic_ID step linkage causing missing matches\n- Fixed crash when opening articles after search (invalid attribute references)\n- Fixed highlight rendering showing markup instead of formatted text\n- Fixed color override in code blocks when applying search highlight\n- Fixed inconsistent handling of search query between screens\n\nVERSION 2.3.2 - UI System & Code Block Enhancement\n\nFeatures\n\n- UI design system integration (major)\n- Introduced centralised UI scaling system using UI(app)\n- Replaced hardcoded dp and sp values with dynamic scaling\n- Unified design tokens: SPACING, SPACING_SMALL, SPACING_LARGE\n- Unified design tokens: ICON_SIZE, ICON_SMALL\n- Unified design tokens: INPUT_HEIGHT, BUTTON_WIDTH\n- Ensures consistent layout, readability and cross-platform behaviour\n\n- Modular UI component architecture\n- Refactored ArticleScreen into reusable UI builder methods\n- Added StepCard component for step rendering\n- Clear separation between UI composition, data rendering and styling\n\n- Custom code font support\n- Added support for bundled monospace fonts\n- Implemented fallback to system fonts (DejaVuSansMono)\n- Improves code readability and visual consistency\n\n- Syntax highlighting for code blocks\n- Implemented lightweight highlighting without external dependency\n- Highlights comments, shell prompts, commands, options and URLs\n- Uses Kivy markup system for rendering\n\n\nVERSION 2.3.1 - Cross‑Platform System Integration\n\nFeatures\n\n- Cross‑platform system integration (major)\n- Centralised system_open_service for opening URLs, files and asset folders\n- Full support for Linux, Windows and WSL\n\n- WSL integration support\n- Automatic detection of WSL environment\n- Redirects file opening to Windows Explorer and applications\n- Uses Windows browser for URLs\n- Path conversion handled via wslpath\n\n- Modular architecture improvement\n- Removed external system calls from main.py\n- Introduced system_open_service layer\n- Clear separation of UI, logic and system interactions\n\nImprovements\n\n- Improved installer robustness\n- Refined OS detection (Debian, Arch, Fedora, WSL)\n- Improved Python version validation\n- Better error handling for dependencies\n\n- WSL install optimisation\n- Avoids unnecessary Linux GUI tools\n- Provides WSLg setup guidance\n- Skips GUI tests when not available\n\n- Better URL handling\n- Adds https:// automatically\n- Decodes HTML entities\n- Ensures consistent behaviour across platforms\n\n- Improved error visibility\n- Added traceback output for subprocess calls\n- Eliminates silent failures\n\n- UI responsiveness\n- Removed blocking subprocess calls\n- Uses async only where required\n\nFixes\n\n- Fixed crash when clicking links\n- Fixed missing open_url method in ArticleScreen\n- Fixed incorrect indentation of method\n\n- Fixed runtime crashes\n- Fixed missing html import\n- Fixed broken URL parsing logic\n\n- Fixed WSL behaviour issues\n- Corrected path conversion with wslpath\n- Fixed incorrect Explorer opening\n- Fixed URL opening behaviour\n\n- Fixed UI freeze issues\n- Removed blocking calls and improper threading\n\n- Fixed inconsistent behaviour\n- Unified handling of system open methods\n\n\nVERSION 2.3.0 - Upgrade System & Version Tracking\n\nFeatures\n\n- Added full Upgrade App system (application updates from GitHub)\n- Separated Update Data and Upgrade App\n- Implemented local vs remote version tracking\n- Added version.txt for installed version storage\n- Installer creates version.txt on first install\n\nImprovements\n\n- Upgrade button reflects state (Upgrade Available / Up to Date)\n- Unified button behaviour (success, failure, idle)\n- Introduced version_service and update_content separation\n- Improved consistency between update and upgrade workflows\n\nFixes\n\n- Fixed upgrade restriction to development mode\n- Fixed incorrect version display\n- Fixed missing version initialisation\n- Fixed AppImage detection issues\n\n\nVERSION 2.2.0 - Architecture Refactor & Codebase Cleanup\n\nFeatures\n\n- Extracted restore logic into restore_service\n- Extracted delete logic into topic_delete_service\n- Extracted promote/demote logic into topic_action_service\n- Extracted restore dialog component\n\nImprovements\n\n- Clear separation between main, services and UI\n- Reduced duplication in save/update/delete flows\n- Centralised local change handling\n- Added unified refresh mechanism\n\nFixes\n\n- Fixed recursion issues in refresh handling\n- Reduced risk of infinite loops\n- Improved data refresh reliability\n\n\nVERSION 2.1.0 – Sync, Keys & Logging Refinement\n\nFeatures\n\n- Introduced Firebase push-key system for Topic _key\n- Improved Topic_ID generation\n- Added smart backup system\n- Added fast restore system\n\nImprovements\n\n- Reduced terminal verbosity\n- Introduced controlled debug strategy\n- Improved topic creation performance\n- Improved sync scalability\n\nFixes\n\n- Fixed backup not triggering during sync\n- Fixed incorrect asset handling\n- Removed excessive debug logs\n- Fixed redundant logging output\n\n\nVERSION 2.0.0 - Backup & Restore System\n\nFeatures\n\n- Full backup system\n- Restore system\n- Sync-integrated backup\n- Backup browser UI\n- Safe restore workflow\n\nImprovements\n\n- Consistent backup structure\n- Improved sorting of backups\n- Normalised data structures\n- Improved restore safety\n- Included icons and assets\n- Improved restore UI alignment\n\nFixes\n\n- Fixed restore overwrite issues\n- Fixed invalid data structure crash\n- Fixed missing assets\n- Fixed backup detection issues\n- Fixed restore logic inconsistencies\n\n\nVERSION 1.9.0 - Category System Integration\n\nFeatures\n\n- Full category management system\n- Introduced categories.json\n- Automatic category generation\n- Category dialog UI\n- Integrated icon support\n\nImprovements\n\n- Unified data architecture\n- Improved startup flow\n- Synced category logic\n\nFixes\n\n- Fixed taxonomy race condition\n- Fixed inconsistent data access\n- Fixed icon fallback behaviour\n\n\nVERSION 1.8.0 - Dialog System & Architecture Refactor\n\nFeatures\n\n- Introduced reusable dialog system\n- Added cleanup, confirm, and promotion dialogs\n- Centralised dialog handling\n- Improved icon service\n\nImprovements\n\n- Refactored architecture (UI / dialogs / services)\n- Reduced complexity in main.py\n- Improved popup consistency\n\nFixes\n\n- Fixed inconsistent popup behaviour\n- Fixed dialog rendering issues\n- Fixed duplicated icon logic\n- Improved delete and promotion stability\n\n\nVERSION 1.7.0 - UI System & AppWindow Upgrade\n\nFeatures\n\n- Resizable window with dynamic scaling\n- Top-aligned window positioning\n- Reusable popup system\n- File picker component\n- Firebase initialisation automation\n\nImprovements\n\n- Improved UI consistency\n- Enhanced layout and spacing\n- Improved startup experience\n\nFixes\n\n- Fixed resize crash issues\n- Fixed window positioning\n- Fixed popup inconsistencies\n- Fixed file picker problems\n- Fixed missing Firebase configuration\n\n\nVERSION 1.6.1 - App Info & Changelog Polish\n\nImprovements\n\n- Improved App Info editor layout\n- Added changelog preview formatting\n- Improved readability and hierarchy\n- Improved popup styling\n\nFixes\n\n- Fixed editor layout issues\n- Fixed duplicate fields\n- Fixed scroll issues\n- Fixed popup rendering mismatch\n\n\nVERSION 1.6.0 - Performance & Editor Improvements\n\nFeatures\n\n- Added Date_Created and Date_Updated\n- Improved topic editor workflow\n- Enhanced duplicate detection\n\nImprovements\n\n- Implemented step indexing\n- Reduced UI rebuilds\n- Improved responsiveness\n- Introduced lazy loading\n\nFixes\n\n- Fixed menu loading bug\n- Fixed recursive fetch issue\n- Fixed UI refresh inconsistencies\n\n\nVERSION 1.5.5 - Editor Stability & UX Improvements\n\nImprovements\n\n- Improved step editing workflow\n- Improved ordering logic\n- Improved UI feedback\n- Improved icon handling\n\nFixes\n\n- Fixed step overwrite issues\n- Fixed screenshot handling\n- Fixed icon update inconsistencies\n\n\nVERSION 1.5.0 - Enhanced Topic Editing & Merge Logic\n\nFeatures\n\n- Topic merge workflow\n- Merge strategies\n- Duplicate detection\n- Local vs official handling\n\nImprovements\n\n- Improved data consistency\n- Improved update logic\n- Improved icon handling\n\nFixes\n\n- Fixed duplicate edge cases\n- Improved merge stability\n\n\nVERSION 1.4.0 - Local Mode & Sync Workflow\n\nFeatures\n\n- USER vs ADMIN modes\n- Local storage system\n- User icons support\n- Promote workflow\n\nImprovements\n\n- Improved sync safety\n- Non-destructive updates\n\nFixes\n\n- Fixed icon loading issues\n- Prevented Git overwrite issues\n\n\nVERSION 1.3.0 - Sync System Redesign\n\nFeatures\n\n- Safer Git sync workflow\n- Non-destructive updates\n\nImprovements\n\n- Removed Excel dependency\n- Simplified data structure\n- Improved icon resolution\n\nFixes\n\n- Fixed icon preview errors\n- Fixed missing icon issues\n- Fixed Git overwrite issues\n\n\nVERSION 1.1.0 - Editor & UI Improvements\n\nFeatures\n\n- Topic editor with step management\n- Admin/User mode\n- Dynamic icons\n\nImprovements\n\n- Improved Topic_ID generation\n- Improved duplicate handling\n- Improved layout\n\nFixes\n\n- Fixed Firebase saving issues\n- Fixed edit behaviour\n\n\nVERSION 1.0.1 - Sync Stability\n\nImprovements\n\n- Automatic version increment\n- Improved Firebase sync\n- Improved GitHub sync\n\nFixes\n\n- Fixed version loop issue\n- Fixed Excel corruption\n- Fixed metadata handling\n\n\nVERSION 1.0.0 - Initial Release\n\nFeatures\n\n- Kivy multi-screen UI\n- Excel-based content system\n- Firebase integration\n- Search functionality\n- Expandable content\n- Code snippet support\n- Local caching\n\n\nDEV VERSION\n\nFeatures\n\n- Early UI prototypes\n- Initial sync pipeline\n- Experimental data structures",
+    "changelog": "VERSION 2.5.0 - Flexible Step System & Enhanced Formatting\n\nFeatures\n- Added support for multiline NOTE / WARNING / TIP blocks\n- Added formatting help popup in Add Topic screen\n- Added flexible step system allowing code-only, screenshot-only, or note-only steps\n\nImprovements\n- Improved rendering of notice blocks (aligned icons, stable backgrounds)\n- Improved text formatting system consistency\n- Updated step validation logic for flexibility\n- Updated UI hints (Instruction now optional)\n\nFixes\n- Fixed misplaced background rendering in notice blocks\n- Fixed icon positioning inside notice blocks\n- Fixed formatting popup showing rendered instead of raw syntax\n\nVERSION 2.4.0 - Search & Highlighting Upgrade\n\nFeatures\n- Full-text search across all topic and step fields\n- Search inside step content including Instruction, Code, Notes and URLs\n- Exact search support using quotes (e.g. \"ls -l\")\n- Display of match location in results (e.g. Step 2 (Code))\n- Highlighting of search terms in titles, descriptions and steps\n- Highlighting of matched code tokens directly inside code blocks\n- Theme-integrated highlight color system (COLOR_HIGHLIGHT, COLOR_WHITE)\n\nImprovements\n- Improved search robustness with normalization of query and content\n- Better matching of command-line inputs including special characters (- / .)\n- Code syntax highlighting preserved while highlighting matched tokens\n- Step-aware search results with better contextual relevance\n- Consistent highlighting across SearchScreen, DetailScreen and ArticleScreen\n- Highlighting avoids breaking existing markup and syntax colors\n\nFixes\n- Fixed issue where step content was not included in search results\n- Fixed incorrect Topic_ID step linkage causing missing matches\n- Fixed crash when opening articles after search (invalid attribute references)\n- Fixed highlight rendering showing markup instead of formatted text\n- Fixed color override in code blocks when applying search highlight\n- Fixed inconsistent handling of search query between screens\n\nVERSION 2.3.2 - UI System & Code Block Enhancement\n\nFeatures\n\n- UI design system integration (major)\n- Introduced centralised UI scaling system using UI(app)\n- Replaced hardcoded dp and sp values with dynamic scaling\n- Unified design tokens: SPACING, SPACING_SMALL, SPACING_LARGE\n- Unified design tokens: ICON_SIZE, ICON_SMALL\n- Unified design tokens: INPUT_HEIGHT, BUTTON_WIDTH\n- Ensures consistent layout, readability and cross-platform behaviour\n\n- Modular UI component architecture\n- Refactored ArticleScreen into reusable UI builder methods\n- Added StepCard component for step rendering\n- Clear separation between UI composition, data rendering and styling\n\n- Custom code font support\n- Added support for bundled monospace fonts\n- Implemented fallback to system fonts (DejaVuSansMono)\n- Improves code readability and visual consistency\n\n- Syntax highlighting for code blocks\n- Implemented lightweight highlighting without external dependency\n- Highlights comments, shell prompts, commands, options and URLs\n- Uses Kivy markup system for rendering\n\n\nVERSION 2.3.1 - Cross‑Platform System Integration\n\nFeatures\n\n- Cross‑platform system integration (major)\n- Centralised system_open_service for opening URLs, files and asset folders\n- Full support for Linux, Windows and WSL\n\n- WSL integration support\n- Automatic detection of WSL environment\n- Redirects file opening to Windows Explorer and applications\n- Uses Windows browser for URLs\n- Path conversion handled via wslpath\n\n- Modular architecture improvement\n- Removed external system calls from main.py\n- Introduced system_open_service layer\n- Clear separation of UI, logic and system interactions\n\nImprovements\n\n- Improved installer robustness\n- Refined OS detection (Debian, Arch, Fedora, WSL)\n- Improved Python version validation\n- Better error handling for dependencies\n\n- WSL install optimisation\n- Avoids unnecessary Linux GUI tools\n- Provides WSLg setup guidance\n- Skips GUI tests when not available\n\n- Better URL handling\n- Adds https:// automatically\n- Decodes HTML entities\n- Ensures consistent behaviour across platforms\n\n- Improved error visibility\n- Added traceback output for subprocess calls\n- Eliminates silent failures\n\n- UI responsiveness\n- Removed blocking subprocess calls\n- Uses async only where required\n\nFixes\n\n- Fixed crash when clicking links\n- Fixed missing open_url method in ArticleScreen\n- Fixed incorrect indentation of method\n\n- Fixed runtime crashes\n- Fixed missing html import\n- Fixed broken URL parsing logic\n\n- Fixed WSL behaviour issues\n- Corrected path conversion with wslpath\n- Fixed incorrect Explorer opening\n- Fixed URL opening behaviour\n\n- Fixed UI freeze issues\n- Removed blocking calls and improper threading\n\n- Fixed inconsistent behaviour\n- Unified handling of system open methods\n\n\nVERSION 2.3.0 - Upgrade System & Version Tracking\n\nFeatures\n\n- Added full Upgrade App system (application updates from GitHub)\n- Separated Update Data and Upgrade App\n- Implemented local vs remote version tracking\n- Added version.txt for installed version storage\n- Installer creates version.txt on first install\n\nImprovements\n\n- Upgrade button reflects state (Upgrade Available / Up to Date)\n- Unified button behaviour (success, failure, idle)\n- Introduced version_service and update_content separation\n- Improved consistency between update and upgrade workflows\n\nFixes\n\n- Fixed upgrade restriction to development mode\n- Fixed incorrect version display\n- Fixed missing version initialisation\n- Fixed AppImage detection issues\n\n\nVERSION 2.2.0 - Architecture Refactor & Codebase Cleanup\n\nFeatures\n\n- Extracted restore logic into restore_service\n- Extracted delete logic into topic_delete_service\n- Extracted promote/demote logic into topic_action_service\n- Extracted restore dialog component\n\nImprovements\n\n- Clear separation between main, services and UI\n- Reduced duplication in save/update/delete flows\n- Centralised local change handling\n- Added unified refresh mechanism\n\nFixes\n\n- Fixed recursion issues in refresh handling\n- Reduced risk of infinite loops\n- Improved data refresh reliability\n\n\nVERSION 2.1.0 – Sync, Keys & Logging Refinement\n\nFeatures\n\n- Introduced Firebase push-key system for Topic _key\n- Improved Topic_ID generation\n- Added smart backup system\n- Added fast restore system\n\nImprovements\n\n- Reduced terminal verbosity\n- Introduced controlled debug strategy\n- Improved topic creation performance\n- Improved sync scalability\n\nFixes\n\n- Fixed backup not triggering during sync\n- Fixed incorrect asset handling\n- Removed excessive debug logs\n- Fixed redundant logging output\n\n\nVERSION 2.0.0 - Backup & Restore System\n\nFeatures\n\n- Full backup system\n- Restore system\n- Sync-integrated backup\n- Backup browser UI\n- Safe restore workflow\n\nImprovements\n\n- Consistent backup structure\n- Improved sorting of backups\n- Normalised data structures\n- Improved restore safety\n- Included icons and assets\n- Improved restore UI alignment\n\nFixes\n\n- Fixed restore overwrite issues\n- Fixed invalid data structure crash\n- Fixed missing assets\n- Fixed backup detection issues\n- Fixed restore logic inconsistencies\n\n\nVERSION 1.9.0 - Category System Integration\n\nFeatures\n\n- Full category management system\n- Introduced categories.json\n- Automatic category generation\n- Category dialog UI\n- Integrated icon support\n\nImprovements\n\n- Unified data architecture\n- Improved startup flow\n- Synced category logic\n\nFixes\n\n- Fixed taxonomy race condition\n- Fixed inconsistent data access\n- Fixed icon fallback behaviour\n\n\nVERSION 1.8.0 - Dialog System & Architecture Refactor\n\nFeatures\n\n- Introduced reusable dialog system\n- Added cleanup, confirm, and promotion dialogs\n- Centralised dialog handling\n- Improved icon service\n\nImprovements\n\n- Refactored architecture (UI / dialogs / services)\n- Reduced complexity in main.py\n- Improved popup consistency\n\nFixes\n\n- Fixed inconsistent popup behaviour\n- Fixed dialog rendering issues\n- Fixed duplicated icon logic\n- Improved delete and promotion stability\n\n\nVERSION 1.7.0 - UI System & AppWindow Upgrade\n\nFeatures\n\n- Resizable window with dynamic scaling\n- Top-aligned window positioning\n- Reusable popup system\n- File picker component\n- Firebase initialisation automation\n\nImprovements\n\n- Improved UI consistency\n- Enhanced layout and spacing\n- Improved startup experience\n\nFixes\n\n- Fixed resize crash issues\n- Fixed window positioning\n- Fixed popup inconsistencies\n- Fixed file picker problems\n- Fixed missing Firebase configuration\n\n\nVERSION 1.6.1 - App Info & Changelog Polish\n\nImprovements\n\n- Improved App Info editor layout\n- Added changelog preview formatting\n- Improved readability and hierarchy\n- Improved popup styling\n\nFixes\n\n- Fixed editor layout issues\n- Fixed duplicate fields\n- Fixed scroll issues\n- Fixed popup rendering mismatch\n\n\nVERSION 1.6.0 - Performance & Editor Improvements\n\nFeatures\n\n- Added Date_Created and Date_Updated\n- Improved topic editor workflow\n- Enhanced duplicate detection\n\nImprovements\n\n- Implemented step indexing\n- Reduced UI rebuilds\n- Improved responsiveness\n- Introduced lazy loading\n\nFixes\n\n- Fixed menu loading bug\n- Fixed recursive fetch issue\n- Fixed UI refresh inconsistencies\n\n\nVERSION 1.5.5 - Editor Stability & UX Improvements\n\nImprovements\n\n- Improved step editing workflow\n- Improved ordering logic\n- Improved UI feedback\n- Improved icon handling\n\nFixes\n\n- Fixed step overwrite issues\n- Fixed screenshot handling\n- Fixed icon update inconsistencies\n\n\nVERSION 1.5.0 - Enhanced Topic Editing & Merge Logic\n\nFeatures\n\n- Topic merge workflow\n- Merge strategies\n- Duplicate detection\n- Local vs official handling\n\nImprovements\n\n- Improved data consistency\n- Improved update logic\n- Improved icon handling\n\nFixes\n\n- Fixed duplicate edge cases\n- Improved merge stability\n\n\nVERSION 1.4.0 - Local Mode & Sync Workflow\n\nFeatures\n\n- USER vs ADMIN modes\n- Local storage system\n- User icons support\n- Promote workflow\n\nImprovements\n\n- Improved sync safety\n- Non-destructive updates\n\nFixes\n\n- Fixed icon loading issues\n- Prevented Git overwrite issues\n\n\nVERSION 1.3.0 - Sync System Redesign\n\nFeatures\n\n- Safer Git sync workflow\n- Non-destructive updates\n\nImprovements\n\n- Removed Excel dependency\n- Simplified data structure\n- Improved icon resolution\n\nFixes\n\n- Fixed icon preview errors\n- Fixed missing icon issues\n- Fixed Git overwrite issues\n\n\nVERSION 1.1.0 - Editor & UI Improvements\n\nFeatures\n\n- Topic editor with step management\n- Admin/User mode\n- Dynamic icons\n\nImprovements\n\n- Improved Topic_ID generation\n- Improved duplicate handling\n- Improved layout\n\nFixes\n\n- Fixed Firebase saving issues\n- Fixed edit behaviour\n\n\nVERSION 1.0.1 - Sync Stability\n\nImprovements\n\n- Automatic version increment\n- Improved Firebase sync\n- Improved GitHub sync\n\nFixes\n\n- Fixed version loop issue\n- Fixed Excel corruption\n- Fixed metadata handling\n\n\nVERSION 1.0.0 - Initial Release\n\nFeatures\n\n- Kivy multi-screen UI\n- Excel-based content system\n- Firebase integration\n- Search functionality\n- Expandable content\n- Code snippet support\n- Local caching\n\n\nDEV VERSION\n\nFeatures\n\n- Early UI prototypes\n- Initial sync pipeline\n- Experimental data structures",
     "description": "Linux How To is a personal documentation hub for Linux commands and scripts. It is making collecting howtos easy.",
     "developer": "Renate Schwiedernoch",
-    "last update": "07.06.2026",
-    "version": "2.4.0"
+    "last update": "21.06.2026",
+    "version": "2.5.0"
   },
   "steps": {
     "-OuZMCQ1io4kMoG42DP9": {
@@ -2999,82 +2999,6 @@
       "_key": "-Ouv4Y8uVI6qhBGWfJkx",
       "created_at": "2026-06-12T09:07:34.620369"
     },
-    "-Ov1uWA80U7j0TS-9BsG": {
-      "Code_Snippet": "",
-      "Header_2": "",
-      "Headline": "Step 1: Access a Terminal (TTY)",
-      "Instruction": "1. Restart your computer.\n\n2. When the GRUB boot menu appears, use the arrow keys to select your most recent kernel but do not press enter.\n\n3. Press e on your keyboard to edit the boot options.\n\n4. Look for the line that starts with linux or linuxefi.\n\n5. Go to the very end of that line and type exactly: nomodeset\n\n6. Press Ctrl + X or F10 to boot.\n\n7. If your screen turns black or you are stuck on a command-line login, press Ctrl + Alt + F3 (or F4, F5) to access a clean TTY terminal screen.\n\n8. Log in using your username and password.",
-      "Notes": "",
-      "Screenshot": "fedo_os_r_corrup-01.png",
-      "Step_ID": 596,
-      "Step_Order": 1,
-      "Topic_ID": "fedo_os_r_corrup",
-      "URLs": "",
-      "_key": "-Ov1uWA80U7j0TS-9BsG",
-      "created_at": "2026-06-13T21:36:22.214407"
-    },
-    "-Ov1uWDK4iSz9B1UmQTQ": {
-      "Code_Snippet": "sudo dnf clean all",
-      "Header_2": "",
-      "Headline": "Step 2: Repair the System",
-      "Instruction": "Clean package cache:",
-      "Notes": "",
-      "Step_ID": 597,
-      "Step_Order": 2,
-      "Topic_ID": "fedo_os_r_corrup",
-      "_key": "-Ov1uWDK4iSz9B1UmQTQ",
-      "created_at": "2026-06-13T21:36:22.432393"
-    },
-    "-Ov1uWG7oJZeBDh0hwzZ": {
-      "Code_Snippet": "sudo dnf distro-sync --refresh",
-      "Header_2": "",
-      "Headline": "",
-      "Instruction": "Synchronize distribution packages:",
-      "Notes": "",
-      "Step_ID": 598,
-      "Step_Order": 3,
-      "Topic_ID": "fedo_os_r_corrup",
-      "_key": "-Ov1uWG7oJZeBDh0hwzZ",
-      "created_at": "2026-06-13T21:36:22.634077"
-    },
-    "-Ov1uWJ9ezH5QmyKAe3Q": {
-      "Code_Snippet": "sudo dracut --force --all",
-      "Header_2": "",
-      "Headline": "",
-      "Instruction": "Rebuild the boot images (Crucial step if the kernel was interrupted):",
-      "Notes": "",
-      "Step_ID": 599,
-      "Step_Order": 4,
-      "Topic_ID": "fedo_os_r_corrup",
-      "_key": "-Ov1uWJ9ezH5QmyKAe3Q",
-      "created_at": "2026-06-13T21:36:22.844807"
-    },
-    "-Ov1uWM6pR_OVcikRckc": {
-      "Code_Snippet": "nobara-driver-tui",
-      "Header_2": "",
-      "Headline": "Step 3: Rebuild Display Drivers & Reboot",
-      "Instruction": "Because the update was interrupted, specialized hardware drivers (like Nvidia/AMD) might be unlinked\n 1. Rebuild your graphics drivers:",
-      "Notes": "",
-      "Step_ID": 600,
-      "Step_Order": 5,
-      "Topic_ID": "fedo_os_r_corrup",
-      "_key": "-Ov1uWM6pR_OVcikRckc",
-      "created_at": "2026-06-13T21:36:23.061007"
-    },
-    "-Ov1uWOpgFQFAf7m8pzx": {
-      "Code_Snippet": "sudo reboot",
-      "Header_2": "",
-      "Headline": "",
-      "Instruction": "2. Wait a few minutes for the process to finish, then restart your system:",
-      "Notes": "Important Note: For future updates, avoid using standard sudo dnf update. Nobara uses heavily customized packages, and running this command can cause dependency conflicts. Instead, always use the built-in GUI updater or run nobara-sync via the terminal. If you need further troubleshooting, consult the Nobara Project Update Troubleshooting Guide.",
-      "Screenshot": "",
-      "Step_ID": 601,
-      "Step_Order": 6,
-      "Topic_ID": "fedo_os_r_corrup",
-      "URLs": "https://wiki.nobaraproject.org/general-usage/troubleshooting/updating-troubleshooting",
-      "_key": "-Ov1uWOpgFQFAf7m8pzx",
-      "created_at": "2026-06-13T21:36:23.242120"
-    },
     "-Ov205VZ3mHjcCktIyv7": {
       "Code_Snippet": "",
       "Header_2": "Perform following steps directly from the Firebase Console:",
@@ -3845,7 +3769,7 @@
       "_key": "-Ov5XEgEj-4m9MQvOJO5",
       "created_at": "2026-06-14T14:28:45.847593"
     },
-    "-Ovb5XZC7ccVD7GyWNSy": {
+    "-OvdhY7qezKgBiicDV1i": {
       "Code_Snippet": "sudo apt-get install zsh\n\nzsh",
       "Header_2": "",
       "Headline": "Step 1 Install zsh",
@@ -3856,10 +3780,10 @@
       "Step_Order": 1,
       "Topic_ID": "debian_tweaks_tweaking_ter_dc64",
       "URLs": "",
-      "_key": "-Ovb5XZC7ccVD7GyWNSy",
-      "created_at": "2026-06-20T22:15:11.851288"
+      "_key": "-OvdhY7qezKgBiicDV1i",
+      "created_at": "2026-06-21T10:24:52.241765"
     },
-    "-Ovb5Xbi_XgTT3T3yyRT": {
+    "-OvdhYBVr_mUQmmdd0Px": {
       "Code_Snippet": "sh -c \"$(curl -fsSL https://raw.github.com/robbyrussell/oh-my-zsh/master/tools/install.sh)\"",
       "Header_2": "",
       "Headline": "Step 2: Install Oh My Zsh",
@@ -3870,24 +3794,24 @@
       "Step_Order": 2,
       "Topic_ID": "debian_tweaks_tweaking_ter_dc64",
       "URLs": "https://github.com/ohmyzsh/ohmyzsh",
-      "_key": "-Ovb5Xbi_XgTT3T3yyRT",
-      "created_at": "2026-06-20T22:15:12.069450"
+      "_key": "-OvdhYBVr_mUQmmdd0Px",
+      "created_at": "2026-06-21T10:24:52.480407"
     },
-    "-Ovb5Xid4NrUqqgfMb7I": {
+    "-OvdhYJ03_xIk-3dpX1p": {
       "Code_Snippet": "https://github.com/tonsky/FiraCode/releases/download/6.2/Fira_Code_v6.2.zip",
       "Header_2": "",
       "Headline": "Step 3: Install missing fonts",
-      "Instruction": "In case you use WSL under windows download and install Fira Cuda and set it as default in your terminal for Linux.\nIn order to be able to see special icons install MesloLG Nerd Font:\n    - MesloGS NF Regular.ttf\n    - MesloGS NF Italic.ttf\n    - MesloGS NF Bold.ttf\n    - MesloGS NF /Bold Italic.ttf",
+      "Instruction": "In case you use WSL under windows download and install Fira Cuda and set it as default in your terminal for Linux.\n\nTIP: Use Nerd font\n\nIn order to be able to see special icons install MesloLG Nerd Font:\n    - MesloGS NF Regular.ttf\n    - MesloGS NF Italic.ttf\n    - MesloGS NF Bold.ttf\n    - MesloGS NF /Bold Italic.ttf",
       "Notes": "",
       "Screenshot": "zsh-02.png",
       "Step_ID": 697,
       "Step_Order": 3,
       "Topic_ID": "debian_tweaks_tweaking_ter_dc64",
       "URLs": "https://github.com/tonsky/FiraCode, https://www.nerdfonts.com/font-downloads",
-      "_key": "-Ovb5Xid4NrUqqgfMb7I",
-      "created_at": "2026-06-20T22:15:12.300424"
+      "_key": "-OvdhYJ03_xIk-3dpX1p",
+      "created_at": "2026-06-21T10:24:52.959861"
     },
-    "-Ovb5XlweO2iwvTImp9Y": {
+    "-OvdhYMFLgOr_8TsLAPN": {
       "Code_Snippet": "git clone https://github.com/romkatv/powerlevel10k.git $ZSH_CUSTOM/themes/powerlevel10k",
       "Header_2": "",
       "Headline": "Step 4: Install PowerLevel10k",
@@ -3898,24 +3822,24 @@
       "Step_Order": 4,
       "Topic_ID": "debian_tweaks_tweaking_ter_dc64",
       "URLs": "",
-      "_key": "-Ovb5XlweO2iwvTImp9Y",
-      "created_at": "2026-06-20T22:15:12.730330"
+      "_key": "-OvdhYMFLgOr_8TsLAPN",
+      "created_at": "2026-06-21T10:24:53.170156"
     },
-    "-Ovb5XpZ-hVdlEWGH3z3": {
+    "-OvdhYPK6eP_r5zrwPnB": {
       "Code_Snippet": "ZSH_THEME=\"powerlevel10k/powerlevel10k\"",
       "Header_2": "",
       "Headline": "",
-      "Instruction": "Enable the powerlevel10k theme by changing the value of ZSH_THEME to following in ~/.zshrc file. Open the .zshrc file with an editor and find the entry ZSH_THEME=\"....\" and change it to:",
+      "Instruction": "Enable the powerlevel10k theme by changing the value of ZSH_THEME to following in ~/.zshrc file. Open the .zshrc file with an editor and find the entry \nZSH_THEME=\"....\" \nand change it to:",
       "Notes": "",
       "Screenshot": "",
       "Step_ID": 699,
       "Step_Order": 5,
       "Topic_ID": "debian_tweaks_tweaking_ter_dc64",
       "URLs": "",
-      "_key": "-Ovb5XpZ-hVdlEWGH3z3",
-      "created_at": "2026-06-20T22:15:12.949799"
+      "_key": "-OvdhYPK6eP_r5zrwPnB",
+      "created_at": "2026-06-21T10:24:53.371639"
     },
-    "-Ovb5Xt-Q2abZlL3mQ_L": {
+    "-OvdhYShFsha74hszv_W": {
       "Code_Snippet": "p10k configure",
       "Header_2": "",
       "Headline": "Step 5: Configure the Theme",
@@ -3926,38 +3850,38 @@
       "Step_Order": 6,
       "Topic_ID": "debian_tweaks_tweaking_ter_dc64",
       "URLs": "",
-      "_key": "-Ovb5Xt-Q2abZlL3mQ_L",
-      "created_at": "2026-06-20T22:15:13.175319"
+      "_key": "-OvdhYShFsha74hszv_W",
+      "created_at": "2026-06-21T10:24:53.581569"
     },
-    "-Ovb5XwJUa35zh678C8d": {
+    "-OvdhYW6dn0OuA7Tjjy8": {
       "Code_Snippet": "plugins=(\n  git\n  sudo\n  dirhistory\n  k\n  autojump\n  zsh-syntax-highlighting\n  zsh-autosuggestions)",
       "Header_2": "",
       "Headline": "Step 6: add plugins",
-      "Instruction": "In order to make most out of it, I installed and activated he following plugins. The activation is also performed in .zshrc.\n\n- git\n- sudo\n- dirhistory\n- k\n- autojump\n- syntax-highlighting\n- zsh-autosuggestions\n\nfind plugins=(git) and replace it with:",
+      "Instruction": "In order to make most out of it, I installed and activated he following plugins. The activation is also performed in .zshrc.\n\n    - git\n    - sudo\n    - dirhistory\n    - k\n    - autojump\n    - syntax-highlighting\n    - zsh-autosuggestions\n\nfind plugins=(git) and replace it with:",
       "Notes": "",
       "Screenshot": "",
       "Step_ID": 701,
       "Step_Order": 7,
       "Topic_ID": "debian_tweaks_tweaking_ter_dc64",
       "URLs": "",
-      "_key": "-Ovb5XwJUa35zh678C8d",
-      "created_at": "2026-06-20T22:15:13.390974"
+      "_key": "-OvdhYW6dn0OuA7Tjjy8",
+      "created_at": "2026-06-21T10:24:53.794716"
     },
-    "-Ovb5Xzhm7eWCozDebY3": {
+    "-OvdhYZcjOVnsKZ5u6ZF": {
       "Code_Snippet": "git clone https://github.com/supercrabtree/k $ZSH_CUSTOM/plugins/k",
       "Header_2": "Plugin k",
       "Headline": "",
-      "Instruction": "4 of the above mentioned plugins need to be added to the already existent plugins in the .oh-my-zsh folder:\n\n~\\.oh-my-zsh\\custom\\plugins\n\n**Plugin k**\n\"k\" gives directory listings for zsh with git features:\nk is a zsh script / plugin to make directory listings more readable, adding a bit of color and some git status information on files and directories.\n\nDirectory listings for zsh with git features:\nk is a zsh script / plugin to make directory listings more readable, adding a bit of color and some git status information on files and directories.\n\nRotting dates:\nDates fade with age.\n\nInstallation",
+      "Instruction": "4 of the above mentioned plugins need to be added to the already existent plugins in the .oh-my-zsh folder:\n\n~\\.oh-my-zsh\\custom\\plugins\n\n**Plugin k**\n    \"k\" gives directory listings for zsh with git features:\nk is a zsh script / plugin to make directory listings more readable, adding a bit of color and some git status information on files and directories.\n\n    [i]Directory listings for zsh with git features:[\\i]\nk is a zsh script / plugin to make directory listings more readable, adding a bit of color and some git status information on files and directories.\n\n    Rotting dates:\nDates fade with age.\n\nInstallation",
       "Notes": "",
       "Screenshot": "",
       "Step_ID": 702,
       "Step_Order": 8,
       "Topic_ID": "debian_tweaks_tweaking_ter_dc64",
       "URLs": "https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins, https://github.com/supercrabtree/k",
-      "_key": "-Ovb5Xzhm7eWCozDebY3",
-      "created_at": "2026-06-20T22:15:13.609921"
+      "_key": "-OvdhYZcjOVnsKZ5u6ZF",
+      "created_at": "2026-06-21T10:24:54.020289"
     },
-    "-Ovb5Y1tDlxZyj3NEWDi": {
+    "-OvdhYbsh6UocCDxxhbY": {
       "Code_Snippet": "git clone --depth 1 -- https://github.com/marlonrichert/zsh-autocomplete.git $ZSH_CUSTOM/plugins/zsh-autocomplete",
       "Header_2": "Plugin Autocomplete",
       "Headline": "",
@@ -3968,24 +3892,24 @@
       "Step_Order": 9,
       "Topic_ID": "debian_tweaks_tweaking_ter_dc64",
       "URLs": "",
-      "_key": "-Ovb5Y1tDlxZyj3NEWDi",
-      "created_at": "2026-06-20T22:15:13.817122"
+      "_key": "-OvdhYbsh6UocCDxxhbY",
+      "created_at": "2026-06-21T10:24:54.239476"
     },
-    "-Ovb5Y55Uf6EUAWmW0yo": {
+    "-OvdhYf0sXbyHY-YCx9F": {
       "Code_Snippet": "git clone https://github.com/wting/autojump.git  \n\ncd autojump\n./install.py or ./uninstall.py",
       "Header_2": "Plugin Autojump",
       "Headline": "",
-      "Instruction": "autojump is a faster way to navigate your filesystem. It works by maintaining a database of the directories you use the most from the command line.\n\nDirectories must be visited first before they can be jumped to.\n\n**USAGE**\nj is a convenience wrapper function around autojump. Any option that can be used with autojump can be used with j and vice versa.\n\nJump To A Directory That Contains foo:\n- j foo\n\nJump To A Directory That Contains foo, Preferring Child Directories:\nYou can prioritize child directories over matches in the databases via\n- jc foo\n\nOpen File Manager To Directories (instead of jumping):\nInstead of jumping to a directory, you can open a file explorer window (Mac Finder, Windows Explorer, GNOME Nautilus, etc.) to the directory instead.\n- jo music\n\nOpening a file manager to a child directory is also supported:\n- jco images\n\nUsing Multiple Arguments:\nLet's assume the following database:\n\n30   /home/user/mail/inbox\n10   /home/user/work/inbox\nj in would jump into /home/user/mail/inbox as the higher weighted entry. However you can pass multiple arguments to autojump to prefer a different entry. In the above example, j w in would then change directory to /home/user/work/inbox.",
+      "Instruction": "autojump is a faster way to navigate your filesystem. It works by maintaining a database of the directories you use the most from the command line.\n\nDirectories must be visited first before they can be jumped to.\n\n**USAGE**\nj is a convenience wrapper function around autojump. Any option that can be used with autojump can be used with j and vice versa.\n\nJump To A Directory That Contains foo:\n     j foo\n\nJump To A Directory That Contains foo, Preferring Child Directories:\nYou can prioritize child directories over matches in the databases via\n    jc foo\n\nOpen File Manager To Directories (instead of jumping):\nInstead of jumping to a directory, you can open a file explorer window (Mac Finder, Windows Explorer, GNOME Nautilus, etc.) to the directory instead.\n    jo music\n\nOpening a file manager to a child directory is also supported:\n    jco images\n\nUsing Multiple Arguments:\nLet's assume the following database:\n\n    30   /home/user/mail/inbox\n    10   /home/user/work/inbox\n    j in would jump into /home/user/mail/inbox as the higher weighted entry. \n\nHowever you can pass multiple arguments to autojump to prefer a different entry. In the above example, j w in would then change directory to /home/user/work/inbox.",
       "Notes": "",
       "Screenshot": "",
       "Step_ID": 704,
       "Step_Order": 10,
       "Topic_ID": "debian_tweaks_tweaking_ter_dc64",
       "URLs": "https://github.com/wting/autojump#installation",
-      "_key": "-Ovb5Y55Uf6EUAWmW0yo",
-      "created_at": "2026-06-20T22:15:14.014678"
+      "_key": "-OvdhYf0sXbyHY-YCx9F",
+      "created_at": "2026-06-21T10:24:54.430111"
     },
-    "-Ovb5Y8WTs4efcgQ085O": {
+    "-OvdhYiC0_6iYhfw3ZpF": {
       "Code_Snippet": "git clone https://github.com/zsh-users/zsh-syntax-highlighting.git $ZSH_CUSTOM/plugins/zsh-syntax-highlighting",
       "Header_2": "Plugin Syntax Highlighting",
       "Headline": "",
@@ -3996,36 +3920,294 @@
       "Step_Order": 11,
       "Topic_ID": "debian_tweaks_tweaking_ter_dc64",
       "URLs": "https://github.com/zsh-users/zsh-syntax-highlighting/tree/master",
-      "_key": "-Ovb5Y8WTs4efcgQ085O",
-      "created_at": "2026-06-20T22:15:14.234428"
+      "_key": "-OvdhYiC0_6iYhfw3ZpF",
+      "created_at": "2026-06-21T10:24:54.640948"
     },
-    "-Ovb5YC5_shyyDMlLTSU": {
+    "-OvdhYlxGZv70Yj2iw27": {
       "Code_Snippet": "echo \"source .oh-my-zsh/custom/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh\" >> ${ZDOTDIR:-$HOME}/.zshrc",
       "Header_2": "",
       "Headline": "",
-      "Instruction": "Sourcing of zsh-syntax-highlighting.zsh at the end of the .zshrc file:\n\n    - zsh-syntax-highlighting works by hooking into the Zsh Line Editor (ZLE) and computing syntax highlighting for the command-line buffer as it stands at the time z-sy-h's hook is invoked.\n\n- In zsh 5.2 and older, zsh-syntax-highlighting.zsh hooks into ZLE by wrapping ZLE widgets. It must be sourced after all custom widgets have been created (i.e., after all zle -N calls and after running compinit) in order to be able to wrap all of them. Widgets created after z-sy-h is sourced will work, but will not update the syntax highlighting.\n\n- In zsh newer than 5.8 (not including 5.8 itself), zsh-syntax-highlighting uses the add-zle-hook-widget facility to install a zle-line-pre-redraw hook. Hooks are run in order of registration, therefore, z-sy-h must be sourced (and register its hook) after anything else that adds hooks that modify the command-line buffer.",
+      "Instruction": "Sourcing of zsh-syntax-highlighting.zsh at the end of the .zshrc file:\n\n    - zsh-syntax-highlighting works by hooking into the Zsh Line Editor (ZLE) and computing syntax highlighting for the command-line buffer as it stands at the time z-sy-h's hook is invoked.\n\n    - In zsh 5.2 and older, zsh-syntax-highlighting.zsh hooks into ZLE by wrapping ZLE widgets. It must be sourced after all custom widgets have been created (i.e., after all zle -N calls and after running compinit) in order to be able to wrap all of them. Widgets created after z-sy-h is sourced will work, but will not update the syntax highlighting.\n\n    - In zsh newer than 5.8 (not including 5.8 itself), zsh-syntax-highlighting uses the add-zle-hook-widget facility to install a zle-line-pre-redraw hook. Hooks are run in order of registration, therefore, z-sy-h must be sourced (and register its hook) after anything else that adds hooks that modify the command-line buffer.",
       "Notes": "",
       "Screenshot": "",
       "Step_ID": 706,
       "Step_Order": 12,
       "Topic_ID": "debian_tweaks_tweaking_ter_dc64",
       "URLs": "",
-      "_key": "-Ovb5YC5_shyyDMlLTSU",
-      "created_at": "2026-06-20T22:15:14.458442"
+      "_key": "-OvdhYlxGZv70Yj2iw27",
+      "created_at": "2026-06-21T10:24:54.877009"
     },
-    "-Ovb5YFYz_vuLP-QfG5R": {
-      "Code_Snippet": "",
+    "-OvdhYpKLL6-D0AkX7_F": {
+      "Code_Snippet": "# list all aliasses in oh-my-zsh: alias\n# comouter info\nalias myip='curl http://ipecho.net/plain; echo'\nalias distro='cat /etc/*-release'\nalias upgrade='sudo dnf upgrade --refresh -y'\nalias update='sudo dnf update'\n\n# Command short cuts to save time\nalias h='history'\nalias j='jobs -l'\nalias c='clear'\n\n##Control output of networking tool called ping\n# Stop after sending count ECHO_REQUEST packets #\nalias ping='ping -c 5'\n# Do not wait interval 1 second, go fast #\nalias fastping='ping -c 100 -s.2'\n\n## Tune sudo and su\n# become root #\nalias root='sudo -i'\nalias su='sudo -i'\n\n##garuda specific\nalias pacman='sudo pacman'\nalias ..='cd ..'\nalias ...='cd ../..'\nalias upgrade='sduo pacman -Syyu'",
       "Header_2": "",
-      "Headline": "Custom Aliases",
-      "Instruction": "xxxx",
+      "Headline": "Custom aliases",
+      "Instruction": "Custom aliases can be saved in the file\n~/.oh-my-zsh/custom/aliases.zsh\n\nthis is my alias.zsh file",
       "Notes": "",
       "Screenshot": "",
       "Step_ID": 707,
       "Step_Order": 13,
       "Topic_ID": "debian_tweaks_tweaking_ter_dc64",
       "URLs": "",
-      "_key": "-Ovb5YFYz_vuLP-QfG5R",
-      "created_at": "2026-06-20T22:15:14.691606"
+      "_key": "-OvdhYpKLL6-D0AkX7_F",
+      "created_at": "2026-06-21T10:24:55.086601"
+    },
+    "-Ovf76uaJHTOqxAchSPB": {
+      "Code_Snippet": "",
+      "Header_2": "",
+      "Headline": "Step 1: Access a Terminal (TTY)",
+      "Instruction": "1. Restart your computer.\n\n2. When the GRUB boot menu appears, use the arrow keys to select your most recent kernel but do not press enter.\n\n3. Press e on your keyboard to edit the boot options.\n\n4. Look for the line that starts with linux or linuxefi.\n\n5. Go to the very end of that line and type exactly: nomodeset\n\n6. Press Ctrl + X or F10 to boot.\n\n7. If your screen turns black or you are stuck on a command-line login, press Ctrl + Alt + F3 (or F4, F5) to access a clean TTY terminal screen.\n\n8. Log in using your username and password.",
+      "Notes": "",
+      "Screenshot": "fedo_os_r_corrup-01.png",
+      "Step_ID": 713,
+      "Step_Order": 1,
+      "Topic_ID": "fedo_os_r_corrup",
+      "URLs": "",
+      "_key": "-Ovf76uaJHTOqxAchSPB",
+      "created_at": "2026-06-21T17:00:35.843759"
+    },
+    "-Ovf76xDX0iDZlYUsYoA": {
+      "Code_Snippet": "sudo dnf clean all",
+      "Header_2": "",
+      "Headline": "Step 2: Repair the System",
+      "Instruction": "Clean package cache:",
+      "Notes": "",
+      "Step_ID": 714,
+      "Step_Order": 2,
+      "Topic_ID": "fedo_os_r_corrup",
+      "_key": "-Ovf76xDX0iDZlYUsYoA",
+      "created_at": "2026-06-21T17:00:36.005586"
+    },
+    "-Ovf77-0lNvHxyOWjQIs": {
+      "Code_Snippet": "sudo dnf distro-sync --refresh",
+      "Header_2": "",
+      "Headline": "",
+      "Instruction": "Synchronize distribution packages:",
+      "Notes": "",
+      "Step_ID": 715,
+      "Step_Order": 3,
+      "Topic_ID": "fedo_os_r_corrup",
+      "_key": "-Ovf77-0lNvHxyOWjQIs",
+      "created_at": "2026-06-21T17:00:36.181662"
+    },
+    "-Ovf771leJoEs9Npq4Wb": {
+      "Code_Snippet": "sudo dracut --force --all",
+      "Header_2": "",
+      "Headline": "",
+      "Instruction": "Rebuild the boot images (Crucial step if the kernel was interrupted):",
+      "Notes": "",
+      "Step_ID": 716,
+      "Step_Order": 4,
+      "Topic_ID": "fedo_os_r_corrup",
+      "_key": "-Ovf771leJoEs9Npq4Wb",
+      "created_at": "2026-06-21T17:00:36.362426"
+    },
+    "-Ovf774IlfQTFNVX_uX2": {
+      "Code_Snippet": "nobara-driver-tui",
+      "Header_2": "",
+      "Headline": "Step 3: Rebuild Display Drivers & Reboot",
+      "Instruction": "Because the update was interrupted, specialized hardware drivers (like Nvidia/AMD) might be unlinked\n 1. Rebuild your graphics drivers:",
+      "Notes": "",
+      "Step_ID": 717,
+      "Step_Order": 5,
+      "Topic_ID": "fedo_os_r_corrup",
+      "_key": "-Ovf774IlfQTFNVX_uX2",
+      "created_at": "2026-06-21T17:00:36.526704"
+    },
+    "-Ovf7778amw_QoG7ac0f": {
+      "Code_Snippet": "sudo reboot",
+      "Header_2": "",
+      "Headline": "",
+      "Instruction": "2. Wait a few minutes for the process to finish, then restart your system:",
+      "Notes": "Important Note: For future updates, avoid using standard sudo dnf update. Nobara uses heavily customized packages, and running this command can cause dependency conflicts. Instead, always use the built-in GUI updater or run nobara-sync via the terminal. If you need further troubleshooting, consult the Nobara Project Update Troubleshooting Guide.",
+      "Screenshot": "",
+      "Step_ID": 718,
+      "Step_Order": 6,
+      "Topic_ID": "fedo_os_r_corrup",
+      "URLs": "https://wiki.nobaraproject.org/general-usage/troubleshooting/updating-troubleshooting",
+      "_key": "-Ovf7778amw_QoG7ac0f",
+      "created_at": "2026-06-21T17:00:36.698063"
+    },
+    "-Ovf7H0Z1gK_9b61jLis": {
+      "Code_Snippet": "nobara-sync cli \nsudo dnf update --best --allowerasing",
+      "Header_2": "",
+      "Headline": "Step 1: Access the Terminal (TTY)",
+      "Instruction": "press ctrl + alt + f3 to enter tty3 and login there. \n\nDisplay manager might be broken:\nInstall lightdm or GDM and then sudo systemctl enable lightdm\n\n1. When you are stuck on the black screen or the broken graphical interface, press Ctrl + Alt + F3 (or F4) to access the terminal.\n\n2. You will be prompted to log in. \n\n3. Type your username and press Enter.Type your password and press Enter. (Note: The asterisks will not show while you type your password, this is normal).",
+      "Notes": "",
+      "Screenshot": "",
+      "Step_ID": 719,
+      "Step_Order": 1,
+      "Topic_ID": "fedora_os_rel_black_screen_7643",
+      "URLs": "",
+      "_key": "-Ovf7H0Z1gK_9b61jLis",
+      "created_at": "2026-06-21T17:01:17.245875"
+    },
+    "-Ovf7H32BEuaV1SJELxF": {
+      "Code_Snippet": "ping -c 4 google.com",
+      "Header_2": "",
+      "Headline": "Step 2: Check Your Internet Connection",
+      "Instruction": "When you are stuck on the black screen or the broken graphical interface, press Ctrl + Alt + F3 (or F4) to access the terminal.You will be prompted to log in. Type your username and press Enter.Type your password and press Enter. (Note: The asterisks will not show while you type your password, this is normal).\n\n- If you are connected via Ethernet, you should already have internet access.\n- If you are on Wi-Fi, it might not have connected automatically. Test your connection by pinging Google:",
+      "Notes": "",
+      "Screenshot": "",
+      "Step_ID": 720,
+      "Step_Order": 2,
+      "Topic_ID": "fedora_os_rel_black_screen_7643",
+      "URLs": "",
+      "_key": "-Ovf7H32BEuaV1SJELxF",
+      "created_at": "2026-06-21T17:01:17.413395"
+    },
+    "-Ovf7H5kCKnam7-Xq_Ip": {
+      "Code_Snippet": "nobara-sync repair\n\nor\nsudo dnf distro-sync --refresh",
+      "Header_2": "",
+      "Headline": "Step 3: Run the System Repair",
+      "Instruction": "Do not use sudo for this command, as the updater will ask for your password automatically when needed.\n- Force the system to synchronize repositories and fix broken packages by running:",
+      "Notes": "",
+      "Screenshot": "",
+      "Step_ID": 721,
+      "Step_Order": 3,
+      "Topic_ID": "fedora_os_rel_black_screen_7643",
+      "URLs": "",
+      "_key": "-Ovf7H5kCKnam7-Xq_Ip",
+      "created_at": "2026-06-21T17:01:17.575148"
+    },
+    "-Ovf7H8gszmGIVI1Q1Ub": {
+      "Code_Snippet": "nobara-driver-tui",
+      "Header_2": "",
+      "Headline": "Step 4: Fix Missing Graphics Drivers (If Applicable)",
+      "Instruction": "If you have an Nvidia GPU and the system still fails to boot into the GUI, your driver modules might need to be recompiled or reinstalled.\n\n1. Reinstall the drivers using the terminal driver manager:\n2. Select your Nvidia driver (usually the Production option) and follow the prompts",
+      "Notes": "",
+      "Screenshot": "",
+      "Step_ID": 722,
+      "Step_Order": 4,
+      "Topic_ID": "fedora_os_rel_black_screen_7643",
+      "URLs": "https://wiki.nobaraproject.org/general-usage/troubleshooting/updating-troubleshooting, https://www.reddit.com/r/NobaraProject/comments/1l943c5/nobara_linux_61152200nobarafc42x86_64_not_booting/",
+      "_key": "-Ovf7H8gszmGIVI1Q1Ub",
+      "created_at": "2026-06-21T17:01:17.766759"
+    },
+    "-Ovf7HBRfrHNqnVGHQ4p": {
+      "Code_Snippet": "systemctl reboot",
+      "Header_2": "",
+      "Headline": "Step 5: Restart the Computer",
+      "Instruction": "Once the processes finish without errors, reboot your system by typing:",
+      "Notes": "",
+      "Screenshot": "",
+      "Step_ID": 723,
+      "Step_Order": 5,
+      "Topic_ID": "fedora_os_rel_black_screen_7643",
+      "URLs": "",
+      "_key": "-Ovf7HBRfrHNqnVGHQ4p",
+      "created_at": "2026-06-21T17:01:17.944851"
+    },
+    "-Ow78GgxQMRbVtPF9wPU": {
+      "Code_Snippet": "",
+      "Header_2": "1. UFS Explorer (Standard or RAID Recovery)",
+      "Headline": "Option 1: The Best Windows Tools (Paid but Effective)",
+      "Instruction": "Since Windows does not natively understand Btrfs, standard tools like EaseUS or Recuva fail. You need specialized software that can reconstruct a Btrfs tree structure from raw disk sectors.\n\nUFS Explorer is widely regarded by data recovery professionals as the absolute best software for Linux file systems (including BTRFS) running on Windows.\n    - Why it works: It natively parses Btrfs chunk tables and B-trees. It can scan the raw drive, find where the Btrfs partition used to start, and display your files in their original folder structure.  \n    - Cost: It has a free trial to let you see if your files and names are there, but you have to pay to copy large files out.",
+      "Notes": "",
+      "Screenshot": "",
+      "Step_ID": 724,
+      "Step_Order": 1,
+      "Topic_ID": "other_howto_file_recover_0dee",
+      "URLs": "https://www.ufsexplorer.com/articles/how-to/recover-data-btrfs-raid/#:~:text=However%2C%20if%20at%20least%20one,for%20further%20data%20recovery%20manipulations.",
+      "_key": "-Ow78GgxQMRbVtPF9wPU",
+      "created_at": "2026-06-27T08:14:37.331993"
+    },
+    "-Ow78GjtH6o2xiGsjx6u": {
+      "Code_Snippet": "",
+      "Header_2": "2. Wondershare Recoverit / ReclaiMe",
+      "Headline": "",
+      "Instruction": "Both of these Windows-based utilities have added dedicated support for Btrfs. Like UFS Explorer, they scan the drive as a raw device, look for the Btrfs superblocks, and attempt to map the original file directory.",
+      "Notes": "",
+      "Screenshot": "",
+      "Step_ID": 725,
+      "Step_Order": 2,
+      "Topic_ID": "other_howto_file_recover_0dee",
+      "URLs": "https://recoverit.wondershare.com/what-is/btrfs-data-recovery.html",
+      "_key": "-Ow78GjtH6o2xiGsjx6u",
+      "created_at": "2026-06-27T08:14:37.537700"
+    },
+    "-Ow78GmZVJFfsv2GpROy": {
+      "Code_Snippet": "",
+      "Header_2": "",
+      "Headline": "Option 2: The Best Linux Tool (Free & Native)",
+      "Instruction": "If you want a completely free method and are comfortable using a Linux live USB (like Ubuntu), you can use the built-in Btrfs utility designed exactly for this situation.\n\nInstead of generic carving tools, use btrfs restore. This command bypasses mounting the broken partition and scans the raw drive for the file system tree, pulling the data off to another drive with filenames and folder structures completely intact.\n\n[b] Tep-by-Step for \"btrfs restore\":[/b]",
+      "Notes": "",
+      "Screenshot": "",
+      "Step_ID": 726,
+      "Step_Order": 3,
+      "Topic_ID": "other_howto_file_recover_0dee",
+      "URLs": "https://rossmanngroup.com/services/filesystem-recovery/btrfs",
+      "_key": "-Ow78GmZVJFfsv2GpROy",
+      "created_at": "2026-06-27T08:14:37.701409"
+    },
+    "-Ow78GtoMmxJra8XK6Oo": {
+      "Code_Snippet": "",
+      "Header_2": "",
+      "Headline": "",
+      "Instruction": "1. Boot into Linux and plug in both your damaged drive and a healthy backup drive with enough space to hold the recovered media.",
+      "Notes": "",
+      "Screenshot": "",
+      "Step_ID": 727,
+      "Step_Order": 4,
+      "Topic_ID": "other_howto_file_recover_0dee",
+      "URLs": "",
+      "_key": "-Ow78GtoMmxJra8XK6Oo",
+      "created_at": "2026-06-27T08:14:38.161865"
+    },
+    "-Ow78GwTQ1OZ-ysrrDCR": {
+      "Code_Snippet": "sudo fdisk -l",
+      "Header_2": "",
+      "Headline": "",
+      "Instruction": "2. Open a terminal and find the identifier for your damaged drive (e.g., /dev/sdb):",
+      "Notes": "",
+      "Screenshot": "",
+      "Step_ID": 728,
+      "Step_Order": 5,
+      "Topic_ID": "other_howto_file_recover_0dee",
+      "URLs": "",
+      "_key": "-Ow78GwTQ1OZ-ysrrDCR",
+      "created_at": "2026-06-27T08:14:38.329439"
+    },
+    "-Ow78GzP4UqmZH3K7xgG": {
+      "Code_Snippet": "mkdir /media/ubuntu/BackupDrive/RecoveredMedia",
+      "Header_2": "",
+      "Headline": "",
+      "Instruction": "3. Create a target directory on your healthy backup drive where you want the recovered files to go:",
+      "Notes": "",
+      "Screenshot": "",
+      "Step_ID": 729,
+      "Step_Order": 6,
+      "Topic_ID": "other_howto_file_recover_0dee",
+      "URLs": "",
+      "_key": "-Ow78GzP4UqmZH3K7xgG",
+      "created_at": "2026-06-27T08:14:38.506775"
+    },
+    "-Ow78H1JNkxpOWapOaL5": {
+      "Code_Snippet": "sudo btrfs restore -v -m -S /dev/sdb /media/ubuntu/BackupDrive/RecoveredMedia",
+      "Header_2": "",
+      "Headline": "",
+      "Instruction": "4. Run the restore command pointing directly to the raw drive (or what used to be the partition):",
+      "Notes": "Note: Replace /dev/sdb with your actual broken drive identifier.\n\n - -v: Verbose (shows you what files it's copying).\n- -m: Restores file metadata (creation times, permissions).\n- -S: Restores symlinks if you had any.\n\nIf it complains about a missing superblock, Btrfs keeps multiple mirrors. You can tell it to use a backup superblock by adding -u 1 or -u 2 to the command.",
+      "Screenshot": "",
+      "Step_ID": 730,
+      "Step_Order": 7,
+      "Topic_ID": "other_howto_file_recover_0dee",
+      "URLs": "",
+      "_key": "-Ow78H1JNkxpOWapOaL5",
+      "created_at": "2026-06-27T08:14:38.704388"
+    },
+    "-Ow78H4Hn-Cb0rjhtEB8": {
+      "Code_Snippet": "",
+      "Header_2": "",
+      "Headline": "Golden Rules for this Recovery",
+      "Instruction": "NOTE:\n- Do not try to fix the partition in-place: Avoid running commands like btrfs check --repair or trying to recreate the partition table right now, as writing anything to that drive could overwrite the metadata trees holding your filenames.\n- Always recover to a separate drive: Never set the output/recovery folder to the same disk you are recovering from.",
+      "Notes": "",
+      "Screenshot": "",
+      "Step_ID": 731,
+      "Step_Order": 8,
+      "Topic_ID": "other_howto_file_recover_0dee",
+      "URLs": "",
+      "_key": "-Ow78H4Hn-Cb0rjhtEB8",
+      "created_at": "2026-06-27T08:14:38.885256"
     }
   },
   "topics": {
@@ -4422,7 +4604,7 @@
       "Date_Updated": "2026-06-14T00:13:53",
       "Description": "use of SSH authentication for git synchronisation will eliminate the need of a password each time.",
       "Sub_Icon": "wifi2.png",
-      "Subcategory": "Internet",
+      "Subcategory": "Network & Internet",
       "Title": "SSH setup for github",
       "Topic_ID": "othe_inte_ssh_se",
       "Topic_Icon": "ssh2.png",
@@ -4841,7 +5023,7 @@
       "Date_Updated": "2026-01-25T00:00:00",
       "Description": "Instruction on how to update and store the wifi password in the wpa_supplicant.conf file on a raspberry pi",
       "Sub_Icon": "wifi2.png",
-      "Subcategory": "Internet",
+      "Subcategory": "Network & Internet",
       "Title": "change of wifi password",
       "Topic_ID": "rasp_inte_change",
       "Topic_Icon": "wifipass.png",
@@ -4855,7 +5037,7 @@
       "Date_Updated": "2026-01-25T00:00:00",
       "Description": "To have a full-fledged experience, you need to SSH into Raspberry Pi. SSH (Secure Shell) is a network communication protocol that enables you to remotely operate your Pi over a secure path. Also, SSH is very useful for copying files and controlling your Pi via commands without moving yourselves into the location of your Pi each time (remote usage). Another advantage of using SSH is that you can use your Raspberry Pi without a dedicated monitor or desktop (ie., headless mode). This allows you to leave the device set up in your desired configuration without worrying about anyone disrupting things.",
       "Sub_Icon": "wifi2.png",
-      "Subcategory": "Internet",
+      "Subcategory": "Network & Internet",
       "Title": "Connect to the pi via ssh",
       "Topic_ID": "rasp_inte_connec",
       "Topic_Icon": "ssh.png",
@@ -5018,7 +5200,7 @@
       "Date_Updated": "2026-05-11T00:00:00",
       "Description": "How to connect a windows PC to github",
       "Sub_Icon": "wifi2.png",
-      "Subcategory": "Internet",
+      "Subcategory": "Network & Internet",
       "Title": "Github connection on Windows",
       "Topic_ID": "wind_inte_github",
       "Topic_Icon": "connect.png",
@@ -5043,10 +5225,10 @@
       "Cat_Icon": "fedora.png",
       "Category": "Fedora",
       "Date_Created": "2026-06-05T15:11:56",
-      "Date_Updated": "2026-06-13T23:36:21",
+      "Date_Updated": "2026-06-21T19:00:35",
       "Description": "Your update was likely interrupted by the crash, leaving your system with broken packages and incomplete boot configurations. You can fix this by accessing a TTY terminal, cleaning the package cache, and running the distro-sync repair command.\nHere is how to fet the system back up and running:",
       "Sub_Icon": "os.png",
-      "Subcategory": "Os related",
+      "Subcategory": "OS related",
       "Title": "Corrupt Nobara: Updating Error",
       "Topic_ID": "fedo_os_r_corrup",
       "Topic_Icon": "corrupt_nobara.png",
@@ -5113,8 +5295,8 @@
       "Cat_Icon": "debian.png",
       "Category": "Debian",
       "Date_Created": "2026-06-19T10:37:39",
-      "Date_Updated": "2026-06-21T00:15:10",
-      "Description": "Oh My Zsh is a community-driven framework for managing your Zsh (Z shell) configuration. Powerlevel10k is a highly popular, lightning-fast theme for Oh My Zsh. Together, they transform your default terminal into a beautiful, highly productive, and information-rich workspace.\n\nPairing the two gives superpowers in the command line:\n\n**Interactive Setup:** \nPowerlevel10k features an out-of-the-box configuration wizard that lets you visually build your prompt (choose colors, icons, and layout).\n\n**Smart Git Integration:** \nIt displays your current Git branch, uncommitted changes, and whether you are ahead or behind the remote repository, right in the prompt.\n\n**Lightning Fast:** \nUnlike older flashy themes that slow down your terminal, Powerlevel10k loads instantly and features \"instant prompt\" capabilities.\n\n**Context Information:** \nIt shows at-a-glance information like your current working directory, battery life, background background jobs, execution time of the last command, and errors.\n\n**Plugin Ecosystem:** \nOh My Zsh allows you to easily install plugins like zsh-autosuggestions and zsh-syntax-highlighting to auto-complete commands and color-code text as you type.\n\n**Transient Prompts:**\n It hides old commands and cleans up previous multi-line prompt layouts once they run, making it easy to copy and scroll through your terminal history.",
+      "Date_Updated": "2026-06-21T12:24:50",
+      "Description": "Oh My Zsh is a community-driven framework for managing your Zsh (Z shell) configuration. Powerlevel10k is a highly popular, lightning-fast theme for Oh My Zsh. Together, they transform your default terminal into a beautiful, highly productive, and information-rich workspace.\n\nPairing the two gives superpowers in the command line:\n \n**Interactive Setup:** \nPowerlevel10k features an out-of-the-box configuration wizard that lets you visually build your prompt (choose colors, icons, and layout).\n \n**Smart Git Integration:** \nIt displays your current Git branch, uncommitted changes, and whether you are ahead or behind the remote repository, right in the prompt.\n\n\n**Lightning Fast:** \nUnlike older flashy themes that slow down your terminal, Powerlevel10k loads instantly and features \"instant prompt\" capabilities.\n\n**Context Information:** \nIt shows at-a-glance information like your current working directory, battery life, background background jobs, execution time of the last command, and errors.\n\n**Plugin Ecosystem:** \nOh My Zsh allows you to easily install plugins like zsh-autosuggestions and zsh-syntax-highlighting to auto-complete commands and color-code text as you type.\n\n**Transient Prompts:**\n It hides old commands and cleans up previous multi-line prompt layouts once they run, making it easy to copy and scroll through your terminal history.",
       "Sub_Icon": "tweaks.png",
       "Subcategory": "Tweaks",
       "Title": "Tweaking terminal for easier and colorful use",
@@ -5122,6 +5304,34 @@
       "Topic_Icon": "ohmyzsh.png",
       "URLs": "https://github.com/ohmyzsh/ohmyzsh, https://dev.to/abdfnx/oh-my-zsh-powerlevel10k-cool-terminal-1no0",
       "_key": "-OvU5SFUDKnh3ssFGgR3"
+    },
+    "-Ovf6bjnCDYEN3Ru-YjQ": {
+      "Cat_Icon": "fedora.png",
+      "Category": "Fedora",
+      "Date_Created": "2026-06-21T18:58:23",
+      "Date_Updated": "2026-06-21T19:01:16",
+      "Description": "When a Nobara update crashes, the display manager or graphical interface often fails to load. You can fix this by booting into a terminal session and repairing your system with the command line update",
+      "Sub_Icon": "os.png",
+      "Subcategory": "OS related",
+      "Title": "Black screen after grub",
+      "Topic_ID": "fedora_os_rel_black_screen_7643",
+      "Topic_Icon": "corrupt_nobara.png",
+      "URLs": "https://www.facebook.com/groups/Fedora.linux/posts/10167540945335249/",
+      "_key": "-Ovf6bjnCDYEN3Ru-YjQ"
+    },
+    "-Ow75ZsKcgpqM4ZJgL53": {
+      "Cat_Icon": "other.png",
+      "Category": "Other",
+      "Date_Created": "2026-06-27T09:53:17",
+      "Date_Updated": "2026-06-27T10:14:36",
+      "Description": "Since the drive was not overwritten and only the partition boundaries were messed up, the Btrfs B-trees (metadata containing your real filenames and folder structures) are highly likely still intact.\n\nHere is how you can recover your files while preserving your exact TV show/movie folders and filenames using either Windows or Linux.",
+      "Sub_Icon": "howto.png",
+      "Subcategory": "HowTo",
+      "Title": "File recovery from brtfs system",
+      "Topic_ID": "other_howto_file_recover_0dee",
+      "Topic_Icon": "",
+      "URLs": "",
+      "_key": "-Ow75ZsKcgpqM4ZJgL53"
     }
   }
 }
