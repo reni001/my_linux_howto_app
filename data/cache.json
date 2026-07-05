@@ -4208,6 +4208,76 @@
       "URLs": "",
       "_key": "-Ow78H4Hn-Cb0rjhtEB8",
       "created_at": "2026-06-27T08:14:38.885256"
+    },
+    "-OwnDDkMJ9CKtujQjuqV": {
+      "Code_Snippet": "",
+      "Header_2": "",
+      "Headline": "Step 1: Wire the Sensor",
+      "Instruction": "Connect the BME680 sensor to your Raspberry Pi’s GPIO pins using your 4-wire Gravity I2C interface cable:\n- VCC (Red wire) -->️ 3.3V (Pin 1)\n- GND (Black wire) -->️ GND (Pin 6)\n- SCL (Green wire) -->️ SCL / GPIO 3 (Pin 5)\n- SDA (Blue wire) -->️ SDA / GPIO 2 (Pin 3)",
+      "Notes": "",
+      "Screenshot": "",
+      "Step_ID": 732,
+      "Step_Order": 1,
+      "Topic_ID": "raspbe_hardwa_bme680_4in1__10ff",
+      "URLs": "https://randomnerdtutorials.com/raspberry-pi-pico-bme680-arduino/, https://spotpear.com/index/forum/detail/id/253.html",
+      "_key": "-OwnDDkMJ9CKtujQjuqV",
+      "created_at": "2026-07-05T16:59:55.944558"
+    },
+    "-OwnDEM6RzpoqNXh_1Bm": {
+      "Code_Snippet": "sudo raspi-config",
+      "Header_2": "",
+      "Headline": "Step 2: Enable I2C on Raspberry Pi",
+      "Instruction": "The sensor communicates via I2C, so you must enable this interface if you haven't already:\n\n- Open terminal and run the configuration tool: sudo raspi-config\n- Navigate to Interface Options -> **I2C** and select **Yes**\n- reboot the raspberry pi (sudo reboot)",
+      "Notes": "",
+      "Screenshot": "",
+      "Step_ID": 733,
+      "Step_Order": 2,
+      "Topic_ID": "raspbe_hardwa_bme680_4in1__10ff",
+      "URLs": "https://randomnerdtutorials.com/raspberry-pi-pico-bme680-micropython/, https://medium.com/@makvoid/easy-climate-monitoring-using-a-raspberry-pi-b43fc55b579c",
+      "_key": "-OwnDEM6RzpoqNXh_1Bm",
+      "created_at": "2026-07-05T16:59:58.335284"
+    },
+    "-OwnDExga4iM8Sgrrhcp": {
+      "Code_Snippet": "sudo i2cdetect -y 1",
+      "Header_2": "Verification",
+      "Headline": "",
+      "Instruction": "Once rebooted, verify the sensor is detected at address 0x76 or 0x77 by running:b",
+      "Notes": "",
+      "Screenshot": "",
+      "Step_ID": 734,
+      "Step_Order": 3,
+      "Topic_ID": "raspbe_hardwa_bme680_4in1__10ff",
+      "URLs": "https://github.com/DFRobot/raspberrypi_ups, https://zbotic.in/raspberry-pi-weather-station-bme680-and-e-ink-display-build/?srsltid=AfmBOopmcKtkb7O37ejkPfKt69mvAm2vmRenV1X1Z8BjUusFlgEDj1eF",
+      "_key": "-OwnDExga4iM8Sgrrhcp",
+      "created_at": "2026-07-05T17:00:00.757805"
+    },
+    "-OwnDFZfU7RJdFbuPTfE": {
+      "Code_Snippet": "sudo apt-get update\nsudo apt-get install git python3-pip -y\ngit clone https://github.com/DFRobot/DFRobot_BME680",
+      "Header_2": "",
+      "Headline": "Step 3: Install Required Software",
+      "Instruction": "Ensure your Pi has git and Python's package manager installed, then clone the official DFRobot library:",
+      "Notes": "",
+      "Screenshot": "",
+      "Step_ID": 735,
+      "Step_Order": 4,
+      "Topic_ID": "raspbe_hardwa_bme680_4in1__10ff",
+      "URLs": "",
+      "_key": "-OwnDFZfU7RJdFbuPTfE",
+      "created_at": "2026-07-05T17:00:03.198853"
+    },
+    "-OwnDGAWoJvnRv6kNacr": {
+      "Code_Snippet": "cd DFRobot_BME680/Python/RaspberryPi/examples\npython3 read_all_data.py",
+      "Header_2": "",
+      "Headline": "Step 4: Run the Example Script",
+      "Instruction": "Navigate to the Python examples directory inside the cloned repository and execute the script:",
+      "Notes": "For tips on setting up and interpreting the data from your BME680 4-in-1 sensor: https://www.youtube.com/watch?v=aiygYEV-GX8&t=2",
+      "Screenshot": "",
+      "Step_ID": 736,
+      "Step_Order": 5,
+      "Topic_ID": "raspbe_hardwa_bme680_4in1__10ff",
+      "URLs": "https://www.youtube.com/watch?v=aiygYEV-GX8&t=2",
+      "_key": "-OwnDGAWoJvnRv6kNacr",
+      "created_at": "2026-07-05T17:00:05.587284"
     }
   },
   "topics": {
@@ -5332,6 +5402,20 @@
       "Topic_Icon": "",
       "URLs": "",
       "_key": "-Ow75ZsKcgpqM4ZJgL53"
+    },
+    "-OwnBT1JP8pM-grosnbP": {
+      "Cat_Icon": "raspi-pi.png",
+      "Category": "Raspberry Pi",
+      "Date_Created": "2026-07-05T18:34:25",
+      "Date_Updated": "2026-07-05T18:59:47",
+      "Description": "The BME680 is a 4-in-1 MEMS environmental sensor integrating VOC, temperature, humidity, and barometer sensors. Designed for air quality monitoring, it features small size and low power consumption via MEMS technology. It’s suitable for environmental monitoring, home automation, IoT wearables, and GPS enhancement. This breakout version has a simplified design with 2.54-pin headers, SPI connectors, onboard voltage regulators, and I2C level translators for easy integration.\n\nInstalling the DFRobot BME680 4-in-1 sensor on a Raspberry Pi involves enabling I2C communication, making four wire connections, and downloading the DFRobot_BME680 Python Library. You can then run provided sample scripts to measure temperature, humidity, pressure, and gas (VOCs).",
+      "Sub_Icon": "hardware.png",
+      "Subcategory": "Hardware",
+      "Title": "BME680 4-in-1 Environmental Sensor",
+      "Topic_ID": "raspbe_hardwa_bme680_4in1__10ff",
+      "Topic_Icon": "BME680.png",
+      "URLs": "https://wiki.dfrobot.com/sen0375/, https://github.com/DFRobot/DFRobot_BME680https://randomnerdtutorials.com/raspberry-pi-pico-bme680-arduino/,",
+      "_key": "-OwnBT1JP8pM-grosnbP"
     }
   }
 }
